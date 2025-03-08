@@ -1,0 +1,2694 @@
+--------------------------------------------------
+AWS Sagemaker Course - Introduction
+  Hands-on AI - Sridhar Kumar Kannam
+https://www.youtube.com/watch?v=q5obnSh1zH8&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=1
+
+
+  Summary:
+   - In this course we will learn how to use AWS Sagemaker for end to end machine learning life cycle.
+   - We will cover all aspects and new developments not limited to
+     End-to-End ML Lifecycle, Data Engineering, Train ML models, Deploy Models,
+     Serverless, Multi-model Endpoints, and Batch Inference,
+     Processing jobs, Pipelines, MLOps, Clarify, Lineage, Text and Image modelling, Jumpstart, TensofrFlow,
+     PyTorch, HuggingFace, Transfer Learning,
+
+  Github for code:
+    https://github.com/KannamSridharKumar/AWS_Sagemaker_Course
+
+
+  Three ways to access SageMaker using Jupyter Notebooks
+    1. local Notebooks with user Credentials
+
+    2. Via SageMaker Notebooks
+       AWS -> SageMaker -> Applications and IDE's -> Notebooks
+         -> create a notebook instance, and start it (must stop it when not using it)
+
+    3. Via SageMaker Studio
+       AWS -> SageMaker -> Admin configuration -> domain
+         -> create a domain
+       AWS -> SageMaker -> Applications and IDE's -> studio
+         -> Select User profile [domain] -> Open Studio
+         -> provides access to pipelines, IDE, etc
+
+--------------------------------------------------
+AWS Sagemaker Course -  Prepare Training Data for XGBoost Model
+  Hands-on AI - Sridhar KumarKannam
+
+  Prepare data for classification model
+
+    Code: 001_Prepare_Data_101.ipynb
+
+        >>> # install nb_black black background package - fails - may require python version 3.6 or less
+        >>> #pip install -q -U nb_black
+        >>> #%load_ext nb_black
+
+
+        >>> import pandas as pd
+        >>> from sklearn import datasets
+        >>> from sklearn.model_selection import train_test_split
+        >>> # enables displaying images
+        >>> from IPython.display import Image
+
+        >>> import boto3
+        >>> import logging
+        >>> # report only Warning or higher levels messages - suppress INFO level messages
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> # #### Iris Dataset - iris_1.png, iris_2.svg, & iris_3.png not provided
+        >>> Image(url="images/iris_1.png", width=800)  # , height=300)
+        >>> Image(url="images/iris_2.svg", width=800)  # , height=300)
+        >>> Image(url="images/iris_3.png", height=400)
+
+        >>> # download iris dataset
+        >>> iris = datasets.load_iris()
+        >>> type(iris)
+
+            sklearn.utils._bunch.Bunch
+
+        >>> dir(iris)
+
+            ['DESCR',
+             'data',
+             'data_module',
+             'feature_names',
+             'filename',
+             'frame',
+             'target',
+             'target_names']
+
+
+        >>> print(iris.DESCR)
+
+            .. _iris_dataset:
+
+            Iris plants dataset
+            --------------------
+
+            **Data Set Characteristics:**
+
+             .   .   .
+
+        >>> # create dataframe from data with column names from feature_names
+        >>> df = pd.DataFrame(data=iris.data, columns=iris.feature_names)
+        >>> # add target variable named 'class' to dataframe using iris.target values
+        >>> df["class"] = pd.Series(iris.target)
+        >>> df.head()
+
+         	class 	sepal length (cm) 	sepal width (cm) 	petal length (cm) 	petal width (cm)
+             0 	0 	        5.1 	        3.5 	                1.4 	                0.2
+             1 	0 	        4.9 	        3.0 	                1.4 	                0.2
+             2 	0 	        4.7 	        3.2 	                1.3 	                0.2
+             3 	0 	        4.6 	        3.1 	                1.5 	                0.2
+             4 	0       	5.0 	        3.6 	                1.4 	                0.2
+
+        >>> iris.target_names
+            array(['setosa', 'versicolor', 'virginica'], dtype='<U10')
+
+        >>> print(df.shape)
+            (150, 5)
+
+        >>> df["class"].value_counts()
+            class
+            0    50
+            1    50
+            2    50
+            Name: count, dtype: int64
+
+        >>> cols = list(df.columns)
+        >>> print(cols)
+            ['sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)', 'class']
+
+        >>> # move 'class' from last to 1st column
+        >>> cols = [cols[-1]] + cols[:-1]
+        >>> print(cols)
+            ['class', 'sepal length (cm)', 'sepal width (cm)', 'petal length (cm)', 'petal width (cm)']
+
+        >>> df = df[cols]
+        >>> df.head()
+
+
+        >>> # #### Train - Test split
+        >>> # split data to train (66%) and test (33%) randomly with proportional balance based on 'Class' values
+        >>> train_df, test_df = train_test_split(
+        >>>     df, test_size=0.33, random_state=42, stratify=df["class"]
+        >>> )
+
+        >>> train_df["class"].value_counts()
+            class
+            0    34
+            2    33
+            1    33
+Name: count, dtype: int64
+
+        >>> test_df["class"].value_counts()
+            class
+            2    17
+            1    17
+            0    16
+            Name: count, dtype: int64
+
+        >>> # must create "data" subdirectory before executing
+        >>> # write out train and test data to CSV files - do not include index colunm nor header
+        >>> train_df.to_csv("data/iris_train.csv", index=False, header=None)
+        >>> test_df.to_csv("data/iris_test.csv", index=False, header=None)
+
+        >>> # drop target ['class'] colunm for test data to inference from
+        >>> infer_df = test_df.drop(columns=["class"])
+        >>> infer_df.head()
+             	sepal length (cm) 	sepal width (cm) 	petal length (cm) 	petal width (cm)
+            133 	6.3 		        2.8 	        	5.1 		1.5
+            56 		6.3     		3.3 	        	4.7 		1.6
+            7 		5.0     		3.4 	        	1.5 		0.2
+            67 		5.8     		2.7 	        	4.1 		1.0
+            107 	7.3     		2.9 	        	6.3 		1.8
+
+            # write inference test data to CSV
+        >>> infer_df.to_csv("data/iris_infer.csv", index=False, header=None)
+
+
+        >>> # upload train, test, and inference CSV data to S3 pat-demo-bkt bucket
+        >>> !aws s3 cp data/iris_train.csv s3://pat-demo-bkt/iris/data/
+        >>> !aws s3 cp data/iris_test.csv s3://pat-demo-bkt/iris/data/
+        >>> !aws s3 cp data/iris_infer.csv s3://pat-demo-bkt/iris/batch_transform/
+
+
+        >>> # graphically display distribution of sepal/petal width/length distribution to
+        >>> #  help determine which distributions are better predictors
+        >>> import seaborn as sb
+        >>> import matplotlib.pyplot as plt
+        >>> plt.style.use("fivethirtyeight")
+
+        >>> sb.pairplot(df, hue="class", palette="deep")
+        >>> plt.show()
+
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Train XGBoost Classification Model
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=6e7x-3a5dE4
+
+
+    Code: 002_Train_Model_101.ipynb
+
+            # install sagemaker package and update other packages as needed
+        >>> #!pip install -q -U sagemaker
+        >>> #%load_ext nb_black
+
+        >>> import os
+        >>> import logging
+            # timestamp to be used to create unique training names
+        >>> from datetime import datetime
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker.session import TrainingInput
+            # import docker container
+        >>> from sagemaker import image_uris
+        >>> from sagemaker import hyperparameters
+
+            # suppress INFO messages
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> region = sagemaker.Session().boto_region_name
+        >>> print(region)
+            us-east-1
+
+        >>> # role_arn = sagemaker.get_execution_role()  # use if running from SageMaker Notebook
+        >>> role_arn = os.getenv("SGMKR_ROLE_ARN")       # if specify ARN with env variable
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket = "pat-demo-bkt"
+        >>> prefix = "iris"
+
+        >>> aws s3 ls {bucket}/{prefix}/
+
+        >>> aws s3 ls {bucket}/{prefix}/data/ --recursive
+            2024-10-16 17:58:39          0 iris/data/
+            2024-10-16 17:59:10        950 iris/data/iris_test.csv
+            2024-10-16 17:59:07       1900 iris/data/iris_train.csv
+
+        >>> train_file = "data/iris_train.csv"
+        >>> valid_file = "data/iris_test.csv"
+
+        >>> train_file_uri = "s3://{}/{}/{}".format(bucket, prefix, train_file)
+        >>> valid_file_uri = "s3://{}/{}/{}".format(bucket, prefix, valid_file)
+        >>> print("train file uri:", train_file_uri)
+        >>> print("valid file uri:", valid_file_uri)
+            train file uri: s3://pat-demo-bkt/iris/data/iris_train.csv
+            valid file uri: s3://pat-demo-bkt/iris/data/iris_test.csv
+
+            # use sageMaker.inputs.TrainingInput() class to specify S3 input data and create traininginput object
+        >>> train_ip = TrainingInput(train_file_uri, content_type="csv")
+        >>> print(train_ip)
+            <sagemaker.inputs.TrainingInput object at 0x000001D62807D790>
+
+        >>> valid_ip = TrainingInput(valid_file_uri, content_type="csv")
+        >>> print(valid_ip)
+            <sagemaker.inputs.TrainingInput object at 0x000001D6280D3810>
+
+            # define training model artifacts output location
+        >>> model_op = "s3://{}/{}/{}".format(bucket, prefix, "model")
+        >>> print(model_op)
+            s3://pat-demo-bkt/iris/model
+
+            # get lastest xgboost docker container uri
+        >>> model_img = sagemaker.image_uris.retrieve("xgboost", region, "latest")
+        >>> print(model_img)
+            811284229777.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest
+           #<containerId>.dkr.ecr.<region>.amazonaws.com/<algorith>:<version>   <- format
+
+        >>> base_job_name = "iris-xgboost-"
+
+            # use sagemaker.estimator.Estimator() class to configure training job
+            # volume_size (default: 30): Size in GB of the storage volume to use for storing input
+            #    and output data during training (external disk size)
+            # xgboost training cannot be parallelized so only use 1 instance
+        >>> xgb_model = sagemaker.estimator.Estimator(
+        >>>     image_uri=model_img,
+        >>>     role=role_arn,
+        >>>     base_job_name=base_job_name,
+        >>>     instance_count=1,
+        >>>     instance_type="ml.m4.xlarge",
+        >>>     output_path=model_op,
+        >>>     sagemaker_session=sagemaker.Session(),
+        >>>     volume_size=5,
+        >>> )
+
+            # set hyperparameters:  3 class, max tree depth:5, number of trees: 10,
+            # objective: multi-> multiclassification,  minimize the predict probability from the 'softmax' function
+        >>> xgb_model.set_hyperparameters(
+        >>>     num_class=3, max_depth=5, num_round=10, objective="multi:softmax",
+        >>> )
+
+            # uniquify the job name with timestamp
+        >>> job_name = base_job_name + datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+        >>> print(job_name)
+            iris-xgboost-2024-10-17-13-45-55
+
+            # start training job
+        >>> xgb_model.fit({"train": train_ip, "validation": valid_ip}, wait=True, job_name=job_name)
+
+            INFO:sagemaker:Creating training-job with name: iris-xgboost-2024-10-17-13-45-55
+
+            2024-10-17 20:46:26 Starting - Starting the training job...
+            2024-10-17 20:46:41 Starting - Preparing the instances for training...
+            2024-10-17 20:47:12 Downloading - Downloading input data...
+            2024-10-17 20:47:48 Downloading - Downloading the training image...
+            2024-10-17 20:48:33 Training - Training image download completed. Training in progress..Arguments: train
+            [2024-10-17:20:48:46:INFO] Running standalone xgboost training.
+            [2024-10-17:20:48:46:INFO] File size need to be processed in the node: 0.0mb. Available memory size in the node: 8461.59mb
+            [2024-10-17:20:48:46:INFO] Determined delimiter of CSV input is ','
+            [20:48:46] S3DistributionType set as FullyReplicated
+            [20:48:46] 100x4 matrix with 400 entries loaded from /opt/ml/input/data/train?format=csv&label_column=0&delimiter=,
+            [2024-10-17:20:48:46:INFO] Determined delimiter of CSV input is ','
+            [20:48:46] S3DistributionType set as FullyReplicated
+            [20:48:46] 50x4 matrix with 200 entries loaded from /opt/ml/input/data/validation?format=csv&label_column=0&delimiter=,
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 4 extra nodes, 0 pruned nodes, max_depth=2
+            [0]#011train-merror:0.03#011validation-merror:0.06
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [1]#011train-merror:0.02#011validation-merror:0.02
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [2]#011train-merror:0.02#011validation-merror:0.02
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [3]#011train-merror:0.02#011validation-merror:0.02
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [4]#011train-merror:0.02#011validation-merror:0.02
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [5]#011train-merror:0.02#011validation-merror:0.04
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [6]#011train-merror:0.02#011validation-merror:0.04
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [7]#011train-merror:0.01#011validation-merror:0.06
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 8 extra nodes, 0 pruned nodes, max_depth=3
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [8]#011train-merror:0.01#011validation-merror:0.06
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 2 extra nodes, 0 pruned nodes, max_depth=1
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 10 extra nodes, 0 pruned nodes, max_depth=4
+            [20:48:46] src/tree/updater_prune.cc:74: tree pruning end, 1 roots, 6 extra nodes, 0 pruned nodes, max_depth=2
+            [9]#011train-merror:0.01#011validation-merror:0.06
+
+            2024-10-17 20:49:07 Uploading - Uploading generated training model
+            2024-10-17 20:49:07 Completed - Training job completed
+            Training seconds: 115
+            Billable seconds: 115
+
+
+        >>> get_ipython().system('aws s3 ls {bucket}/{prefix}/model/')
+            PRE iris-xgboost-2024-10-17-13-45-55/
+
+        >>> get_ipython().system('aws s3 ls {bucket}/{prefix}/model/{job_name}/')
+
+                           PRE debug-output/
+                           PRE output/                       # 'output' folder contains the model zip file
+                           PRE profiler-output/
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Model Deployment and Inference 1
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=KFEvESlbFTQ&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=5
+
+    Code: 003_Deploy_Infer_101_1.ipynb
+            # Repeat previous model training from 002_Train_Model_101.ipynb  - begin
+        >>> import os
+        >>> import io
+        >>> from datetime import datetime
+        >>> import logging
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker.session import TrainingInput
+        >>> from sagemaker import image_uris
+        >>> from sagemaker import hyperparameters
+
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> region = sagemaker.Session().boto_region_name
+        >>> print(region)
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket = "pat-demo-bkt"
+        >>> prefix = "iris"
+
+        >>> !aws s3 ls {bucket}/{prefix}/
+
+        >>> !aws s3 ls {bucket}/{prefix}/data/ --recursive
+
+        >>> train_file = "data/iris_train.csv"
+        >>> valid_file = "data/iris_test.csv"
+
+        >>> train_ip = TrainingInput(
+        >>>     "s3://{}/{}/{}".format(bucket, prefix, train_file), content_type="csv"
+        >>> )
+        >>> valid_ip = TrainingInput(
+        >>>     "s3://{}/{}/{}".format(bucket, prefix, valid_file), content_type="csv"
+        >>> )
+
+        >>> model_op = "s3://{}/{}/{}".format(bucket, prefix, "model")
+
+        >>> train_image_uri = sagemaker.image_uris.retrieve("xgboost", region, "latest")
+        >>> print(train_image_uri)
+
+        >>> base_job_name = "iris-xgboost"
+
+        >>> xgb_estimator = sagemaker.estimator.Estimator(
+        >>>     image_uri=train_image_uri,
+        >>>     role=role_arn,
+        >>>     base_job_name=base_job_name,
+        >>>     instance_count=1,
+        >>>     instance_type="ml.m4.xlarge",
+        >>>     volume_size=5,
+        >>>     output_path=model_op,
+        >>>     sagemaker_session=sagemaker.Session(),
+        >>> )
+
+        >>> xgb_estimator.set_hyperparameters(
+        >>>     num_class=3, max_depth=5, num_round=10, objective="multi:softmax",
+        >>> )
+
+        >>> # xgb_estimator.set_hyperparameters(
+        >>> #     num_class=3,
+        >>> #     max_depth=5,
+        >>> #     eta=0.2,
+        >>> #     gamma=4,
+        >>> #     min_child_weight=6,
+        >>> #     subsample=0.7,
+        >>> #     objective="multi:softmax",
+        >>> #     num_round=10,
+        >>> # )
+
+        >>> job_name = "iris-xgboost-" + datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+        >>> print(job_name)
+
+        >>> xgb_estimator.fit(
+        >>>     {"train": train_ip, "validation": valid_ip}, wait=True, job_name=job_name
+        >>> )
+
+        >>> !aws s3 ls {bucket}/{prefix}/model/
+
+            # Repeat previous model training from 002_Train_Model_101.ipynb  - end
+
+
+            # CSVSerializer: Serialize data of various formats to a CSV-formatted string.
+        >>> from sagemaker.serializers import CSVSerializer
+
+
+        >>> # #### Deploy the model as an endpoint
+        >>> type(xgb_estimator)
+            sagemaker.estimator.Estimator
+            <IPython.core.display.Javascript object>
+
+            # estimator.deploy(): After you call fit, you can call deploy on an XGBoost estimator to create a SageMaker endpoint.
+            # deploy creates: model, endpoint-config, and endpoint
+        >>> xgb_predictor = xgb_estimator.deploy(
+        >>>     initial_instance_count=1, instance_type="ml.t2.medium", serializer=CSVSerializer()
+        >>> )
+            INFO:sagemaker:Creating model with name: iris-xgboost-2024-10-18-00-19-37-448
+            INFO:sagemaker:Creating endpoint-config with name iris-xgboost-2024-10-18-00-19-37-448
+            INFO:sagemaker:Creating endpoint with name iris-xgboost-2024-10-18-00-19-37-448
+            ------------!
+
+        >>> # #### Predictor single record
+            # estimator.predict(): deploy returns a Predictor object, which you can use to do inference on the Endpoint hosting
+            #    your XGBoost model. Each Predictor provides a predict method which can do inference with numpy arrays,
+        >>> xgb_predictor.predict("7.7, 3.0, 6.1, 2.3")
+            b'2.0'              # predicted class 2 - virginica
+
+
+            # get endpoint_name from predictor
+        >>> # #### Endpoint
+        >>> endpoint_name = xgb_predictor.endpoint_name
+        >>> print(endpoint_name)
+            iris-xgboost-2024-10-18-00-19-37-448
+
+            # create a runtime.sagemaker client
+        >>> sgmkr_runtime = boto3.client("runtime.sagemaker")
+
+            # uses sagemaker runtime to invoke endpoint
+        >>> # #### Endpoint - One record
+        >>> payload_csv_text = "7.7, 3.0, 6.1, 2.3"
+        >>> response = sgmkr_runtime.invoke_endpoint(
+        >>>     EndpointName=endpoint_name, ContentType="text/csv", Body=payload_csv_text
+        >>> )
+        >>> print(response)
+            {'ResponseMetadata': {'RequestId': '6dfd0a72-0ef3-44a8-b563-40ecacf20639', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': '6dfd0a72-0ef3-44a8-b563-40ecacf20639', 'x-amzn-invoked-production-variant': 'AllTraffic', 'date': 'Fri, 18 Oct 2024 00:39:08 GMT', 'content-type': 'text/csv; charset=utf-8', 'content-length': '3', 'connection': 'keep-alive'}, 'RetryAttempts': 0}, 'ContentType': 'text/csv; charset=utf-8', 'InvokedProductionVariant': 'AllTraffic', 'Body': <botocore.response.StreamingBody object at 0x0000019EACEF0D60>}
+
+            # decode() used to convert binary value to text
+        >>> print(response["Body"].read().decode())
+            2.0
+
+        >>> # #### Endpoint - Multiple records
+        >>> payload_csv_text = "7.7, 3.0, 6.1, 2.3 \n 7.9, 3.8, 6.4, 2.1"
+
+        >>> response = sgmkr_runtime.invoke_endpoint(
+        >>>     EndpointName=endpoint_name, ContentType="text/csv", Body=payload_csv_text
+        >>> )
+        >>> print(response["Body"].read().decode())
+
+
+        >>> # #### Endpoint - Multiple records from a local file
+        >>> csv_buffer = open("data/iris_infer.csv")
+        >>> payload_csv_text = csv_buffer.read()
+            2.0,2.0
+
+        >>> response = sgmkr_runtime.invoke_endpoint(
+        >>>     EndpointName=endpoint_name, ContentType="text/csv", Body=payload_csv_text
+        >>> )
+        >>> print(response["Body"].read().decode())
+            1.0,0.0,1.0,2.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,1.0,1.0,2.0,1.0,2.0,1.0,0.0,2.0,0.0,2.0,2.0,0.0,0.0,2.0,2.0,2.0,0.0,1.0,0.0,0.0,2.0,1.0,2.0,1.0,1.0,1.0,0.0,0.0,2.0,1.0,2.0,1.0,1.0,2.0
+
+        >>> payload_csv_text
+           '6.3,2.8,5.1,1.5\n6.3,3.3,4.7,1.6\n5.0,3.4,1.5,0.2\n5.8,2.7,4.1,1.0\n7.3,2.9,6.3,1.8\n4.9,2.4,3.3,1.0\n5.7,2.8,4.5,1.3\n5.7,3.8,1.7,0.3\n5.6,3.0,4.5,1.5\n5.5,2.3,4.0,1.3\n4.4,3.2,1.3,0.2\n5.8,4.0,1.2,0.2\n5.1,3.3,1.7,0.5\n5.1,3.4,1.5,0.2\n5.4,3.7,1.5,0.2\n6.4,2.8,5.6,2.2\n6.0,3.0,4.8,1.8\n5.6,2.5,3.9,1.1\n7.7,2.8,6.7,2.0\n5.7,2.8,4.1,1.3\n6.5,3.0,5.2,2.0\n5.6,3.0,4.1,1.3\n4.7,3.2,1.3,0.2\n6.5,3.0,5.5,1.8\n4.6,3.6,1.0,0.2\n6.5,3.0,5.8,2.2\n6.7,3.1,5.6,2.4\n5.0,3.2,1.2,0.2\n5.4,3.4,1.7,0.2\n6.2,3.4,5.4,2.3\n6.4,2.7,5.3,1.9\n6.9,3.1,5.1,2.3\n5.1,3.7,1.5,0.4\n5.4,3.0,4.5,1.5\n5.2,3.4,1.4,0.2\n4.5,2.3,1.3,0.3\n6.7,3.0,5.2,2.3\n5.7,2.9,4.2,1.3\n6.7,3.0,5.0,1.7\n6.0,3.4,4.5,1.6\n6.1,2.9,4.7,1.4\n5.0,2.3,3.3,1.0\n4.4,3.0,1.3,0.2\n4.9,3.0,1.4,0.2\n6.1,2.6,5.6,1.4\n6.0,2.9,4.5,1.5\n6.7,2.5,5.8,1.8\n4.9,2.5,4.5,1.7\n6.4,3.2,4.5,1.5\n6.1,3.0,4.9,1.8\n'
+
+
+        >>> # #### Endpoint - Multiple records from a S3 file
+        >>> infer_ip_s3_uri = "s3://{}/{}/{}".format(
+        >>>     bucket, prefix, "batch_transform/iris_infer.csv"
+        >>> )
+
+            # 3 ways to read CSV file stored in S3
+            # 1st: panda read_csv using s3 file uri - requires aws credentials to be configured
+        >>> # payload_df = pd.read_csv(infer_ip_s3_uri)
+            # 2nd: use AWS wrangler libray to read csv
+        >>> # payload_df = wr.s3.read_csv(path=infer_ip_s3_uri)
+            # 3rd: using S3 boto3 client
+        >>> s3_clnt = boto3.client("s3")
+        >>> obj = s3_clnt.get_object(Bucket=bucket, Key="iris/batch_transform/iris_infer.csv")
+        >>> payload_df = pd.read_csv(obj["Body"])
+
+        >>> csv_buffer = io.StringIO()
+        >>> payload_df.to_csv(csv_buffer, header=None, index=None)
+        >>> payload_csv_text = csv_buffer.getvalue()
+
+        >>> response = sgmkr_runtime.invoke_endpoint(
+        >>>     EndpointName=endpoint_name, ContentType="text/csv", Body=payload_csv_text
+        >>> )
+        >>> print(response["Body"].read().decode())
+            1.0,0.0,1.0,2.0,1.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,2.0,1.0,1.0,2.0,1.0,2.0,1.0,0.0,2.0,0.0,2.0,2.0,0.0,0.0,2.0,2.0,2.0,0.0,1.0,0.0,0.0,2.0,1.0,2.0,1.0,1.0,1.0,0.0,0.0,2.0,1.0,2.0,1.0,1.0,2.0
+
+
+        >>> # #### Delete the endpoint
+        >>> sgmkr_clnt = boto3.client("sagemaker")
+
+        >>> sgmkr_clnt.delete_endpoint(EndpointName=endpoint_name)
+            {'ResponseMetadata': {'RequestId': '8a30633c-c555-4db0-8a17-9bd9d4938093',
+             'HTTPStatusCode': 200,
+             'HTTPHeaders': {'x-amzn-requestid': '8a30633c-c555-4db0-8a17-9bd9d4938093',
+             'content-type': 'application/x-amz-json-1.1',
+             'date': 'Fri, 18 Oct 2024 01:41:11 GMT',
+             'content-length': '0'},
+             'RetryAttempts': 0}}
+
+
+            # batch inference can take up to 5 min to spin up instance for batch inference use
+        >>> # #### Batch Transform
+        >>> batch_ip = "s3://{}/{}/{}".format(bucket, prefix, "batch_transform")
+        >>> batch_op = "s3://{}/{}/{}".format(bucket, prefix, "batch_transform")
+
+        >>> !aws s3 ls {batch_ip}/ --recursive
+
+            # create batch tranformer job
+        >>> transformer = xgb_estimator.transformer(
+        >>>     instance_count=1, instance_type="ml.m4.xlarge", output_path=batch_op
+        >>> )
+
+        >>> transformer.transform(
+        >>>     data=batch_ip, data_type="S3Prefix", content_type="text/csv", split_type="Line"
+        >>> )
+        >>> transformer.wait()
+
+
+            # batch tranform output failed to be created - no obvious errors
+        >>> !aws s3 ls {bucket}/{prefix}/batch_transform/ --recursive
+            2024-10-16 17:58:53          0 iris/batch_transform/
+            2024-10-16 17:59:13        850 iris/batch_transform/iris_infer.csv
+            2024-10-16 ??:??:??        850 iris/batch_transform/iris_infer.csv.out  # creates output file for each input file
+
+        >>> !aws s3 cp s3://{bucket}/{prefix}/batch_transform/iris_infer.csv.out .
+
+        >>> !head -n 5 iris_infer.csv.out
+
+
+
+ estimator.deploy(..)
+    - deploy creates: model,             # AWS -> SageMaker -> Inference -> Model
+                      endpoint-config,   # AWS -> SageMaker -> Inference -> Endpoint configuration
+                      and endpoint       # AWS -> SageMaker -> Inference -> Endpoint
+
+
+
+    AWS -> SageMaker -> Inference -> Model
+       includes Container info
+          - for Xgboost, the training and inference containers are the same
+          - for most algorithm, have difference containers for training and inference
+       includes model ARM
+       Container info includes S3 'Model data location'
+
+    AWS -> SageMaker -> Inference -> Endpoint Configuration
+      includes
+          - model name
+          - training job
+
+    AWS -> SageMaker -> Inference -> Endpoint
+          - instance type and count
+          - has serverless option
+          - "data capture setting"  - optionally, used to capture and save inference data
+
+    AWS -> SageMaker -> Training -> Training Jobs -> job name
+       includes
+            - hyperparameters settings
+            - model metrics
+            - training data, validation data
+            - instance type to  train model
+            - under monitor, algorithm metrics, instance metrics, logs
+            - etc
+
+--------------------------------------------------
+AWS Sagemaker Course - Model Deployment and Inference 2
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=zun2I9ljOGA&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=5
+
+
+   Previously used estimator.deploy to create model, endpoint configuration, endpoint:
+
+            # estimator.deploy(): After you call fit, you can call deploy on an XGBoost estimator to create a SageMaker endpoint.
+            # deploy creates: model, endpoint-config, and endpoint
+        >>> xgb_predictor = xgb_estimator.deploy(
+        >>>     initial_instance_count=1, instance_type="ml.t2.medium", serializer=CSVSerializer()
+        >>> )
+            INFO:sagemaker:Creating model with name: iris-xgboost-2024-10-18-00-19-37-448
+            INFO:sagemaker:Creating endpoint-config with name iris-xgboost-2024-10-18-00-19-37-448
+            INFO:sagemaker:Creating endpoint with name iris-xgboost-2024-10-18-00-19-37-448
+
+
+   However,  estimator.deploy() can only be used after call  estimator.fit().
+     - thus, it can only be used after training.
+     - instead, if you want to create the model from the training model artifacts, use need use:
+          sgmkr_clnt.create_model()
+             - two input data requirements: model artifacts and xgboost docker image container
+             - also requires                unique model name and sagemaker execution role
+     - to create endpoint configuration, use:
+          sgmkr_clnt.create_endpoint_config()
+     - to create endpoint, use:
+        sgmkr_clnt.create_endpoint()
+
+    sagemaker client vs sagemaker runtime client
+      sagemaker client
+         - used to call: create_model(), create_endpoint_config(), create_endpoint()
+         - to create:
+              sgmkr_clnt = boto3.client("sagemaker")
+      sagemaker client
+         - used to call: invoke_endpoint()
+         - to create:
+               sgmkr_rt = boto3.client("runtime.sagemaker")
+
+
+
+    Code: 004_Deploy_Infer_101_2.ipynb
+
+        >>> import os
+        >>> import boto3
+        >>> import logging
+        >>> from datetime import datetime
+
+            # suppress INFO messages
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> import sagemaker
+        >>> from sagemaker.transformer import Transformer
+
+            # create boto3 sakermaker client and runtime client
+        >>> sgmkr_clnt = boto3.client("sagemaker")
+        >>> sgmkr_rt = boto3.client("runtime.sagemaker")
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+
+        >>> # #### Create model
+        >>> from sagemaker import image_uris
+
+            # get lastest xgboost docker container uri  (instead of hardcoding it)
+        >>> region = sagemaker.Session().boto_region_name
+        >>> print(region)
+        >>> model_img = sagemaker.image_uris.retrieve("xgboost", region, "latest")
+        >>> print(model_img)
+        >>> #model_img = "811284229777.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest"
+            us-east-1
+            811284229777.dkr.ecr.us-east-1.amazonaws.com/xgboost:latest
+
+            # specify the model path on s3 to the model artifacts and verify the model path exists
+        >>> bucket = 'pat-demo-bkt'
+        >>> prefix = 'iris/model/iris-xgboost-2024-10-17-17-03-48/output'
+        >>> model_tar_file = "model.tar.gz"
+        >>> s3_model_path = "s3://{}/{}/{}".format(bucket, prefix, model_tar_file)
+        >>> s3_model_path_ls = "{}/{}/{}".format(bucket, prefix, model_tar_file)
+        >>> #s3_model_path = "s3://pat-demo-bkt/iris/model/iris-xgboost-2024-10-17-17-03-48/output/model.tar.gz"
+        >>> print (s3_model_path_ls)
+        >>> !aws s3 ls {s3_model_path_ls}
+            pat-demo-bkt/iris/model/iris-xgboost-2024-10-17-17-03-48/output/model.tar.gz
+            2024-10-17 17:07:05       3453 model.tar.gz
+
+        >>> model_path = (
+        >>>     s3_model_path
+        >>> )
+        >>> print (model_path)
+            s3://pat-demo-bkt/iris/model/iris-xgboost-2024-10-17-17-03-48/output/model.tar.gz
+
+        >>> model_name = "iris-xgboost-" + datetime.today().strftime("%Y-%m-%d-%H-%M-%S")
+        >>> print(model_name)
+
+            # create model from training model artifacts
+        >>> response = sgmkr_clnt.create_model(
+        >>>     ModelName=model_name,
+        >>>     PrimaryContainer={"Image": model_img, "ModelDataUrl": model_path},
+        >>>     ExecutionRoleArn=role_arn,
+        >>> )
+        >>> print(response)
+            {'ModelArn': 'arn:aws:sagemaker:us-east-1:012345678901:model/iris-xgboost-2024-10-18-13-08-20', 'ResponseMetadata': {'RequestId': '18cf1c5b-d894-40e6-a379-a6a4b5c6d94c', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': '18cf1c5b-d894-40e6-a379-a6a4b5c6d94c', 'content-type': 'application/x-amz-json-1.1', 'content-length': '94', 'date': 'Fri, 18 Oct 2024 20:08:29 GMT'}, 'RetryAttempts': 0}}
+
+        >>> bucket = "pat-demo-bkt"
+        >>> prefix_bt = "iris"
+
+
+        >>> # #### Batch Transform
+        >>> batch_ip = 's3://{}/{}/{}'.format(bucket, prefix_bt, 'batch_transform')
+        >>> batch_op = 's3://{}/{}/{}'.format(bucket, prefix_bt, 'batch_transform')
+
+            # use Transformer method to configure a batch tranform job using 'model_name' and placing outputs at 'batch_ip' location
+        >>> transformer = Transformer(
+        >>>     model_name=model_name,
+        >>>     instance_count=1,
+        >>>     instance_type='ml.m4.xlarge',
+        >>>     output_path=batch_op,
+        >>> )
+
+            # run batch transform job
+        >>> transformer.transform(
+        >>>     data=batch_ip, data_type="S3Prefix", content_type="text/csv"
+        >>> )
+        >>> transformer.wait()
+
+           INFO:sagemaker:Creating transform job with name: xgboost-2024-10-18-20-13-17-568
+            .................................
+            Arguments: serve
+            [2024-10-18 20:19:22 +0000] [1] [INFO] Starting gunicorn 19.9.0
+            [2024-10-18 20:19:22 +0000] [1] [INFO] Listening at: http://0.0.0.0:8080 (1)
+            [2024-10-18 20:19:22 +0000] [1] [INFO] Using worker: gevent
+            [2024-10-18 20:19:22 +0000] [21] [INFO] Booting worker with pid: 21
+            [2024-10-18 20:19:22 +0000] [22] [INFO] Booting worker with pid: 22
+            [2024-10-18 20:19:22 +0000] [23] [INFO] Booting worker with pid: 23
+            /opt/amazon/lib/python3.7/site-packages/gunicorn/workers/ggevent.py:65: MonkeyPatchWarning: Monkey-patching ssl after ssl has already been imported may lead to errors, including RecursionError on Python 3.6. It may also silently lead to incorrect behaviour on Python 3.7. Please monkey-patch earlier. See https://github.com/gevent/gevent/issues/1016. Modules that had direct imports (NOT patched): ['urllib3.util (/opt/amazon/lib/python3.7/site-packages/urllib3/util/__init__.py)', 'urllib3.util.ssl_ (/opt/amazon/lib/python3.7/site-packages/urllib3/util/ssl_.py)'].
+              monkey.patch_all(subprocess=True)
+            [2024-10-18:20:19:22:INFO] Model loaded successfully for worker : 21
+            [2024-10-18 20:19:22 +0000] [24] [INFO] Booting worker with pid: 24
+            .   .   .
+            .   .   .
+            [2024-10-18:20:19:22:INFO] Model loaded successfully for worker : 23
+            /opt/amazon/lib/python3.7/site-packages/gunicorn/workers/ggevent.py:65: MonkeyPatchWarning: Monkey-patching ssl after ssl has already been imported may lead to errors, including RecursionError on Python 3.6. It may also silently lead to incorrect behaviour on Python 3.7. Please monkey-patch earlier. See https://github.com/gevent/gevent/issues/1016. Modules that had direct imports (NOT patched): ['urllib3.util (/opt/amazon/lib/python3.7/site-packages/urllib3/util/__init__.py)', 'urllib3.util.ssl_ (/opt/amazon/lib/python3.7/site-packages/urllib3/util/ssl_.py)'].
+              monkey.patch_all(subprocess=True)
+            [2024-10-18:20:19:22:INFO] Model loaded successfully for worker : 24
+            [2024-10-18:20:19:25:INFO] Sniff delimiter as ','
+            [2024-10-18:20:19:25:INFO] Determined delimiter of CSV input is ','
+            [2024-10-18:20:19:25:INFO] Sniff delimiter as ','
+            [2024-10-18:20:19:25:INFO] Determined delimiter of CSV input is ','
+            2024-10-18T20:19:25.696:[sagemaker logs]: MaxConcurrentTransforms=4, MaxPayloadInMB=6, BatchStrategy=MULTI_RECORD
+
+
+        >>> # #### Endpoint
+            # create unique endpoint config name
+        >>> ep_config_name = "tmp-ep-config-" + datetime.today().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        >>> print(ep_config_name)
+            tmp-ep-config-2024-10-18-14-16-13-624785
+
+           # create endpoint configuration with model name, config version, instance type, etc
+        >>> response = sgmkr_clnt.create_endpoint_config(
+        >>>     EndpointConfigName=ep_config_name,
+        >>>     ProductionVariants=[
+        >>>         {
+        >>>             "VariantName": "version-1",
+        >>>             "ModelName": model_name,
+        >>>             "InitialInstanceCount": 1,
+        >>>             "InstanceType": "ml.m4.xlarge",
+        >>>             # sever_less = ''
+        >>>         },
+        >>>     ],
+        >>> )
+        >>> print(response)
+           {'EndpointConfigArn': 'arn:aws:sagemaker:us-east-1:012345678901:endpoint-config/tmp-ep-config-2024-10-18-14-16-13-624785', 'ResponseMetadata': {'RequestId': '3a356224-e954-4d23-9fef-cd5173188682', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': '3a356224-e954-4d23-9fef-cd5173188682', 'content-type': 'application/x-amz-json-1.1', 'content-length': '121', 'date': 'Fri, 18 Oct 2024 21:16:58 GMT'}, 'RetryAttempts': 0}}
+
+        >>> ep_name = "tmp-ep-" + datetime.today().strftime("%Y-%m-%d-%H-%M-%S-%f")
+        >>> print(ep_name)
+            tmp-ep-2024-10-18-14-19-04-897502
+
+        >>> response = sgmkr_clnt.create_endpoint(
+        >>>     EndpointName=ep_name, EndpointConfigName=ep_config_name,
+        >>> )
+        >>> print(response)
+            {'EndpointArn': 'arn:aws:sagemaker:us-east-1:012345678901:endpoint/tmp-ep-2024-10-18-14-19-04-897502', 'ResponseMetadata': {'RequestId': 'ce49bffd-0da9-492d-a6a8-15765862c0ee', 'HTTPStatusCode': 200, 'HTTPHeaders': {'x-amzn-requestid': 'ce49bffd-0da9-492d-a6a8-15765862c0ee', 'content-type': 'application/x-amz-json-1.1', 'content-length': '101', 'date': 'Fri, 18 Oct 2024 21:19:12 GMT'}, 'RetryAttempts': 0}}
+
+            # create waiter to wait for endpoint creation to be completed - may tak 5 min
+        >>> waiter = sgmkr_clnt.get_waiter("endpoint_in_service")
+        >>> waiter.wait(EndpointName=ep_name, WaiterConfig={"Delay": 123, "MaxAttempts": 123})
+        >>> print("Endpoint created")
+            Endpoint created
+
+        >>> payload = "7.7, 3.0, 6.1, 2.3"
+        >>> # payload = '7.7, 3.0, 6.1, 2.3 \n 7.9, 3.8, 6.4, 2.1'
+
+        >>> sgmkr_runt = boto3.client("runtime.sagemaker")
+
+            # send payload to endpoint to return inference
+        >>> response = sgmkr_runt.invoke_endpoint(
+        >>>     EndpointName=ep_name, ContentType="text/csv", Body=payload,
+        >>> )
+        >>> prediction = response["Body"].read().decode()
+        >>> print(prediction)
+            2.0
+
+        >>> print("Deleting sagemaker endpoint")
+        >>> response = sgmkr_clnt.delete_endpoint(EndpointName = ep_name)
+        >>> print("Deleted sagemaker endpoint")
+        >>> #print(response)
+            Deleting sagemaker endpoint
+            Deleted sagemaker endpoint
+
+        >>> print("Deleting sagemaker endpoint configuration")
+        >>> response = sgmkr_clnt.delete_endpoint_config(EndpointConfigName = ep_config_name)
+        >>> print("Deleted sagemaker endpoint configuration")
+        >>> #print(response)
+            Deleting sagemaker endpoint configuration
+            Deleted sagemaker endpoint configuration
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Jumpstart Models
+
+
+   tf_flower data:
+     https://www.tensorflow.org/tutorials/load_data/images
+     -> contains 3670 flower images for daisy, dandelion, roses, sunflowers, and tulips
+     - a small subset of these was used in the image classificaiton demos
+
+  amazon sagemaker jumpstart
+    - includes prebuilt models from various frameworks/libraries such as tensorflow, pytorch, huggingface, etc.
+    - in some cases, you can use these [foundation] model directly, especially in the image detection and language spaces
+      [i.e. text classification, text translation]
+    - in other cases, you can fine tune the models [transfer learning] using your own data
+    - machine learning (ml) hub with foundation models, built-in algorithms, and prebuilt ml solutions that you can
+      deploy with just a few clicks
+    - with sagemaker jumpstart, you can evaluate, compare, and select fms quickly based on pre-defined quality and
+      responsibility metrics to perform tasks like article summarization and image generation.
+
+   Introduction to JumpStart - Named Entity Recognition
+      https://sagemaker-examples.readthedocs.io/en/latest/introduction_to_amazon_algorithms/jumpstart_named_entity_recognition/Amazon_JumpStart_Named_Entity_Recognition.html
+      includes:
+         1. Set Up
+         2. Select a model
+         3. Retrieve JumpStart Artifacts & Deploy an Endpoint
+         4. Query endpoint and parse response
+         5. Clean up the endpoint
+
+
+    Code: 005_Jumpstart_Models.ipynb
+
+        >>> import json
+        >>> import pandas as pd
+        >>> import logging
+            # jupyter notebook package for widgets such as the Dropdown widget
+        >>> from ipywidgets import Dropdown
+
+        >>> import boto3
+        >>> import sagemaker
+
+            # suppress INFO messages
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> sess = sagemaker.Session()
+        >>> region = sess.boto_region_name
+        >>> print(region)
+            us-east-1
+
+        >>> # download JumpStart model_manifest file.
+            # download_file(<bucket>, <key (file path) to download>, <Filename to download to>)
+        >>> boto3.client("s3").download_file(
+        >>>     f"jumpstart-cache-prod-{region}", "models_manifest.json", "models_manifest.json"
+        >>> )
+        >>> with open("models_manifest.json", "rb") as json_file:
+        >>>     model_list = json.load(json_file)
+
+        >>> print("number of models: ", len(model_list))
+            number of models:  6177
+
+        >>> model_df = pd.DataFrame(model_list)
+        >>> model_df.sample(20)
+                        model_id 	                               version 	min_version 	spec_key 	                                search_keywords
+            3670 	tensorflow-ic-bit-s-r101x1-ilsvrc2012-classifi... 	2.0.0 	2.80.0 	community_models/tensorflow-ic-bit-s-r101x1-il... 	NaN
+            1767 	huggingface-txt2img-fictiverse-elrisitas 	1.1.0 	2.144.0 	community_models/huggingface-txt2img-fictivers... 	NaN
+            4892 	tensorflow-ic-resnet-50-classification-1 	4.0.1 	2.189.0 	community_models/tensorflow-ic-resnet-50-class... 	NaN
+            3043 	pytorch-eqa-bert-base-multilingual-uncased 	1.2.0 	2.75.0 	        community_models/pytorch-eqa-bert-base-multili... 	NaN
+            3536 	tensorflow-ic-bit-m-r101x1-imagenet21k-classif... 	3.0.2 	2.80.0 	community_models/tensorflow-ic-bit-m-r101x1-im... 	NaN
+            5778 	tensorflow-spc-electra-small-1 	                2.0.0 	2.189.0 	community_models/tensorflow-spc-electra-small-... 	NaN
+            . . .
+
+        >>> # filter-out all the Object Detection models from the manifest list.
+        >>> od_models = []
+        >>> for model in model_list:
+        >>>     model_id = model["model_id"]
+        >>>     if ("-od-" in model_id or "-od1-" in model_id) and model_id not in od_models:
+        >>>         od_models.append(model_id)
+
+        >>> print(f"Number of od models available for inference: {len(od_models)}")
+            Number of od models available for inference: 70
+
+        >>> # display the model-ids in a dropdown to select a model for inference.
+        >>> infer_model_dropdown = Dropdown(
+        >>>     options=od_models,
+        >>>     value="pytorch-od-nvidia-ssd",
+        >>>     description="Select a model:",
+        >>>     style={"description_width": "initial"},
+        >>>     layout={"width": "max-content"},
+        >>> )
+
+        >>> display(infer_model_dropdown)
+            Select a model: [dropdown OD model list]
+
+            # print current model selected in dropdown list
+        >>> print(infer_model_dropdown.value)
+            pytorch-od-nvidia-ssd
+
+        >>> # filter-out all the Image Classification models from the manifest list.
+        >>> ic_models = []
+        >>> for model in model_list:
+        >>>     model_id = model["model_id"]
+        >>>     if ("-ic-" in model_id) and model_id not in ic_models:
+        >>>         ic_models.append(model_id)
+
+        >>> print(f"Number of ic models available for inference: {len(ic_models)}")
+            Number of ic models available for inference: 162
+
+        >>> # display the model-ids in a dropdown to select a model for inference.
+        >>> infer_model_dropdown = Dropdown(
+        >>>     options=ic_models,
+        >>>     value="pytorch-ic-alexnet",
+        >>>     description="Select a model:",
+        >>>     style={"description_width": "initial"},
+        >>>     layout={"width": "max-content"},
+        >>> )
+
+        >>> display(infer_model_dropdown)
+            Select a model: [dropdown IC model list]
+
+        >>> print(infer_model_dropdown.value)
+            pytorch-ic-alexnet
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Image Classification using Inbuilt Algorithm
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=m9bze7MDJAc&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=7
+
+
+    Demo:
+       - already prepared ground truth flower data which includes images of daisy, rose, & sunflower,
+       - for image classification, give the images and predefine the classes
+
+       classification types include:
+         binary classification
+           - when only 2 classes
+         multi-class classification
+           - when more than 2 classes (rose and sunflower)
+         multiple label classification (daisy, rose, & sunflower)
+           - when image contains has multiple images (rose and sunflower)
+       S3 bucket data organization - required foldersi  {under bucket>/sgmkr-clf-lst:
+         train_imgs
+            - contains training images of the 3 flowers
+         train_annots
+            - contains training annotations (corresponding ground  truth labels)
+            - in 'train.lst' list file (sagemaker builtin format)
+               format:  3 columns separated by tabs, where columns are: index, ground truth label, image file name
+         valid_imgs
+            - contains validation images of the 3 flowers
+         valid_annots
+            - contains validation annotations (corresponding ground  truth labels)
+            - in 'valid.lst' list file (sagemaker builtin format)
+
+    Amazon Estimators:
+        Base class for Amazon first-party Estimator implementations.
+        >>> from sagemaker.amazon.amazon_estimator import get_image_uri
+
+     SageMaker algorithms docker containers:
+       - for 3rd party algorithm like "image-classifiction", the training and and inference have separate docker containers
+          - when retrieving docker images with 'sagemaker.image_uris.retrieve()'
+            MUSt specify  'image_scope': to be either 'training' or 'inference'
+       - for AWS builtin algorithm like "xgboost", the training and and inference uses the same docker containers
+
+
+    SageMaker Image-classification Algorithm - how it works
+      https://docs.aws.amazon.com/sagemaker/latest/dg/IC-HowItWorks.html
+      - Image classification in Amazon SageMaker can be run in two modes: full training and transfer learning.
+      full training mode (use_pretrained_model=0 default)
+        - In full training mode, the network is initialized with random weights and trained on user data from scratch.
+      transfer learning mode (use_pretrained_model=1)
+        - In transfer learning mode, the network is initialized with pre-trained weights and just the top fully
+          connected layer is initialized with random weights.
+        - Then, the whole network is fine-tuned with new data.
+        - In this mode, training can be achieved even with a smaller dataset. This is because the network is
+          already trained and therefore can be used in cases without sufficient training data.
+
+    SageMaker Image-classification Algorithm - hyperparameters
+      num_layers
+        - Number of layers for the network.
+        - For transfer learning, the number of layers defines the architecture of base network and hence can
+          only be selected from the set [18, 34, 50, 101, 152, 200].
+      num_classes
+        - Number of output classes.
+      epochs
+        - Number of training epochs.
+      num_training_samples
+        - Number of training examples in the input dataset.
+      mini_batch_size
+        - the batch size for training
+      use_pretrained_model
+        - Flag to use pre-trained model for training.
+        - If set to 1, then the pretrained model with the corresponding number of layers is loaded and used for training. i
+          Only the top FC layer are reinitialized with random weights.
+        - Otherwise, the network is trained from scratch.
+      image_shape
+       - The input image dimensions, which is the same size as the input layer of the network.
+      resize
+        - The number of pixels in the shortest side of an image after resizing it for training.
+      learning_rate
+        - initial learning rate
+      use_weighted_loss
+        - Flag to use weighted cross-entropy loss for multi-label classification (used only when multi_label = 1),
+          where the weights are calculated based on the distribution of classes.
+      augmentation_type
+        - Data augmentation type. Valid values: crop, crop_color, or crop_color_transform.
+        - crop_color_transform: In addition to crop_color, random transformations, including rotation, shear,
+          and aspect ratio variations are applied to the image.
+      precision_dtype
+        - The precision of the weights used for training.
+        - Valid values: float32 or float16
+      multi_label
+        - Flag to use for multi-label classification where each sample can be assigned multiple labels.
+
+    Code: 006_Image_Clf_Inbuilt_ResNet.ipynb
+
+        >>> import os
+        >>> import json
+        >>> import logging
+        >>> from datetime import datetime
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker import get_execution_role
+            # get docker image for the 1st Estimator implementation
+        >>> from sagemaker.amazon.amazon_estimator import get_image_uri
+
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> sess = sagemaker.Session()
+        >>> region = sess.boto_region_name
+        >>> print(region)
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket_name = "pat-demo-bkt"
+        >>> data_path = "sgmkr_clf_lst"
+
+            # specify parameters and hyperparameter values
+        >>> nclasses = 3
+        >>> nimgs_train = 36
+        >>> nepochs = 10
+        >>> mini_batch_size = 8
+
+            # specify GPU instance (required for this image classifiction)
+        >>> train_instance_type = "ml.g4dn.xlarge"
+        >>> job_name_prefix = "flowers-clf-ib-resent-"
+
+        >>> # https://aws.amazon.com/sagemaker/pricing/
+
+            # retreive the image-classification docker container image
+            # for this algorithm, image_scope: training or inference
+        >>> train_image_uri = sagemaker.image_uris.retrieve(
+        >>>     framework="image-classification",
+        >>>     region=region,
+        >>>     image_scope="training",
+        >>>     version="latest",
+        >>> )
+        >>> print(train_image_uri)
+        811284229777.dkr.ecr.us-east-1.amazonaws.com/image-classification:1
+
+        >>> s3_output_path = "s3://{}/{}/{}".format(bucket_name, data_path, "model_output")
+        >>> print(s3_output_path)
+            s3://pat-demo-bkt/sgmkr_clf_lst/model_output
+
+            # define SageMaker Estimater with image URI, role, instance info, max run time (in sec),
+            #  File mode: Amazon SageMaker copies the training dataset from the S3 location to a local directory,
+            #  output path, and session
+        >>> clf_estimator = sagemaker.estimator.Estimator(
+        >>>     image_uri=train_image_uri,
+        >>>     role=role_arn,
+        >>>     instance_count=1,
+        >>>     instance_type=train_instance_type,
+        >>>     volume_size=50,
+        >>>     max_run=360000,
+        >>>     input_mode="File",
+        >>>     output_path=s3_output_path,
+        >>>     sagemaker_session=sess,
+        >>> )
+
+
+            # set hyperparameters - see before code section for details on the image-classifiction hyperparameters
+            #  using 18 layers with transfer load mode, so only 17 layers will be fixed and only the 18 layer will
+            #  changed
+        >>> clf_estimator.set_hyperparameters(
+        >>>     num_classes=nclasses,  # update this
+        >>>     epochs=nepochs,  # update this
+        >>>     num_training_samples=nimgs_train,  # update this
+        >>>     mini_batch_size=mini_batch_size,  # update this
+        >>>     num_layers=18,
+        >>>     use_pretrained_model=1,
+        >>>     image_shape="3,224,224",
+        >>>     resize=256,
+        >>>     learning_rate=0.001,
+        >>>     use_weighted_loss=1,
+        >>>     augmentation_type="crop_color_transform",
+        >>>     precision_dtype="float32",
+        >>>     multi_label=0,
+        >>> )
+
+            # specify the train/validation image and annotation S3 locations
+        >>> s3_train_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "train_imgs")
+        >>> s3_valid_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "valid_imgs")
+        >>> s3_train_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "train_annots")
+        >>> s3_valid_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "valid_annots")
+
+            # create 4 trainingInput variables, one for each train/validate image and annotation locations
+        >>> train_imgs = sagemaker.inputs.TrainingInput(
+        >>>     s3_train_imgs,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="application/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> valid_imgs = sagemaker.inputs.TrainingInput(
+        >>>     s3_valid_imgs,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="application/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> train_annot = sagemaker.inputs.TrainingInput(
+        >>>     s3_train_annot,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="application/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> valid_annot = sagemaker.inputs.TrainingInput(
+        >>>     s3_valid_annot,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="application/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+
+            # create data channels for the 4 TrainingInputs
+        >>> data_channels = {
+        >>>     "train": train_imgs,
+        >>>     "validation": valid_imgs,
+        >>>     "train_lst": train_annot,
+        >>>     "validation_lst": valid_annot,
+        >>> }
+
+            # create unique training job name
+        >>> timestamp = (
+        >>>     str(datetime.now().replace(microsecond=0)).replace(" ", "-").replace(":", "-")
+        >>> )
+        >>> job_name = job_name_prefix + timestamp
+        >>> print(job_name)
+
+
+
+            # train the model
+        >>> clf_estimator.fit(inputs=data_channels, logs=True, job_name=job_name)
+
+            2023-03-21 05:48:23 Starting - Starting the training job...
+            2023-03-21 05:48:48 Starting - Preparing the instances for training......
+            2023-03-21 05:49:59 Downloading - Downloading input data...
+            2023-03-21 05:50:24 Training - Downloading the training image...............
+            2023-03-21 05:52:55 Training - Training image download completed. Training in progress.....Docker entrypoint called with argument(s): train
+            Running default environment configuration script
+            Nvidia gpu devices, drivers and cuda toolkit versions (only available on hosts with GPU):
+            Tue Mar 21 05:53:35 2023
+            +-----------------------------------------------------------------------------+
+            | NVIDIA-SMI 470.57.02    Driver Version: 470.57.02    CUDA Version: 11.4     |
+            |-------------------------------+----------------------+----------------------+
+            | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+            | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+            |                               |                      |               MIG M. |
+            |===============================+======================+======================|
+            |   0  Tesla K80           On   | 00000000:00:1E.0 Off |                    0 |
+            | N/A   35C    P8    31W / 149W |      0MiB / 11441MiB |      0%      Default |
+            |                               |                      |                  N/A |
+            +-------------------------------+----------------------+----------------------+
+
+            +-----------------------------------------------------------------------------+
+            | Processes:                                                                  |
+            |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+            |        ID   ID                                                   Usage      |
+            |=============================================================================|
+            |  No running processes found                                                 |
+            +-----------------------------------------------------------------------------+
+            Checking for nvidia driver and cuda compatibility.
+            CUDA Compatibility driver provided.
+            Proceeding with compatibility check between driver, cuda-toolkit and cuda-compat.
+            Detected cuda-toolkit version: 11.1.
+            Detected cuda-compat version: 455.32.00.
+            Detected Nvidia driver version: 470.57.02.
+            Nvidia driver compatible with cuda-toolkit. Disabling cuda-compat.
+            [03/21/2023 05:53:38 INFO 140106315691840] Reading default configuration from /opt/amazon/lib/python3.7/site-packages/image_classification/default-input.json: {'use_pretrained_model': 0, 'num_layers': 152, 'epochs': 30, 'learning_rate': 0.1, 'lr_scheduler_factor': 0.1, 'optimizer': 'sgd', 'momentum': 0, 'weight_decay': 0.0001, 'beta_1': 0.9, 'beta_2': 0.999, 'eps': 1e-08, 'gamma': 0.9, 'mini_batch_size': 32, 'image_shape': '3,224,224', 'precision_dtype': 'float32'}
+            [03/21/2023 05:53:38 INFO 140106315691840] Merging with provided configuration from /opt/ml/input/config/hyperparameters.json: {'augmentation_type': 'crop_color_transform', 'epochs': '10', 'image_shape': '3,224,224', 'learning_rate': '0.001', 'mini_batch_size': '8', 'multi_label': '0', 'num_classes': '3', 'num_layers': '18', 'num_training_samples': '36', 'precision_dtype': 'float32', 'resize': '256', 'use_pretrained_model': '1', 'use_weighted_loss': '1'}
+            [03/21/2023 05:53:38 INFO 140106315691840] Final configuration: {'use_pretrained_model': '1', 'num_layers': '18', 'epochs': '10', 'learning_rate': '0.001', 'lr_scheduler_factor': 0.1, 'optimizer': 'sgd', 'momentum': 0, 'weight_decay': 0.0001, 'beta_1': 0.9, 'beta_2': 0.999, 'eps': 1e-08, 'gamma': 0.9, 'mini_batch_size': '8', 'image_shape': '3,224,224', 'precision_dtype': 'float32', 'augmentation_type': 'crop_color_transform', 'multi_label': '0', 'num_classes': '3', 'num_training_samples': '36', 'resize': '256', 'use_weighted_loss': '1'}
+            [03/21/2023 05:53:38 WARNING 140106315691840] use_weighted_loss is only used for multi-label training. Ignoring the parameter.
+            [03/21/2023 05:53:38 INFO 140106315691840] Searching for .lst files in /opt/ml/input/data/train_lst.
+            [03/21/2023 05:53:38 INFO 140106315691840] Creating record files for train.lst
+            [03/21/2023 05:53:38 INFO 140106315691840] Done creating record files...
+            [03/21/2023 05:53:38 INFO 140106315691840] Searching for .lst files in /opt/ml/input/data/validation_lst.
+            [03/21/2023 05:53:38 INFO 140106315691840] Creating record files for valid.lst
+            [03/21/2023 05:53:39 INFO 140106315691840] Done creating record files...
+            [03/21/2023 05:53:39 INFO 140106315691840] use_pretrained_model: 1
+            [03/21/2023 05:53:39 INFO 140106315691840] multi_label: 0
+            [03/21/2023 05:53:39 INFO 140106315691840] Using pretrained model for initializing weights and transfer learning.
+            [03/21/2023 05:53:39 INFO 140106315691840] ---- Parameters ----
+            [03/21/2023 05:53:39 INFO 140106315691840] num_layers: 18
+            [03/21/2023 05:53:39 INFO 140106315691840] data type: <class 'numpy.float32'>
+            [03/21/2023 05:53:39 INFO 140106315691840] epochs: 10
+            [03/21/2023 05:53:39 INFO 140106315691840] image resize size: 256
+            [03/21/2023 05:53:39 INFO 140106315691840] optimizer: sgd
+            [03/21/2023 05:53:39 INFO 140106315691840] momentum: 0.9
+            [03/21/2023 05:53:39 INFO 140106315691840] weight_decay: 0.0001
+            [03/21/2023 05:53:39 INFO 140106315691840] learning_rate: 0.001
+            [03/21/2023 05:53:39 INFO 140106315691840] num_training_samples: 36
+            [03/21/2023 05:53:39 INFO 140106315691840] mini_batch_size: 8
+            [03/21/2023 05:53:39 INFO 140106315691840] image_shape: 3,224,224
+            [03/21/2023 05:53:39 INFO 140106315691840] num_classes: 3
+            [03/21/2023 05:53:39 INFO 140106315691840] augmentation_type: crop_color_transform
+            [03/21/2023 05:53:39 INFO 140106315691840] kv_store: device
+            [03/21/2023 05:53:39 INFO 140106315691840] checkpoint_frequency not set, will store the best model
+            [03/21/2023 05:53:39 INFO 140106315691840] --------------------
+            [05:53:39] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.4.x_ecl_Cuda_11.1.x.136.0/AL2_x86_64/generic-flavor/src/src/nnvm/legacy_json_util.cc:209: Loading symbol saved by previous version v0.8.0. Attempting to upgrade...
+            [05:53:39] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.4.x_ecl_Cuda_11.1.x.136.0/AL2_x86_64/generic-flavor/src/src/nnvm/legacy_json_util.cc:217: Symbol successfully upgraded!
+            [03/21/2023 05:53:39 INFO 140106315691840] Setting number of threads: 3
+            [05:53:43] /opt/brazil-pkg-cache/packages/AIAlgorithmsMXNet/AIAlgorithmsMXNet-1.4.x_ecl_Cuda_11.1.x.136.0/AL2_x86_64/generic-flavor/src/src/operator/nn/./cudnn/./cudnn_algoreg-inl.h:97: Running performance tests to find the best convolution algorithm, this can take a while... (setting env variable MXNET_CUDNN_AUTOTUNE_DEFAULT to 0 to disable)
+            [03/21/2023 05:53:44 INFO 140106315691840] Epoch[0] Train-accuracy=0.343750
+            [03/21/2023 05:53:44 INFO 140106315691840] Epoch[0] Time cost=1.767
+            [03/21/2023 05:53:44 INFO 140106315691840] Epoch[0] Validation-accuracy=0.250000
+            [03/21/2023 05:53:44 INFO 140106315691840] Storing the best model with validation accuracy: 0.250000
+            [03/21/2023 05:53:45 INFO 140106315691840] Saved checkpoint to "/opt/ml/model/image-classification-0001.params"
+            [03/21/2023 05:53:45 INFO 140106315691840] Epoch[1] Train-accuracy=0.500000
+            [03/21/2023 05:53:45 INFO 140106315691840] Epoch[1] Time cost=0.416
+            [03/21/2023 05:53:45 INFO 140106315691840] Epoch[1] Validation-accuracy=0.562500
+            [03/21/2023 05:53:45 INFO 140106315691840] Storing the best model with validation accuracy: 0.562500
+            [03/21/2023 05:53:46 INFO 140106315691840] Saved checkpoint to "/opt/ml/model/image-classification-0002.params"
+            [03/21/2023 05:53:46 INFO 140106315691840] Epoch[2] Train-accuracy=0.968750
+            [03/21/2023 05:53:46 INFO 140106315691840] Epoch[2] Time cost=0.281
+            [03/21/2023 05:53:46 INFO 140106315691840] Epoch[2] Validation-accuracy=0.625000
+            [03/21/2023 05:53:46 INFO 140106315691840] Storing the best model with validation accuracy: 0.625000
+            [03/21/2023 05:53:46 INFO 140106315691840] Saved checkpoint to "/opt/ml/model/image-classification-0003.params"
+            [03/21/2023 05:53:47 INFO 140106315691840] Epoch[3] Train-accuracy=0.781250
+            [03/21/2023 05:53:47 INFO 140106315691840] Epoch[3] Time cost=0.514
+            [03/21/2023 05:53:47 INFO 140106315691840] Epoch[3] Validation-accuracy=0.812500
+            [03/21/2023 05:53:47 INFO 140106315691840] Storing the best model with validation accuracy: 0.812500
+            [03/21/2023 05:53:47 INFO 140106315691840] Saved checkpoint to "/opt/ml/model/image-classification-0004.params"
+            [03/21/2023 05:53:48 INFO 140106315691840] Epoch[4] Train-accuracy=0.906250
+            [03/21/2023 05:53:48 INFO 140106315691840] Epoch[4] Time cost=0.291
+            [03/21/2023 05:53:48 INFO 140106315691840] Epoch[4] Validation-accuracy=0.750000
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[5] Train-accuracy=0.937500
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[5] Time cost=0.458
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[5] Validation-accuracy=0.875000
+            [03/21/2023 05:53:49 INFO 140106315691840] Storing the best model with validation accuracy: 0.875000
+            [03/21/2023 05:53:49 INFO 140106315691840] Saved checkpoint to "/opt/ml/model/image-classification-0006.params"
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[6] Train-accuracy=1.000000
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[6] Time cost=0.283
+            [03/21/2023 05:53:49 INFO 140106315691840] Epoch[6] Validation-accuracy=0.750000
+            [03/21/2023 05:53:50 INFO 140106315691840] Epoch[7] Train-accuracy=1.000000
+            [03/21/2023 05:53:50 INFO 140106315691840] Epoch[7] Time cost=0.450
+            [03/21/2023 05:53:50 INFO 140106315691840] Epoch[7] Validation-accuracy=0.875000
+            [03/21/2023 05:53:51 INFO 140106315691840] Epoch[8] Train-accuracy=0.937500
+            [03/21/2023 05:53:51 INFO 140106315691840] Epoch[8] Time cost=0.278
+            [03/21/2023 05:53:51 INFO 140106315691840] Epoch[8] Validation-accuracy=0.750000
+            [03/21/2023 05:53:52 INFO 140106315691840] Epoch[9] Train-accuracy=0.968750
+            [03/21/2023 05:53:52 INFO 140106315691840] Epoch[9] Time cost=0.447
+            [03/21/2023 05:53:52 INFO 140106315691840] Epoch[9] Validation-accuracy=0.875000
+
+            2023-03-21 05:53:56 Uploading - Uploading generated training model
+            2023-03-21 05:54:16 Completed - Training job completed
+            Training seconds: 257
+            Billable seconds: 257
+
+            # Deploy the Model
+            # for training, need gpu instance, but for inference only small cpu instance needed
+        >>> infer_instance_type = "ml.t2.medium"
+        >>> model_name = job_name
+        >>> endpoint_name = job_name
+
+        >>> clf_predictor = clf_estimator.deploy(
+        >>>     initial_instance_count=1,
+        >>>     instance_type=infer_instance_type,
+        >>>     endpoint_name=endpoint_name,
+        >>>     model_name=model_name,
+        >>> )
+
+        >>> sgmkr_runt = boto3.client("runtime.sagemaker")
+
+        >>> with open("images/rose.jpg", "rb") as image:
+        >>>         payload = image.read()
+        >>>         payload = bytearray(payload)
+        >>>
+        >>> response = sgmkr_runt.invoke_endpoint(
+        >>>     EndpointName = endpoint_name,
+        >>>     ContentType = 'image/jpeg',
+        >>>     Accept = "application/json;verbose",
+        >>>     Body = payload,
+        >>> )
+
+            # prediction returns a probability value for each of the 3 classes
+        >>> prediction = json.loads(response['Body'].read().decode())
+        >>> print(prediction)
+            [0.0009680639486759901, 0.9901915788650513, 0.008840403519570827]
+
+        >>> clf_predictor.delete_endpoint()
+
+
+--------------------------------------------------
+
+AWS Sagemaker Course - Image Classification, PyTorch Transfer Learning
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=oOe2WRWDgk0&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=8
+
+  Links provided in Notebook:
+    Introduction to SageMaker TensorFlow - Image Classification
+      https://github.com/aws/amazon-sagemaker-examples/blob/main/introduction_to_amazon_algorithms/image_classification_tensorflow/Amazon_TensorFlow_Image_Classification.ipynb
+
+    Introduction to JumpStart - Image Classification
+      https://github.com/aws/amazon-sagemaker-examples/blob/93fc48d21bf88d07853775f11d6ef7db92110549/introduction_to_amazon_algorithms/jumpstart_image_classification/Amazon_JumpStart_Image_Classification.ipynb
+
+    AWS Machine Learning Blog -  Transfer learning for TensorFlow image classification models in Amazon SageMaker
+      https://aws.amazon.com/blogs/machine-learning/transfer-learning-for-tensorflow-image-classification-models-in-amazon-sagemaker/
+
+    AWS Machine Learning Blog
+Run image classification with Amazon SageMaker JumpStart
+      https://aws.amazon.com/blogs/machine-learning/run-image-classification-with-amazon-sagemaker-jumpstart/
+
+
+  Tensorflow source data setup
+    - instead of using the annotation list to identify the flower type in the images with all image files
+      stored in 1 directory, for this tensorflow setup, the flower images are placed into 3 separate
+      subfolders - daisy, rose, and sunflower - one for each class
+    - for multi-label use cases, the list annotation must be used with the tensorflow
+    - previous image-classification model is buitin to SageMaker, which this tensor model is a 3rd party model
+
+  Tensorflow pytorch-ic-mobilenet-v2 model inputs:
+    - in addition to the model image URI, need to provide model artifacts and scripts
+    - do not need to explicitly define the number of classes and number training images as with previous case
+
+   Built-in models vs 3rd party models (non built-in)
+     Built-in
+        - only need to retrieve docker image container using 'image_uris.retrieve()'
+        - use same docker image for training and inferencing (image_scope="training" for both)
+     3rd party models (Jumpstart models)
+        - need to retrieve docker image container using 'image_uris.retrieve()',  model  plus retrieve:
+            script_uris.retreive(): retrieve the script Amazon S3 URI to run pretrained machine learning models.
+            model_uris.retrieve(): retrieve the model artifact S3 URI of pretrained machine learning models.
+        - for Estimator(), must also include source uri, model uri, entry point script (e.g. entry_point="transfer_learning.py")
+        - use (retrieve docker image with image_uris.retrieve()) different docker images for training (image_scope="training")
+          and inferencing (image_scope="inference")
+        - for jumpstart models, estimator.deploy() must also include source uri and entry point file 'entry_point="inference.py"'
+
+
+
+    Code: 007_Image_Clf_JS_TF.ipynb
+
+        >>> # ## Image Classification - TensorFlow - pytorch-ic-mobilenet-v2
+
+        >>> import os
+        >>> import json
+        >>> import logging
+        >>> from datetime import datetime
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker import get_execution_role
+        >>> from sagemaker import image_uris,  script_uris, model_uris
+        >>> from sagemaker import hyperparameters
+        >>> from sagemaker.estimator import Estimator
+
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> sess = sagemaker.Session()
+        >>> region = sess.boto_region_name
+        >>> print(region)
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket_name = "pat-demo-bkt"
+            # folder containing the daisy, rose, and sunflower subfolders
+        >>> data_path = "sgmkr_clf_subfolders"
+
+        >>> nepochs = 10
+        >>> mini_batch_size = 8
+
+        >>> train_instance_type = "ml.g4dn.xlarge"
+        >>> job_name_prefix = "flowers-clf-js-tf-"
+
+
+        >>> model_id = "pytorch-ic-mobilenet-v2"
+        >>> model_version = "*"                     # * - latest version
+
+           # retrieve the pytorch-ic-mobilenet-v2 docker image
+           # image_uris: Retrieves the ECR URI for the Docker image matching the given arguments.
+        >>> train_image_uri = image_uris.retrieve(
+        >>>     region=None,
+        >>>     framework=None,
+        >>>     model_id=model_id,
+        >>>     model_version=model_version,
+        >>>     image_scope="training",
+        >>>     instance_type=train_instance_type,
+        >>> )
+
+            # script_uris.retreive: retrieve the script Amazon S3 URI to run pretrained machine learning models.
+            #  model_id (str) – The model ID of the JumpStart model for which to retrieve the script S3 URI.
+            #  model_version (str) – The version of the JumpStart model for which to retrieve the model script S3 URI.
+            #  script_scope (str) – The script type. Valid values: “training” and “inference”.
+            #
+            # contains: the entry point file such 'transfer_learning.py' , code for training the model, or code for inferencing
+        >>> train_source_uri = script_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, script_scope="training"
+        >>> )
+
+           # model_uris.retrieve: retrieve the model artifact S3 URI of pretrained machine learning models.
+           #   model_id (str) – The model ID of the JumpStart model for which to retrieve the model artifact S3 URI.
+           #   model_version (str) – The version of the JumpStart model for which to retrieve the model artifact S3 URI.
+           #
+           # Contents include: the model with its current weights; for transfering learning, only last layer
+           #     weights will updated/changed
+        >>> train_model_uri = model_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, model_scope="training"
+        >>> )
+
+        >>> print(train_image_uri)
+        >>> print(train_source_uri)
+        >>> print(train_model_uri)
+            763104351884.dkr.ecr.us-east-1.amazonaws.com/pytorch-training:1.10.0-gpu-py38
+            s3://jumpstart-cache-prod-us-east-1/source-directory-tarballs/pytorch/transfer_learning/ic/prepack/v1.1.0/sourcedir.tar.gz
+            s3://jumpstart-cache-prod-us-east-1/pytorch-training/v2.0.0/train-pytorch-ic-mobilenet-v2.tar.gz
+
+
+
+            # extract the default hyperparameters and change epochs value to '5'
+            #   train_only_top_layer: enable transfer learning
+        >>> hyperparameters = hyperparameters.retrieve_default(
+        >>>     model_id=model_id, model_version=model_version
+        >>> )
+
+        >>> hyperparameters["epochs"] = "5"
+        >>> print(hyperparameters)
+            {'train_only_top_layer': 'True', 'epochs': '5', 'learning_rate': '0.001', 'batch_size': '4', 'reinitialize_top_layer': 'Auto'}
+
+
+            # set model output path
+        >>> s3_output_path = "s3://{}/{}/{}".format(bucket_name, data_path, "model_output")
+
+           # create the Estimator object with information for image uri, source uri, model uri, entry point scrit,
+           #    role ARN, hyperparameters, etc.
+        >>> clf_estimator = Estimator(
+        >>>     role=role_arn,
+        >>>     image_uri=train_image_uri,
+        >>>     source_dir=train_source_uri,
+        >>>     model_uri=train_model_uri,
+        >>>     entry_point="transfer_learning.py",
+        >>>     instance_count=1,
+        >>>     instance_type=train_instance_type,
+        >>>     max_run=360000,
+        >>>     hyperparameters=hyperparameters,
+        >>>     output_path=s3_output_path,
+        >>> )
+
+
+
+        >>> s3_train_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "train_imgs")
+        >>> s3_valid_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "valid_imgs")
+        >>> data_channels = {
+        >>>     "training": s3_train_imgs,
+        >>>     "validation": s3_valid_imgs,
+        >>> }
+        >>> print(data_channels)
+            {'training': 's3://pat-demo-bkt/sgmkr_clf_subfolders/train_imgs/', 'validation': 's3://pat-demo-bkt/sgmkr_clf_subfolders/valid_imgs/'}
+
+            # create a unique training job name
+        >>> timestamp = (
+        >>>     str(datetime.now().replace(microsecond=0)).replace(" ", "-").replace(":", "-")
+        >>> )
+        >>> job_name = job_name_prefix + timestamp
+        >>> print(job_name)
+
+            # train model
+        >>> clf_estimator.fit(inputs=data_channels, logs=True, job_name=job_name)
+
+            Creating training-job with name: flowers-clf-js-tf-2023-03-21-17-39-10
+
+            2023-03-21 06:39:12 Starting - Starting the training job...
+            2023-03-21 06:39:27 Starting - Preparing the instances for training...
+            2023-03-21 06:40:19 Downloading - Downloading input data...
+            2023-03-21 06:40:39 Training - Downloading the training image..................
+            2023-03-21 06:43:55 Training - Training image download completed. Training in progress...bash: cannot set terminal process group (-1): Inappropriate ioctl for device
+            bash: no job control in this shell
+            2023-03-21 06:44:07,323 sagemaker-training-toolkit INFO     Imported framework sagemaker_pytorch_container.training
+            2023-03-21 06:44:07,349 sagemaker_pytorch_container.training INFO     Block until all host DNS lookups succeed.
+            2023-03-21 06:44:07,354 sagemaker_pytorch_container.training INFO     Invoking user training script.
+            2023-03-21 06:44:07,574 sagemaker-training-toolkit INFO     Invoking user script
+            Training Env:
+            {
+                "additional_framework_parameters": {},
+                "channel_input_dirs": {
+                    "model": "/opt/ml/input/data/model",
+                    "training": "/opt/ml/input/data/training",
+                    "validation": "/opt/ml/input/data/validation"
+                },
+                "current_host": "algo-1",
+                "framework_module": "sagemaker_pytorch_container.training:main",
+                "hosts": [
+                    "algo-1"
+                ],
+                "hyperparameters": {
+                    "batch_size": "4",
+                    "epochs": "5",
+                    "learning_rate": "0.001",
+                    "reinitialize_top_layer": "Auto",
+                    "train_only_top_layer": "True"
+                },
+                "input_config_dir": "/opt/ml/input/config",
+                "input_data_config": {
+                    "model": {
+                        "ContentType": "application/x-sagemaker-model",
+                        "TrainingInputMode": "File",
+                        "S3DistributionType": "FullyReplicated",
+                        "RecordWrapperType": "None"
+                    },
+                    "training": {
+                        "TrainingInputMode": "File",
+                        "S3DistributionType": "FullyReplicated",
+                        "RecordWrapperType": "None"
+                    },
+                    "validation": {
+                        "TrainingInputMode": "File",
+                        "S3DistributionType": "FullyReplicated",
+                        "RecordWrapperType": "None"
+                    }
+                },
+                "input_dir": "/opt/ml/input",
+                "is_master": true,
+                "job_name": "flowers-clf-js-tf-2023-03-21-17-39-10",
+                "log_level": 20,
+                "master_hostname": "algo-1",
+                "model_dir": "/opt/ml/model",
+                "module_dir": "s3://jumpstart-cache-prod-ap-southeast-2/source-directory-tarballs/pytorch/transfer_learning/ic/v2.2.4/sourcedir.tar.gz",
+                "module_name": "transfer_learning",
+                "network_interface_name": "eth0",
+                "num_cpus": 4,
+                "num_gpus": 1,
+                "output_data_dir": "/opt/ml/output/data",
+                "output_dir": "/opt/ml/output",
+                "output_intermediate_dir": "/opt/ml/output/intermediate",
+                "resource_config": {
+                    "current_host": "algo-1",
+                    "current_instance_type": "ml.g4dn.xlarge",
+                    "current_group_name": "homogeneousCluster",
+                    "hosts": [
+                        "algo-1"
+                    ],
+                    "instance_groups": [
+                        {
+                            "instance_group_name": "homogeneousCluster",
+                            "instance_type": "ml.g4dn.xlarge",
+                            "hosts": [
+                                "algo-1"
+                            ]
+                        }
+                    ],
+                    "network_interface_name": "eth0"
+                },
+                "user_entry_point": "transfer_learning.py"
+            }
+            Environment variables:
+            .  .  .
+            .  .  .
+            Invoking script with the following command:
+            /opt/conda/bin/python3.8 transfer_learning.py --batch_size 4 --epochs 5 --learning_rate 0.001 --reinitialize_top_layer Auto --train_only_top_layer True
+            dataset sizes: {'train': 29, 'val': 7}
+            prediction class indices mapping to input training data labels: {'daisy': 0, 'rose': 1, 'sunflower': 2}
+            '_input_model_extracted/__models_info__.json' file could not be found.
+            Epoch 0/4
+            [2023-03-21 06:44:11.206 algo-1:28 INFO utils.py:27] RULE_JOB_STOP_SIGNAL_FILENAME: None
+            [2023-03-21 06:44:11.282 algo-1:28 INFO profiler_config_parser.py:102] User has disabled profiler.
+            [2023-03-21 06:44:11.283 algo-1:28 INFO json_config.py:91] Creating hook from json_config at /opt/ml/input/config/debughookconfig.json.
+            [2023-03-21 06:44:11.283 algo-1:28 INFO hook.py:200] tensorboard_dir has not been set for the hook. SMDebug will not be exporting tensorboard summaries.
+            [2023-03-21 06:44:11.284 algo-1:28 INFO hook.py:255] Saving to /opt/ml/output/tensors
+            [2023-03-21 06:44:11.284 algo-1:28 INFO state_store.py:77] The checkpoint config file /opt/ml/input/config/checkpointconfig.json does not exist.
+            [2023-03-21 06:44:11.537 algo-1:28 INFO hook.py:591] name:classifier.1.weight count_params:3840
+            [2023-03-21 06:44:11.537 algo-1:28 INFO hook.py:591] name:classifier.1.bias count_params:3
+            [2023-03-21 06:44:11.537 algo-1:28 INFO hook.py:593] Total Trainable Params: 3843
+            [2023-03-21 06:44:11.537 algo-1:28 INFO hook.py:424] Monitoring the collections: losses
+            [2023-03-21 06:44:11.538 algo-1:28 INFO hook.py:488] Hook is writing from the hook with pid: 28
+
+            2023-03-21 06:44:26 Uploading - Uploading generated training modeltrain Loss: 1.4059 train Acc: 0.3103
+            val Loss: 1.0486 val Acc: 0.4286
+            Epoch 1/4
+            train Loss: 1.0888 train Acc: 0.5172
+            val Loss: 0.9716 val Acc: 0.7143
+            Epoch 2/4
+            train Loss: 0.9761 train Acc: 0.4138
+            val Loss: 0.8658 val Acc: 0.8571
+            Epoch 3/4
+            train Loss: 0.9784 train Acc: 0.5172
+            val Loss: 0.9652 val Acc: 0.5714
+            Epoch 4/4
+            train Loss: 1.0012 train Acc: 0.4828
+            val Loss: 0.9213 val Acc: 0.7143
+            Training complete in 0m 8s
+            Best val Acc: 0.857143
+            Info file not found at '_input_model_extracted/__models_info__.json'.
+            2023-03-21 06:44:20,125 sagemaker-training-toolkit INFO     Reporting training SUCCESS
+
+            2023-03-21 06:44:37 Completed - Training job completed
+            Training seconds: 258
+            Billable seconds: 258
+
+
+            # Deploy the Model
+            # for training, need gpu instance, but for inference only small cpu instance needed
+        >>> infer_instance_type = "ml.t2.medium"
+
+            # retrieve inference docker image
+        >>> deploy_image_uri = image_uris.retrieve(
+        >>>     region=None,
+        >>>     framework=None,
+        >>>     image_scope="inference",
+        >>>     model_id=model_id,
+        >>>     model_version=model_version,
+        >>>     instance_type=infer_instance_type,
+        >>> )
+
+        >>> deploy_source_uri = script_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, script_scope="inference"
+        >>> )
+
+        >>> model_name = job_name
+        >>> endpoint_name = job_name
+
+            # for jumpstart models, estimator.deploy() must also include source uri and entry point file
+        >>> clf_predictor = clf_estimator.deploy(
+        >>>     initial_instance_count=1,
+        >>>     instance_type=infer_instance_type,
+        >>>     entry_point="inference.py",
+        >>>     image_uri=deploy_image_uri,
+        >>>     source_dir=deploy_source_uri,
+        >>>     endpoint_name=endpoint_name,
+        >>>     model_name=model_name,
+        >>> )
+
+        >>> sgmkr_runt = boto3.client("runtime.sagemaker")
+
+        >>> with open("images/rose.jpg", "rb") as image:
+        >>>     payload = image.read()
+        >>>     # payload = bytearray(payload)
+
+        >>> response = sgmkr_runt.invoke_endpoint(
+        >>>     EndpointName=endpoint_name,
+        >>>     # ContentType = 'image/jpeg',
+        >>>     ContentType="application/x-image",
+        >>>     Accept="application/json;verbose",
+        >>>     Body=payload,
+        >>> )
+
+            # since response set to "verbose", provides all 3 probability instead of just the predicted class
+        >>> prediction = json.loads(response["Body"].read().decode())
+        >>> print(prediction)
+            {'probabilities': [0.4329131245613098, 0.3074776530265808, 0.2596091628074646], 'labels': ['daisy', 'rose', 'sunflower'], 'predicted_label': 'daisy'}
+
+        >>> clf_predictor.delete_endpoint()
+
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Object Detection Inbuilt [built-in] Models
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=0IpRHiLiX2U&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=9
+
+
+
+  SageMaker Object Detection MxNet - how it works
+    https://docs.aws.amazon.com/sagemaker/latest/dg/algo-object-detection-tech-notes.html
+    - The object detection algorithm identifies and locates all instances of objects in an image from a known collection
+       of object categories.
+    - The algorithm takes an image as input and outputs the category that the object belongs to, along with a confidence
+       score that it belongs to the category.
+     - The algorithm also predicts the object's location and scale with a rectangular bounding box.
+
+     - SageMaker Object Detection uses the Single Shot multibox Detector (SSD) algorithm that takes a convolutional neural
+       network (CNN) pretrained for classification task as the base network.
+     - SSD uses the output of intermediate layers as features for detection.
+
+     - Various CNNs such as VGG and ResNet have achieved great performance on the image classification task.
+     - Object detection in Amazon SageMaker supports both VGG-16 and ResNet-50 as a base network for SSD.
+     - The algorithm can be trained in full training mode or in transfer learning mode.
+     - In full training mode, the base network is initialized with random weights and then trained on user data.
+     - In transfer learning mode, the base network weights are loaded from pretrained models.
+
+
+  Box around the object
+    - different models provide different coordinates to determine them box (e.g. upper left and lower right coordinates,
+      or  center coordinate with height and width)
+    - SSD model in demo provides/uses upper left coordinate along with width and height for specifying the box around an object
+    - In SSD inference response. the bounding box uses:
+       - first two numbers in each row represent the class label and the detection confidence scrore
+       - The last four numbers in each row represent the bounding box coordinates [xmin, ymin, xmax, ymax].
+       - These output bounding box corner indices are normalized by the overall image size.
+
+
+  Dataset setup:
+       smgkr_od_ssd/train_imgs   : training images directory
+       smgkr_od_ssd/valid_imgs   : validation imagess directory
+       smgkr_od_ssd/train_annots : training annotation info directory - one json file per image
+       smgkr_od_ssd/valid_annots : validation annotation info directory - one json file per image
+       smgkr_od_ssd/model_output : model output [artifact] directory
+
+
+  ground truth annotation file format for MxNet Object Detection SSD:
+    {
+       "file": "34342014230_4230ae8e08_n.jpg",
+       "image_size": [ { "width": 240, "height": 180, "depth": 3 } ],
+       "annotations": [
+          { "class_id": 1, "left": 2, "top": 14, "width": 45, "height": 38 },
+          { "class_id": 1, "left": 58, "top": 36, "width": 120, "height": 107 }
+       ],
+       "categories": [
+          { "class_id": 1, "name": "daisy"]}.
+          { "class_id": 1, "name": "daisy"]}.
+       ]
+    }
+
+     Notes:
+       - image file should have same prefix and json file
+       - annotation:
+          - list of objects in image
+          - provides top left coordinate (via 'left' & 'top') along with the width and height
+       - categories: just a mapping between class id and class name
+       - inference file format is similar except annotations includes "score" value and does
+         not incldue "categories" nor "file" fields
+
+    SageMaker Object-Detection Hyperparameters:
+      https://docs.aws.amazon.com/sagemaker/latest/dg/object-detection-api-config.html
+      num_classes (set to: nclasess=3)
+        - The number of output classes.
+      num_training_samples (set to: nimgs_train=36)
+        - The number of training examples in the input dataset.
+      epochs (set to: nepochs=10)
+        - The number of training epochs.
+      mini_batch_size (set to: mini_batch_size=8)
+        - The batch size for training
+      base_network (set to: "resnet-50")
+        - The base network architecture to use.
+        - Valid values: 'vgg-16' or 'resnet-50' Default value: 'vgg-16'
+      use_pretrained_model (set to: 1)
+        - Indicates whether to use a pre-trained model for training.
+        - If set to 1, then the pre-trained model with corresponding architecture is loaded and used for training.
+        - Otherwise, the network is trained from scratch.
+        - Valid values: 0 or 1. Default: 1
+      learning_rate (set to: 0.002)
+        - The initial learning rate.
+        - Valid values: float in (0, 1]. Default: 0.001
+      lr_scheduler_step (set to: "10")
+        - The epochs at which to reduce the learning rate.
+      lr_scheduler_factor (set to: 0.1)
+        - The ratio to reduce learning rate.
+        - Used in conjunction with the lr_scheduler_step parameter defined as lr_new = lr_old * lr_scheduler_factor.
+      optimizer (set to: "sgd")
+        - The optimizer types. For details on optimizer values
+        - Valid values: ['sgd', 'adam', 'rmsprop', 'adadelta']. Default: 'sgd'
+      momentum (set to: 0.9)
+        - The momentum for sgd. Ignored for other optimizers.
+        - Valid values: float in (0, 1]. Default: 0.9
+      weight_decay (set to: 0.0005)
+        - The weight decay coefficient for sgd and rmsprop. Ignored for other optimizers.
+        - Valid values: float in (0, 1). Default: 0.0005
+      overlap_threshold (set to: 0.5)
+        - The evaluation overlap threshold.
+        - Valid values: float in (0, 1].  Default: 0.5
+      nms_threshold (set to: 0.45)
+        - The non-maximum suppression threshold.
+        - Valid values: float in (0, 1]. Default: 0.45
+      image_shape (set to: 512)
+        - The image size for input images.
+        - We rescale the input image to a square image with this size.
+        - We recommend using 300 and 512 for better performance.
+        - Valid values: positive integer ≥300.  Default: 300
+      label_width (set to: 50)
+        - The force padding label width used to sync across training and validation data.
+        - For example, if one image in the data contains at most 10 objects, and each object's annotation is
+          specified with 5 numbers, [class_id, left, top, width, height], then the label_width should be no
+          smaller than (10*5 + header information length).
+        - default: 350
+
+  Response Formats [prediction]
+    https://docs.aws.amazon.com/sagemaker/latest/dg/object-detection-in-formats.html
+    - The response is the class index with a confidence score and bounding box coordinates for all objects within the
+      image encoded in JSON format. The following is an example of response .json file:
+
+      {"prediction":[
+        [4.0, 0.86419455409049988, 0.3088374733924866, 0.07030484080314636, 0.7110607028007507, 0.9345266819000244],
+        [0.0, 0.73376623392105103, 0.5714187026023865, 0.40427327156066895, 0.827075183391571, 0.9712159633636475],
+        [4.0, 0.32643985450267792, 0.3677481412887573, 0.034883320331573486, 0.6318609714508057, 0.5967587828636169],
+        [8.0, 0.22552496790885925, 0.6152569651603699, 0.5722782611846924, 0.882301390171051, 0.8985623121261597],
+        [3.0, 0.42260299175977707, 0.019305512309074402, 0.08386176824569702, 0.39093565940856934, 0.9574796557426453]
+      ]}
+
+    - Each row in this .json file contains an array that represents a detected object.
+    - Each of these object arrays consists of a list of six numbers.
+       - The first number is the predicted class label.
+       - The second number is the associated confidence score for the detection.
+       - The last four numbers represent the bounding box coordinates [xmin, ymin, xmax, ymax].
+       - These output bounding box corner indices are normalized by the overall image size.
+    - To avoid unreliable detection results, you might want to filter out the detection results with low confidence scores
+
+
+
+    Code: 008_Object_Detection_Inbuilt_SSD.ipynb
+
+            # display image with 2 cats and 2 dogs with boxes around each dog/cat
+        >>> from IPython.display import Image
+        >>> Image("https://assets-global.website-files.com/5d7b77b063a9066d83e1209c/627d124572023b6948b6cdff_60ed9a4e09e2c648f1b8a013_object-detection-cover.png")
+
+        >>> import os
+        >>> import json
+        >>> import logging
+        >>> from datetime import datetime
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker import get_execution_role
+        >>> from sagemaker.amazon.amazon_estimator import get_image_uri
+
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> sess = sagemaker.Session()
+        >>> region = sess.boto_region_name
+        >>> print(region)
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket_name = "pat-demo-bkt"
+        >>> data_path = "sgmkr_od_ssd"
+
+            # specify hyperparameter values
+            #  need to specify number of classes and images
+        >>> nclasses = 3
+        >>> nimgs_train = 36
+        >>> nepochs = 10
+        >>> mini_batch_size = 8
+
+        >>> train_instance_type = "ml.g4dn.xlarge"
+        >>> job_name_prefix = "flowers-od-ib-ssd-"
+
+
+            # retrieve sagemaker 'object-detection' docker container [image]
+            #  since built-in model, image_score='training' for both training and inference
+        >>> train_image_uri = sagemaker.image_uris.retrieve(
+        >>>     framework="object-detection",
+        >>>     region=region,
+        >>>     image_scope="training",
+        >>>     version="latest",
+        >>> )
+
+
+        >>> s3_output_path = "s3://{}/{}/{}".format(bucket_name, data_path, "model_output")
+
+            # define SageMaker Estimater with image URI, role, instance info, max run time (in sec),
+            #  File mode: Amazon SageMaker copies the training dataset from the S3 location to a local directory,
+            #  output path, and session
+        >>> od_estimator = sagemaker.estimator.Estimator(
+        >>>     image_uri=train_image_uri,
+        >>>     role=role_arn,
+        >>>     instance_count=1,
+        >>>     instance_type=train_instance_type,
+        >>>     volume_size=50,
+        >>>     max_run=360000,
+        >>>     input_mode="File",
+        >>>     output_path=s3_output_path,
+        >>>     sagemaker_session=sess,
+        >>> )
+
+            # set the hyperparameters
+            #  use_pretrained_model=1: enable transfer learning
+            #  see info on the hyperparameter prior to this code section
+            #  using default values from optimizer, momentum, weight_decaly, overlap_threshold, nms_threshold
+        >>> od_estimator.set_hyperparameters(
+        >>>     num_classes=nclasses,  # update this
+        >>>     num_training_samples=nimgs_train,  # update this
+        >>>     epochs=nepochs,  # update this
+        >>>     mini_batch_size=mini_batch_size,  # update this
+        >>>     base_network="resnet-50",  # Transfer Learning
+        >>>     use_pretrained_model=1,  # IMP
+        >>>     learning_rate=0.002,
+        >>>     lr_scheduler_step="10",
+        >>>     lr_scheduler_factor=0.1,
+        >>>     optimizer="sgd",
+        >>>     momentum=0.9,
+        >>>     weight_decay=0.0005,
+        >>>     overlap_threshold=0.5,
+        >>>     nms_threshold=0.45,
+        >>>     image_shape=512,
+        >>>     label_width=50,
+        >>> )
+
+           # define paths to train/valid images and annotations
+        >>> s3_train_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "train_imgs")
+        >>> s3_valid_imgs = "s3://{}/{}/{}".format(bucket_name, data_path, "valid_imgs")
+        >>> s3_train_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "train_annots")
+        >>> s3_valid_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "valid_annots")
+
+            # crate TrainingInput objects for train/valid images and annotations
+        >>> train_imgs = sagemaker.inputs.TrainingInput(
+        >>>     s3_train_imgs,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="image/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> valid_imgs = sagemaker.inputs.TrainingInput(
+        >>>     s3_valid_imgs,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="image/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> train_annot = sagemaker.inputs.TrainingInput(
+        >>>     s3_train_annot,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="image/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+        >>> valid_annot = sagemaker.inputs.TrainingInput(
+        >>>     s3_valid_annot,
+        >>>     distribution="FullyReplicated",
+        >>>     content_type="image/jpeg",
+        >>>     s3_data_type="S3Prefix",
+        >>> )
+
+            # create data_channels with the 4 TraniningInput objects
+        >>> data_channels = {
+        >>>     "train": train_imgs,
+        >>>     "validation": valid_imgs,
+        >>>     "train_annotation": train_annot,
+        >>>     "validation_annotation": valid_annot,
+        >>> }
+
+            # create unique training job name
+        >>> timestamp = (
+        >>>     str(datetime.now().replace(microsecond=0)).replace(" ", "-").replace(":", "-")
+        >>> )
+        >>> job_name = job_name_prefix + timestamp
+        >>> print(job_name)
+
+            # run training job
+        >>> od_estimator.fit(inputs=data_channels, logs=True, job_name=job_name)
+
+            Creating training-job with name: flowers-od-ib-ssd-2023-03-21-16-57-56
+            2023-03-21 05:57:57 Starting - Starting the training job...
+            2023-03-21 05:58:12 Starting - Preparing the instances for training...
+            2023-03-21 05:59:07 Downloading - Downloading input data...
+            2023-03-21 05:59:32 Training - Downloading the training image........
+            2023-03-21 06:00:42 Training - Training image download completed. Training in progress.Docker entrypoint called with argument(s): train
+            Running default environment configuration script
+            Nvidia gpu devices, drivers and cuda toolkit versions (only available on hosts with GPU):
+            Tue Mar 21 06:00:53 2023
+            +-----------------------------------------------------------------------------+
+            | NVIDIA-SMI 515.65.07    Driver Version: 515.65.07    CUDA Version: 11.7     |
+            |-------------------------------+----------------------+----------------------+
+            | GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+            | Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+            |                               |                      |               MIG M. |
+            |===============================+======================+======================|
+            |   0  Tesla T4            On   | 00000000:00:1E.0 Off |                    0 |
+            | N/A   35C    P8     9W /  70W |      0MiB / 15360MiB |      0%      Default |
+            |                               |                      |                  N/A |
+            +-------------------------------+----------------------+----------------------+
+
+            +-----------------------------------------------------------------------------+
+            | Processes:                                                                  |
+            |  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+            |        ID   ID                                                   Usage      |
+            |=============================================================================|
+            |  No running processes found                                                 |
+            +-----------------------------------------------------------------------------+
+            Checking for nvidia driver and cuda compatibility.
+            .   .   .
+            .   .   .
+            [03/21/2023 06:01:27 INFO 140290042931008] Update[41]: Change learning rate to 2.00000e-04
+            [03/21/2023 06:01:27 INFO 140290042931008] #quality_metric: host=algo-1, epoch=8, batch=5 train cross_entropy <loss>=(1.366511375025699)
+            [03/21/2023 06:01:27 INFO 140290042931008] #quality_metric: host=algo-1, epoch=8, batch=5 train smooth_l1 <loss>=(0.613015191596851)
+            [03/21/2023 06:01:27 INFO 140290042931008] Round of batches complete
+            [03/21/2023 06:01:27 INFO 140290042931008] Updated the metrics
+            [03/21/2023 06:01:28 INFO 140290042931008] #quality_metric: host=algo-1, epoch=8, validation mAP <score>=(0.0027206675550479095)
+            [03/21/2023 06:01:28 INFO 140290042931008] #progress_metric: host=algo-1, completed 90.0 % of epochs
+            #metrics {"StartTime": 1679378485.944141, "EndTime": 1679378488.5199971, "Dimensions": {"Algorithm": "AWS/Object Detection", "Host": "algo-1", "Operation": "training", "epoch": 8, "Meta": "training_data_iter"}, "Metrics": {"Total Records Seen": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Total Batches Seen": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Max Records Seen Between Resets": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Max Batches Seen Between Resets": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Reset Count": {"sum": 9.0, "count": 1, "min": 9, "max": 9}, "Number of Records Since Last Reset": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Number of Batches Since Last Reset": {"sum": 0.0, "count": 1, "min": 0, "max": 0}}}
+            [03/21/2023 06:01:29 INFO 140290042931008] #quality_metric: host=algo-1, epoch=9, batch=4 train cross_entropy <loss>=(1.374971808456793)
+            [03/21/2023 06:01:29 INFO 140290042931008] #quality_metric: host=algo-1, epoch=9, batch=4 train smooth_l1 <loss>=(0.6390577099187588)
+            [03/21/2023 06:01:29 INFO 140290042931008] Round of batches complete
+            [03/21/2023 06:01:30 INFO 140290042931008] Updated the metrics
+
+            2023-03-21 06:01:38 Uploading - Uploading generated training model[03/21/2023 06:01:30 INFO 140290042931008] #quality_metric: host=algo-1, epoch=9, validation mAP <score>=(0.028176501860712386)
+            [03/21/2023 06:01:30 INFO 140290042931008] #progress_metric: host=algo-1, completed 100.0 % of epochs
+            #metrics {"StartTime": 1679378488.5201957, "EndTime": 1679378490.3792412, "Dimensions": {"Algorithm": "AWS/Object Detection", "Host": "algo-1", "Operation": "training", "epoch": 9, "Meta": "training_data_iter"}, "Metrics": {"Total Records Seen": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Total Batches Seen": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Max Records Seen Between Resets": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Max Batches Seen Between Resets": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Reset Count": {"sum": 10.0, "count": 1, "min": 10, "max": 10}, "Number of Records Since Last Reset": {"sum": 0.0, "count": 1, "min": 0, "max": 0}, "Number of Batches Since Last Reset": {"sum": 0.0, "count": 1, "min": 0, "max": 0}}}
+            [03/21/2023 06:01:30 WARNING 140290042931008] wait_for_all_workers will not sync workers since the kv store is not running distributed
+            [03/21/2023 06:01:30 INFO 140290042931008] Saved checkpoint to "/opt/ml/model/model_algo_1-0000.params"
+            [03/21/2023 06:01:30 INFO 140290042931008] Test data is not provided.
+            #metrics {"StartTime": 1679378456.831202, "EndTime": 1679378490.7377708, "Dimensions": {"Algorithm": "AWS/Object Detection", "Host": "algo-1", "Operation": "training"}, "Metrics": {"epochs": {"sum": 10.0, "count": 1, "min": 10, "max": 10}, "setuptime": {"sum": 6.2961578369140625, "count": 1, "min": 6.2961578369140625, "max": 6.2961578369140625}, "totaltime": {"sum": 33975.539684295654, "count": 1, "min": 33975.539684295654, "max": 33975.539684295654}}}
+
+            2023-03-21 06:01:59 Completed - Training job completed
+            Training seconds: 171
+            Billable seconds: 171
+
+            # NOTE: final validation mAP <score>=(0.028176501860712386) which is extreme poor. This was due to
+            #       training set having poor resolution images
+
+
+            # Deploy Model
+
+        >>> infer_instance_type = "ml.t2.medium"
+        >>> model_name = job_name
+        >>> endpoint_name = job_name
+
+        >>> od_predictor = od_estimator.deploy(
+        >>>     initial_instance_count=1,
+        >>>     instance_type=infer_instance_type,
+        >>>     endpoint_name=endpoint_name,
+        >>>     model_name=model_name,
+        >>> )
+
+
+        >>> sgmkr_runt = boto3.client("runtime.sagemaker")
+
+        >>> with open("images/rose.jpg", "rb") as image:
+        >>>         payload = image.read()
+        >>>         payload = bytearray(payload)
+        >>>
+        >>> response = sgmkr_runt.invoke_endpoint(
+        >>>     EndpointName = endpoint_name,
+        >>>     ContentType = 'image/jpeg',
+        >>>     #Accept = "application/json;n_predictions=5",
+        >>>     Body = payload,
+        >>> )
+
+            #  see info on the response format prior to this code section
+            #  with object-detection, often generates lots of low reliability predictions which should be filtered out
+            # each row contains: class label, detection confidence score, and 4 scaled bounding box coordineates values
+            #    bounding box coordinates [xmin, ymin, xmax, ymax].
+            #      - These output bounding box corner indices are normalized by the overall image size.
+        >>> prediction = json.loads(response['Body'].read().decode())
+        >>> print(prediction)
+
+            {'prediction': [
+             [0.0, 0.3848296105861664, 0.2949581444263458, 0.4293615221977234, 0.42599937319755554, 0.5943439602851868],
+             [0.0, 0.381910115480423, 0.6468297243118286, 0.2760745882987976, 0.7615469694137573, 0.430669903755188],
+             [1.0, 0.38041630387306213, 0.9254640340805054, 0.0, 1.0, 0.061581552028656006],
+             [1.0, 0.375691294670105, 0.46112871170043945, 0.586995005607605, 0.5657875537872314, 0.6949728727340698],
+             [1.0, 0.37286534905433655, 0.0, 0.9329835772514343, 0.06630755215883255, 1.0],
+             [0.0, 0.3715086877346039, 0.2585042715072632, 0.3743842840194702, 0.3884844183921814, 0.5269457697868347],
+             [1.0, 0.370464026927948, 0.7440735101699829, 0.8314143419265747, 0.8441121578216553, 0.9467120170593262],
+             [0.0, 0.36671918630599976, 0.7399877905845642, 0.5010684132575989, 0.859707772731781, 0.6520853638648987],
+             [0.0, 0.3629227578639984, 0.7043559551239014, 0.3450604975223541, 0.8305513858795166, 0.49466416239738464],
+               . . .
+             [2.0, 0.28667333722114563, 0.12333270907402039, 0.0, 0.43852928280830383, 0.32243257761001587]
+             ]}
+
+        >>> od_predictor.delete_endpoint()
+
+--------------------------------------------------
+AWS Sagemaker Course - Object Detection, TensorFlow, Transfer Learning
+        "tensorflow-od1-ssd-resnet50-v1-fpn-640x640-coco17-tpu-8"
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=5qKTUuA_cmw&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=10
+
+  SageMaker Object-Detection ML model:
+        "tensorflow-od1-ssd-resnet50-v1-fpn-640x640-coco17-tpu-8"
+
+  sageMaker Tensorflow Object-Detection Dataset setup:
+       smgkr_od_tf/train/images           : training images directory
+       smgkr_od_tf/train/annotations.json : training annotation info file (just one file)
+       smgkr_od_tf/valid/images           : validation images directory
+       smgkr_od_tf/valid/annotations.json : validation annotation info file (just one file)
+       smgkr_od_tf/model_output           : model output [artifact] directory
+
+  ground truth annotation file format for TensorFlow Object Detection SSD:
+    {
+     "data": [
+       {
+       "file": "34342014230_4230ae8e08_n.jpg",
+       "height": 149,
+       "width": 240,
+       "id": 36
+       },
+       {
+       "file": "34342014230_5f0c131e59_n.jpg",
+       "height": 159,
+       "width": 240,
+       "id": 37
+       },
+       {
+       "file": "658724528_6cd5cbe20343.jpg",
+       "height": 333,
+       "width": 500,
+       "id": 38
+       },
+        . . .
+       ]
+     "annotations": [
+        . . .
+        { "image_id: 36, "bbox": [41, 3 , 128, 122], "category_id": 2},
+        { "image_id: 37, "bbox": [35, 39, 93, 76],   "category_id": 1},
+        { "image_id: 38, "bbox": [77, 24, 326, 297], "category_id": 0},
+        { "image_id: 39, "bbox": [53, 39, 129, 120], "category_id": 0},
+
+       ]
+    }
+
+     Note: json dictionary contains two elements:
+        data:
+           - contains 1 block with file, height, id (unique number for each image) info for each image
+        annotations:
+            - contains: image_id: map to file id in 'data'; bbox: image box coordinates (top left coordinate
+              plus width & height ??); categoir_id: class label
+
+
+
+    Code: 009_Object_Detection_JS_TF.ipynb
+
+            #0.1. Object Detection - TensorFlow SSD (Single Shot Detection) model
+
+            # display image with 2 cats and 2 dogs with boxes around each dog/cat
+        >>> from IPython.display import Image
+        >>> Image("https://assets-global.website-files.com/5d7b77b063a9066d83e1209c/627d124572023b6948b6cdff_60ed9a4e09e2c648f1b8a013_object-detection-cover.png")
+        >>> import os
+        >>> import json
+        >>> import logging
+        >>> from datetime import datetime
+
+        >>> import boto3
+        >>> import sagemaker
+        >>> from sagemaker import get_execution_role
+        >>> from sagemaker import image_uris, model_uris, script_uris
+        >>> from sagemaker.estimator import Estimator
+        >>> from sagemaker import hyperparameters
+
+        >>> boto3.set_stream_logger(name="botocore.credentials", level=logging.WARNING)
+
+        >>> sess = sagemaker.Session()
+        >>> region = sess.boto_region_name
+        >>> print(region)
+
+        >>> # role_arn = sagemaker.get_execution_role()
+        >>> #role_arn = os.getenv("SGMKR_ROLE_ARN")
+        >>> role_arn = "arn:aws:iam::0123456789012:role/service-role/AmazonSageMaker-ExecutionRole-20240718T104942"
+
+        >>> bucket_name = "pat-demo-bkt"
+        >>> data_path = "sgmkr_od_tf"
+
+            # specify hyperparameter values
+            #  Do NOT need to specify number of classes and images
+        >>> # nclasses = 3
+        >>> # nimgs_train = 36
+        >>> nepochs = 10
+        >>> mini_batch_size = 8
+
+        >>> train_instance_type = "ml.g4dn.xlarge"
+        >>> job_name_prefix = "flowers-od-js-tf-"
+
+
+        >>> model_id = "tensorflow-od1-ssd-resnet50-v1-fpn-640x640-coco17-tpu-8"
+        >>> model_version = "*"
+        >>> train_instance_type = "ml.g4dn.xlarge"
+
+            # retrieve sagemaker tensorflow object-detection SSD docker container [image]
+            #  must specify image_score='training' since training and inference use different containers
+        >>> train_image_uri = image_uris.retrieve(
+        >>>     model_id=model_id,
+        >>>     model_version=model_version,
+        >>>     image_scope="training",
+        >>>     instance_type=train_instance_type,
+        >>>     region=None,
+        >>>     framework=None,
+        >>> )
+
+            # script_uris.retreive: retrieve the script Amazon S3 URI to run pretrained machine learning models.
+            #  model_id (str) – The model ID of the JumpStart model for which to retrieve the script S3 URI.
+            #  model_version (str) – The version of the JumpStart model for which to retrieve the model script S3 URI.
+            #  script_scope (str) – The script type. Valid values: “training” and “inference”.
+            #
+            # contains: the entry point file such 'transfer_learning.py' , code for training the model, or code for inferencing
+        >>> train_source_uri = script_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, script_scope="training"
+        >>> )
+
+           # model_uris.retrieve: retrieve the model artifact S3 URI of pretrained machine learning models.
+           #   model_id (str) – The model ID of the JumpStart model for which to retrieve the model artifact S3 URI.
+           #   model_version (str) – The version of the JumpStart model for which to retrieve the model artifact S3 URI.
+           #
+           # Contents include: the model with its current weights; for transfering learning, only last layer
+           #     weights will updated/changed
+        >>> train_model_uri = model_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, model_scope="training"
+        >>> )
+
+        >>> print(train_image_uri)
+        >>> print(train_source_uri)
+        >>> print(train_model_uri)
+            763104351884.dkr.ecr.us-east-1.amazonaws.com/tensorflow-training:2.11.0-gpu-py39
+            s3://jumpstart-cache-prod-us-east-1/source-directory-tarballs/tensorflow/transfer_learning/od1/prepack/v1.1.0/sourcedir.tar.gz
+            s3://jumpstart-cache-prod-us-east-1/tensorflow-training/train-tensorflow-od1-ssd-resnet50-v1-fpn-640x640-coco17-tpu-8.tar.gz
+
+        >>> s3_output_path = "s3://{}/{}/{}".format(bucket_name, data_path, "model_output")
+
+
+            # extract the default hyperparameters and change 'epochs' value to '5' and 'train_only_top_layer' to True
+            #   train_only_top_layer: enable transfer learning
+        >>> hyperparameters = hyperparameters.retrieve_default(
+        >>>     model_id=model_id,
+        >>>     model_version=model_version
+        >>> )
+        >>> print(hyperparameters)
+        >>> hyperparameters["epochs"] = "5"
+        >>> hyperparameters['train_only_top_layer'] = True
+            {'batch_size': '3', 'reinitialize_top_layer': 'Auto', 'train_only_top_layer': 'False', 'optimizer': 'adam', 'learning_rate': '0.001', 'beta_1': '0.9', 'beta_2': '0.999', 'momentum': '0.9', 'epsilon': '1e-07', 'rho': '0.95', 'initial_accumulator_value': '0.1', 'early_stopping': 'False', 'early_stopping_patience': '5', 'early_stopping_min_delta': '0.0', 'epochs': '5'}
+
+           # create the Estimator object with information for image uri, source uri, model uri, entry point scrit,
+           #    role ARN, hyperparameters, etc.
+        >>> tf_od_estimator = Estimator(
+        >>>     role=role_arn,
+        >>>     image_uri=train_image_uri,
+        >>>     source_dir=train_source_uri,
+        >>>     model_uri=train_model_uri,
+        >>>     entry_point="transfer_learning.py",
+        >>>     instance_count=1,
+        >>>     instance_type=train_instance_type,
+        >>>     max_run=360000,
+        >>>     hyperparameters=hyperparameters,
+        >>>     output_path=s3_output_path,
+        >>> )
+
+            # only need 2 channels (1 for train & 1 for valid) since images and annotations are found in the same location
+            # actually,  create only 1 channel
+        >>> s3_train_imgs_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "train/")
+        >>> s3_valid_imgs_annot = "s3://{}/{}/{}".format(bucket_name, data_path, "valid/")
+
+            # create 1 TrainingInput change objcects
+            #  model will split training data into training (80%) and validation (20%)
+        >>> data_channels = {
+        >>>     "training": s3_train_imgs_annot,
+        >>>     # "validation": s3_valid_imgs_annot,
+        >>> }
+        >>> print(data_channels)
+
+        >>> timestamp = (
+        >>>     str(datetime.now().replace(microsecond=0)).replace(" ", "-").replace(":", "-")
+        >>> )
+        >>> job_name = job_name_prefix + timestamp
+        >>> print(job_name)
+
+            # train model in transfer learning mode
+        >>> tf_od_estimator.fit(inputs=data_channels, logs=True, job_name=job_name)
+
+
+
+        >>> infer_instance_type = "ml.t2.medium"
+
+            # retrieve inference image URI since non-built-in model
+        >>> deploy_image_uri = image_uris.retrieve(
+        >>>     region=None,
+        >>>     framework=None,
+        >>>     image_scope="inference",
+        >>>     model_id=model_id,
+        >>>     model_version=model_version,
+        >>>     instance_type=infer_instance_type,
+        >>> )
+
+            # retrieve inference source URI since non-built-in model
+        >>> deploy_source_uri = script_uris.retrieve(
+        >>>     model_id=model_id, model_version=model_version, script_scope="inference"
+        >>> )
+
+        >>> model_name = job_name
+        >>> endpoint_name = job_name
+
+
+            # deploy model
+            # Note: with training you need to provide model uri for non-built-in models,
+            #      but for inference it uses the model you just trained and the Estimator knows where it is stored
+            # Need specify "inference.py" for entrypoint
+        >>> od_predictor = tf_od_estimator.deploy(
+        >>>     initial_instance_count=1,
+        >>>     instance_type=infer_instance_type,
+        >>>     entry_point="inference.py",
+        >>>     image_uri=deploy_image_uri,
+        >>>     source_dir=deploy_source_uri,
+        >>>     endpoint_name=endpoint_name,
+        >>>     model_name=model_name,
+        >>> )
+
+        >>> sgmkr_runt = boto3.client("runtime.sagemaker")
+
+            # do  not need to convert payload to bytearray for this model
+        >>> with open("images/rose.jpg", "rb") as image:
+        >>>     payload = image.read()
+        >>>     # payload = bytearray(payload)
+
+           # get the reponse/prediction, but return on the 5 top predictions (n_prediction=5)
+        >>> response = sgmkr_runt.invoke_endpoint(
+        >>>     EndpointName=endpoint_name,
+        >>>     # ContentType = 'image/jpeg',
+        >>>     ContentType="application/x-image",
+        >>>     Accept="application/json;n_predictions=5",
+        >>>     Body=payload,
+        >>> )
+
+        >>> prediction = json.loads(response["Body"].read().decode())
+        >>> print(prediction)
+           {'normalized_boxes': [
+             [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 1.0, 1.0]
+            ],
+            'classes': [3.0, 3.0, 3.0, 3.0, 3.0],
+            'scores': [0.213013142, 0.213013172, 0.213013172, 0.213013172, 0.213013172]
+           }
+
+
+        # delete endpoint
+        >>> od_predictor.delete_endpoint()
+
+
+--------------------------------------------------
+Create Annotations for Image Classification using makesense.ai
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=UL9ofCTTK6A
+
+  create annnotations for image classification and object detection computer vision tasks,
+    - these tasks are also referred to as ground truth labels creation or classes creation
+
+  makesense.ai
+     - lightweight, browser based, easy to use tool
+     - source code available on github so you can download it and run it locally
+
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Data Preparation for Image Classification
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=S61wdrMfxcQ&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=11
+
+
+   Make Sense (makesense.ai)
+     - web based UI tool used in other videos to create annotation for the model
+     - output for those video are used as input to this video for creating annotations for the built-in and jumpstart models
+
+
+    Code: 010_Create_Img_Clf_GT_Lst.ipynb
+
+        >>> get_ipython().system('pwd')
+            /cygdrive/c/Users/pat/Documents/Online_Training/MachineLearningTraining/AWS Certified Machine Learning class/tutorials/Hands-on_AI_SageMaker_Course/AWS_Sagemaker_Course-main
+
+        >>> import os
+        >>> import json
+        >>> import random
+        >>> import pandas as pd
+            # shutil packages provides high-level operations on files and collections of files
+        >>> import shutil
+
+            # create the required training and annotation directories
+        >>> base_path="flower_photos_90/img_clf_lst/"
+        >>> subdirs = ["train_imgs", "valid_imgs", "train_annots", "valid_annots"]
+        >>> for subdir in subdirs:
+        >>>     path = base_path + "/" + subdir
+        >>>     if not os.path.exists(path):
+        >>>         print(f"creating directory {path}")
+        >>>         os.makedirs(path)
+        >>>     else:
+        >>>        print(f"{path} already exist")
+
+            # read in classification label file created with makesense.ai (file row1: 100080576_f52e8ee070_n.jpg,[daisy] )
+        >>> gt_df = pd.read_csv(
+        >>>     "flower_photos_90/img_clf_lst/all_images_gt/clf_labels.csv", header=None
+        >>> )
+        >>> gt_df.columns = ["image", "class"]
+        >>> gt_df.head()
+                                    image 	class
+            0 	100080576_f52e8ee070_n.jpg 	[daisy]
+            1 	10140303196_b88d3d6cec.jpg 	[daisy]
+            2 	10172379554_b296050f82_n.jpg 	[daisy]
+            3 	10172567486_2748826a8b.jpg 	[daisy]
+            4 	10172636503_21bededa75_n.jpg 	[daisy]
+
+        >>> train_valid_split = 0.7
+        >>> nimages = gt_df["image"].nunique()
+        >>> ntrain = int(train_valid_split * nimages)
+        >>> nvalid = nimages - ntrain
+        >>> print(nimages, ntrain, nvalid)
+            90 62 28
+
+            # remove square brackets around labels
+        >>> gt_df["class"] = gt_df["class"].apply(lambda x: x[1:-1])
+        >>> gt_df.head()
+                                    image 	class
+            0 	100080576_f52e8ee070_n.jpg 	daisy
+            1 	10140303196_b88d3d6cec.jpg 	daisy
+            2 	10172379554_b296050f82_n.jpg 	daisy
+            3 	10172567486_2748826a8b.jpg 	daisy
+            4 	10172636503_21bededa75_n.jpg 	daisy
+
+            # create labels mapping file, "labels_map.json"
+        >>> labels = ["daisy", "dandelion", "roses"]
+        >>> labels_map = {k: v for v, k in enumerate(labels)}
+        >>> with open("flower_photos_90/img_clf_lst/labels_map.json", "w") as fp:
+        >>>     json.dump(labels_map, fp)
+        >>> labels_map
+            {'daisy': 0, 'dandelion': 1, 'roses': 2}
+
+            # add class id column with values mapped from class names
+        >>> gt_df["class_id"] = gt_df["class"].map(labels_map)
+        >>> gt_df.head()
+                                    image 	class   class_id
+            0 	100080576_f52e8ee070_n.jpg 	daisy          0
+            1 	10140303196_b88d3d6cec.jpg 	daisy          0
+            2 	10172379554_b296050f82_n.jpg 	daisy          0
+            3 	10172567486_2748826a8b.jpg 	daisy          0
+            4 	10172636503_21bededa75_n.jpg 	daisy          0
+
+            # randomize dataset
+        >>> gt_df = gt_df.sample(frac=1).reset_index(drop=True)
+        >>> gt_df.head()
+
+            # add index column
+        >>> gt_df["index"] = gt_df.index + 1
+        >>> gt_df.head()
+                                     	image 	class 	class_id 	index
+            0 	12406229175_82e2ac649c_n.jpg 	roses 	        2 	1
+            1 	10770585085_4742b9dac3_n.jpg 	daisy 	        0 	2
+            2 	10466290366_cc72e33532.jpg 	daisy 	        0 	3
+            3 	10828951106_c3cd47983f.jpg 	dandelion 	1 	4
+            4 	11124324295_503f3a0804.jpg 	daisy 	        0 	5
+
+
+
+            # create 'train.lst' file
+        >>> sel_cols = ["index", "class_id", "image"]
+        >>> gt_df[sel_cols].head(ntrain).to_csv(
+        >>>     "flower_photos_90/img_clf_lst/train_annots/train.lst",
+        >>>     sep="\t",
+        >>>     index=False,
+        >>>     header=False,
+        >>> )
+        >>> !head -n 5 flower_photos_90/img_clf_lst/train_annots/train.lst
+
+            # create 'valid.lst' file
+        >>> gt_df[sel_cols].tail(nvalid).to_csv(
+        >>>     "flower_photos_90/img_clf_lst/valid_annots/valid.lst",
+        >>>     sep="\t",
+        >>>     index=False,
+        >>>     header=False,
+        >>> )
+        >>> !head -n 5 flower_photos_90/img_clf_lst/valid_annots/valid.lst
+
+            # copy images in 'train.list' file from 'all_images_gt' directory to the 'train_imgs' directory
+        >>> train_df = pd.read_csv(
+        >>>     "flower_photos_90/img_clf_lst/train_annots/train.lst", sep="\t", header=None
+        >>> )
+        >>> images = list(train_df[2].values)
+        >>> for image in images:
+        >>>     shutil.copy(
+        >>>         "flower_photos_90/img_clf_lst/all_images_gt/" + image,
+        >>>         "flower_photos_90/img_clf_lst/train_imgs/",
+        >>>     )
+
+            # copy images in 'valid.list' file from 'all_images_gt' directory to the 'valid_imgs' directory
+        >>> valid_df = pd.read_csv(
+        >>>     "flower_photos_90/img_clf_lst/valid_annots/valid.lst", sep="\t", header=None
+        >>> )
+        >>> images = list(valid_df[2].values)
+        >>> for image in images:
+        >>>     shutil.copy(
+        >>>         "flower_photos_90/img_clf_lst/all_images_gt/" + image,
+        >>>         "flower_photos_90/img_clf_lst/valid_imgs/",
+        >>>     )
+
+
+--------------------------------------------------
+AWS Sagemaker Course - Data Preparation for Image Classification 2
+  Hands-on AI - Sridhar KumarKannam
+  https://www.youtube.com/watch?v=7vdNZWX-b94&list=PLZ8LpvgeJKcjVJwDQELeXBIyrMhaYr1mb&index=12
+
+
+   Make Sense (makesense.ai)
+     - web based UI tool used in other videos to create annotation for the model
+     - output for those video are used as input to this video for creating annotations for the built-in and jumpstart models
+
+
+    Code: 011_Create_Img_Clf_GT_Lst_Subfolds.ipynb
+
+        >>> import os
+        >>> import json
+        >>> import random
+        >>> import pandas as pd
+        >>> import shutil
+
+            # create train and validation images/annotations subdirs
+        >>> base_path="flower_photos_90/img_clf_lst_from_subfolds/"
+        >>> subdirs = ["train_imgs", "valid_imgs", "train_annots", "valid_annots"]
+        >>> for subdir in subdirs:
+        >>>     path = base_path + "/" + subdir
+        >>>     if not os.path.exists(path):
+        >>>         print(f"creating directory {path}")
+        >>>         os.makedirs(path)
+        >>>     else:
+        >>>        print(f"{path} already exist")
+            creating directory flower_photos_90/img_clf_lst_from_subfolds//train_imgs
+            creating directory flower_photos_90/img_clf_lst_from_subfolds//valid_imgs
+            creating directory flower_photos_90/img_clf_lst_from_subfolds//train_annots
+            creating directory flower_photos_90/img_clf_lst_from_subfolds//valid_annots
+
+            # walk the subdirectories under all_images and find all the images and set each images class
+            #    based on the subdir containing the image file
+        >>> images = []
+        >>> classes = []
+
+        >>> for path, subdirs, files in os.walk(
+        >>>     "flower_photos_90/img_clf_lst_from_subfolds/all_images"
+        >>> ):
+        >>>     for file in files:
+        >>>         # print(os.path.join(path, name))
+        >>>         if file == ".DS_Store":
+        >>>             continue
+        >>>         else:
+        >>>             images.append(file)
+        >>>             #classes.append(path.split("/")[-1])
+        >>>             # changed to '\' to deal with Windows
+        >>>             classes.append(path.split("\\")[-1])
+
+        >>> print(path)
+        >>> print(images[:5])
+        >>> print(classes[:5])
+            flower_photos_90/img_clf_lst_from_subfolds/all_images\roses
+            ['100080576_f52e8ee070_n.jpg', '10140303196_b88d3d6cec.jpg', '10172379554_b296050f82_n.jpg', '10172567486_2748826a8b.jpg', '10172636503_21bededa75_n.jpg']
+            ['daisy', 'daisy', 'daisy', 'daisy', 'daisy']
+
+
+
+            # create dataframe with image file name and associated class
+        >>> gt_df = pd.DataFrame({"image": images, "class": classes})
+        >>> gt_df.head()
+                                     	image 	class
+            0 	100080576_f52e8ee070_n.jpg 	daisy
+            1 	10140303196_b88d3d6cec.jpg 	daisy
+            2 	10172379554_b296050f82_n.jpg 	daisy
+            3 	10172567486_2748826a8b.jpg 	daisy
+            4 	10172636503_21bededa75_n.jpg 	daisy
+
+            # determine train & validation images split
+        >>> train_valid_split = 0.7
+        >>> nimages = gt_df["image"].nunique()
+        >>> ntrain = int(train_valid_split * nimages)
+        >>> nvalid = nimages - ntrain
+        >>> print(nimages, ntrain, nvalid)
+            90 62 28
+
+            # create labels mapping file, 'labels_map.json'
+        >>> labels = ["daisy", "dandelion", "roses"]
+        >>> labels_map = {k: v for v, k in enumerate(labels)}
+        >>> with open("flower_photos_90/img_clf_lst_from_subfolds/labels_map.json", "w") as fp:
+        >>>     json.dump(labels_map, fp)
+        >>> labels_map
+            {'daisy': 0, 'dandelion': 1, 'roses': 2}
+
+            # add class ID column (based label mapping info)  to dataframe
+        >>> gt_df["class_id"] = gt_df["class"].map(labels_map)
+        >>> gt_df.head()
+
+            # randomize dataframe
+        >>> gt_df = gt_df.sample(frac=1).reset_index(drop=True)
+        >>> gt_df.head()
+
+            # add index column to dataframe
+        >>> gt_df["index"] = gt_df.index + 1
+        >>> gt_df.head()
+                                 	image 	class 	class_id 	index
+            0 	10437652486_aa86c14985.jpg 	dandelion 	1 	1
+            1 	10617191174_9a01753241_n.jpg 	dandelion 	1 	2
+            2 	12406418663_af20dc225f_n.jpg 	roses 	        2 	3
+            3 	12450781274_eb78723921.jpg 	roses 	        2 	4
+            4 	10559679065_50d2b16f6d.jpg 	daisy 	        0 	5
+
+            # create 'train.lst' with list of training images
+        >>> sel_cols = ["index", "class_id", "image"]
+        >>> gt_df[sel_cols].head(ntrain).to_csv(
+        >>>     "flower_photos_90/img_clf_lst_from_subfolds/train_annots/train.lst",
+        >>>     sep="\t",
+        >>>     index=False,
+        >>>     header=False,
+        >>> )
+        >>> !head -n 5 flower_photos_90/img_clf_lst/train_annots/train.lst
+            1	2	12406229175_82e2ac649c_n.jpg
+            2	0	10770585085_4742b9dac3_n.jpg
+            3	0	10466290366_cc72e33532.jpg
+            4	1	10828951106_c3cd47983f.jpg
+            5	0	11124324295_503f3a0804.jpg
+
+            # create 'valid.lst' with list of validation images
+        >>> gt_df[sel_cols].tail(nvalid).to_csv(
+        >>>     "flower_photos_90/img_clf_lst_from_subfolds/valid_annots/valid.lst",
+        >>>     sep="\t",
+        >>>     index=False,
+        >>>     header=False,
+        >>> )
+        >>> !head -n 5 flower_photos_90/img_clf_lst/valid_annots/valid.lst
+            63	0	10993818044_4c19b86c82.jpg
+            64	2	12407768513_3440238148_n.jpg
+            65	1	11296320473_1d9261ddcb.jpg
+            66	1	11545123_50a340b473_m.jpg
+            67	1	1080179756_5f05350a59.jpg
+
+            # create "all_images_tmp" directory and copy all images to this directory
+        >>> tmp_path="flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp"
+        >>> if not os.path.exists(tmp_path):
+        >>>     print(f"creating directory {tmp_path}")
+        >>>     os.makedirs(tmp_path)
+        >>> else:
+        >>>     print(f"{tmp_path} already exist")
+
+        >>> #!mkdir flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp
+        >>> for label in labels:
+        >>>     get_ipython().system('cp flower_photos_90/img_clf_lst_from_subfolds/all_images/{label}/* flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp/')
+
+           # copy  images in 'train.lst' from 'all_images_tmp' to 'train_imgs'
+        >>> train_df = pd.read_csv(
+        >>>     "flower_photos_90/img_clf_lst_from_subfolds/train_annots/train.lst",
+        >>>     sep="\t",
+        >>>     header=None,
+        >>> )
+        >>> images = list(train_df[2].values)
+        >>> for image in images:
+        >>>     shutil.copy(
+        >>>         "flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp/" + image,
+        >>>         "flower_photos_90/img_clf_lst_from_subfolds/train_imgs/",
+        >>>     )
+
+           # copy  images in 'valid.lst' from 'all_images_tmp' to 'valid_imgs'
+        >>> valid_df = pd.read_csv(
+        >>>     "flower_photos_90/img_clf_lst/valid_annots/valid.lst", sep="\t", header=None
+        >>> )
+        >>> images = list(valid_df[2].values)
+        >>> for image in images:
+        >>>     shutil.copy(
+        >>>         "flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp/" + image,
+        >>>         "flower_photos_90/img_clf_lst_from_subfolds/valid_imgs/",
+        >>>     )
+
+           # clean-up - remove all_images_tmp directory
+        >>> !rm -r flower_photos_90/img_clf_lst_from_subfolds/all_images_tmp
+
+
+
+--------------------------------------------------
+--------------------------------------------------
+--------------------------------------------------
