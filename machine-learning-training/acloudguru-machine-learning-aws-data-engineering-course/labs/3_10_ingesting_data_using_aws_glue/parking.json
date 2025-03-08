@@ -1,0 +1,212 @@
+{
+	"dag": {
+		"node-1723749162014": {
+			"classification": "DataSource",
+			"type": "S3",
+			"name": "Amazon S3",
+			"inputs": [],
+			"isCatalog": false,
+			"recurse": true,
+			"paths": [
+				"s3://parking-glue-bkt/parking_data/Parking_Tags_Data_2022.000.csv"
+			],
+			"additionalOptions": {
+				"enableSamplePath": false,
+				"samplePath": "s3://parking-glue-bkt/parking_data/Parking_Tags_Data_2022.000.csv"
+			},
+			"inferSchemaChanged": false,
+			"format": "csv",
+			"generatedNodeName": "AmazonS3_node1723749162014",
+			"codeGenVersion": 2,
+			"separator": ",",
+			"quoteChar": "\"",
+			"withHeader": true,
+			"escaper": "",
+			"outputSchemas": [
+				[
+					{
+						"key": "tag_number_masked",
+						"fullPath": [
+							"tag_number_masked"
+						],
+						"type": "string"
+					},
+					{
+						"key": "date_of_infraction",
+						"fullPath": [
+							"date_of_infraction"
+						],
+						"type": "string"
+					},
+					{
+						"key": "infraction_code",
+						"fullPath": [
+							"infraction_code"
+						],
+						"type": "string"
+					},
+					{
+						"key": "infraction_description",
+						"fullPath": [
+							"infraction_description"
+						],
+						"type": "string"
+					},
+					{
+						"key": "set_fine_amount",
+						"fullPath": [
+							"set_fine_amount"
+						],
+						"type": "string"
+					},
+					{
+						"key": "time_of_infraction",
+						"fullPath": [
+							"time_of_infraction"
+						],
+						"type": "string"
+					},
+					{
+						"key": "location1",
+						"fullPath": [
+							"location1"
+						],
+						"type": "string"
+					},
+					{
+						"key": "location2",
+						"fullPath": [
+							"location2"
+						],
+						"type": "string"
+					},
+					{
+						"key": "location3",
+						"fullPath": [
+							"location3"
+						],
+						"type": "string"
+					},
+					{
+						"key": "location4",
+						"fullPath": [
+							"location4"
+						],
+						"type": "string"
+					},
+					{
+						"key": "province",
+						"fullPath": [
+							"province"
+						],
+						"type": "string"
+					}
+				]
+			]
+		},
+		"node-1723749264801": {
+			"classification": "Transform",
+			"type": "DropFields",
+			"name": "Drop Fields",
+			"inputs": [
+				"node-1723749162014"
+			],
+			"paths": [
+				"tag_number_masked",
+				"set_fine_amount",
+				"time_of_infraction",
+				"location1",
+				"location2",
+				"location3",
+				"location4",
+				"province"
+			],
+			"generatedNodeName": "DropFields_node1723749264801",
+			"codeGenVersion": 2,
+			"outputSchemas": [
+				[
+					{
+						"key": "date_of_infraction",
+						"fullPath": [
+							"date_of_infraction"
+						],
+						"type": "string"
+					},
+					{
+						"key": "infraction_code",
+						"fullPath": [
+							"infraction_code"
+						],
+						"type": "string"
+					},
+					{
+						"key": "infraction_description",
+						"fullPath": [
+							"infraction_description"
+						],
+						"type": "string"
+					}
+				]
+			]
+		},
+		"node-1723749547540": {
+			"classification": "DataSink",
+			"type": "S3",
+			"name": "Amazon S3",
+			"inputs": [
+				"node-1723749264801"
+			],
+			"format": "glueparquet",
+			"compression": "snappy",
+			"path": "s3://parking-glue-bkt/parking_data/",
+			"partitionKeys": [],
+			"updateCatalogOptions": "schemaAndPartitions",
+			"schemaChangePolicy": {
+				"enableUpdateCatalog": true,
+				"updateBehavior": "UPDATE_IN_DATABASE",
+				"database": "parking",
+				"table": "results"
+			},
+			"autoDataQuality": {
+				"isEnabled": false
+			},
+			"additionalOptions": {},
+			"generatedNodeName": "AmazonS3_node1723749547540",
+			"codeGenVersion": 2
+		}
+	},
+	"jobConfig": {
+		"command": "glueetl",
+		"description": "",
+		"role": "arn:aws:iam::012345678901:role/service-role/AWSGlueServiceRole",
+		"scriptName": "parking.py",
+		"version": "4.0",
+		"language": "python-3",
+		"scriptLocation": "s3://aws-glue-assets-012345678901-us-east-1/scripts/",
+		"temporaryDirectory": "s3://aws-glue-assets-012345678901-us-east-1/temporary/",
+		"timeout": 2880,
+		"maxConcurrentRuns": 1,
+		"workerType": "G.1X",
+		"numberOfWorkers": 10,
+		"maxRetries": 0,
+		"metrics": true,
+		"observabilityMetrics": true,
+		"security": "none",
+		"bookmark": "job-bookmark-disable",
+		"logging": true,
+		"spark": true,
+		"sparkConfiguration": "standard",
+		"sparkPath": "s3://aws-glue-assets-012345678901-us-east-1/sparkHistoryLogs/",
+		"serverEncryption": false,
+		"glueHiveMetastore": true,
+		"etlAutoScaling": false,
+		"etlAutoTuning": false,
+		"jobParameters": [],
+		"tags": [],
+		"connectionsList": [],
+		"jobMode": "VISUAL_MODE",
+		"name": "parking",
+		"pythonPath": ""
+	},
+	"hasBeenSaved": false
+}

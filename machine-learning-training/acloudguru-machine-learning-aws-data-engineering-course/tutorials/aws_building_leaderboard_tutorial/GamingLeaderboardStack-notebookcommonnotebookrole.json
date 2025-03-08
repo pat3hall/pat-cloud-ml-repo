@@ -1,0 +1,56 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "ec2:CreateNetworkInterface",
+                "ec2:CreateNetworkInterfacePermission",
+                "ec2:DeleteNetworkInterface",
+                "ec2:DescribeDhcpOptions",
+                "ec2:DescribeNetworkInterfaces",
+                "ec2:DescribeSecurityGroups",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcs"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "glue:*Partitions",
+                "glue:*Table",
+                "glue:*Tables",
+                "glue:GetDatabase",
+                "glue:GetDatabases",
+                "glue:GetUserDefinedFunction",
+                "kinesis:DescribeStream*",
+                "kinesis:GetRecords",
+                "kinesis:GetShardIterator",
+                "kinesis:ListShards",
+                "kinesis:ListStreams",
+                "kinesis:PutRecord",
+                "kinesis:PutRecords",
+                "kinesis:SubscribeToShard",
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:DescribeLogGroups",
+                "logs:DescribeLogStreams",
+                "logs:PutLogEvents",
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::cdk-hnb659fds-assets-012345678901-us-east-1/*",
+                "arn:aws:glue:us-east-1:012345678901:catalog",
+                "arn:aws:glue:us-east-1:012345678901:database/leaderboard",
+                "arn:aws:glue:us-east-1:012345678901:database/hive",
+                "arn:aws:glue:us-east-1:012345678901:table/leaderboard/*",
+                "arn:aws:glue:us-east-1:012345678901:userDefinedFunction/leaderboard/*",
+                "arn:aws:kinesis:us-east-1:012345678901:stream/GamingLeaderboardStack-*",
+                "arn:aws:logs:us-east-1:012345678901:log-group:*",
+                "arn:aws:logs:us-east-1:012345678901:log-group:*:*",
+                "arn:aws:logs:us-east-1:012345678901:log-group:*:log-stream:*"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}

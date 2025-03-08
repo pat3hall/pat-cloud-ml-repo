@@ -1,0 +1,64 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::emr-dev-exp-012345678901/"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::emr-dev-exp-012345678901/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::us-west-2.elasticmapreduce",
+                "arn:aws:s3:::amazon-reviews-pds",
+                "arn:aws:s3:::aws-data-analytics-blog",
+                "arn:aws:s3:::emr-dev-exp-012345678901"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::us-west-2.elasticmapreduce/*",
+                "arn:aws:s3:::amazon-reviews-pds/*",
+                "arn:aws:s3:::aws-data-analytics-workshops/emr-dev-exp-workshop/*",
+                "arn:aws:s3:::emr-dev-exp-012345678901/*"
+            ],
+            "Effect": "Allow"
+        },
+        {
+            "Action": [
+                "cloudwatch:*",
+                "dynamodb:*",
+                "ec2:Describe*",
+                "elasticmapreduce:Describe*",
+                "elasticmapreduce:ListBootstrapActions",
+                "elasticmapreduce:ListClusters",
+                "elasticmapreduce:ListInstanceGroups",
+                "elasticmapreduce:ListInstances",
+                "elasticmapreduce:ListSteps",
+                "kinesis:*",
+                "rds:Describe*",
+                "sdb:*",
+                "sns:*",
+                "sqs:*",
+                "glue:*"
+            ],
+            "Resource": "*",
+            "Effect": "Allow"
+        }
+    ]
+}

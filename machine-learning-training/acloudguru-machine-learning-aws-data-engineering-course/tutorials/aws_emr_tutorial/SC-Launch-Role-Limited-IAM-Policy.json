@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::012345678901:role/EMRDevExp-EMR_EC2_Restricted_Role",
+                "arn:aws:iam::012345678901:role/EMRDevExp-EMRClusterServiceRole",
+                "arn:aws:iam::012345678901:role/EMR_AutoScaling_DefaultRole",
+                "arn:aws:iam::012345678901:role/EMR_DefaultRole",
+                "arn:aws:iam::012345678901:role/EMR_EC2_DefaultRole"
+            ],
+            "Effect": "Allow"
+        }
+    ]
+}

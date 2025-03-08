@@ -1,0 +1,3557 @@
+------------------------------------------------------
+
+A Cloud Guru:
+AWS Certified Machine Learning - Specialty (MLS-C01): Exploratory Data Engineering
+
+  Brian Roehm
+    - course trainer
+
+------------------------------------------------------
+Chapter 1 Introduction
+------------------------------------------------------
+1.1 Course Overview
+
+  Major Topics:
+    - Creating Data Repositories for Machine Learning
+    - Identify and implement a Data Ingestion Solution
+    - Identify and implement a Data Transformation Solution
+
+
+
+   By end of this course:
+     - knowledge needed to ingest, move, transform, and automate machine learning
+       pipelines in AWS
+
+   Prerequisties
+     - Basic AWS Understanding
+     - Basic Python programming knowledge
+
+------------------------------------------------------
+1.2 Skills Needed for this Course
+
+  Skills Needed for this Exam
+    Basic AWS Understanding
+      - Basic of Clouding Computing
+      - How to Navigate in the Enviroment
+      - Standard Security
+    Basic Python Programming
+      - coding familiarity - Data types, variables, functions
+      - Fundamentals of Python Programmin
+      - Standard libraries like Pandas, Numpy, Scikit-learn
+
+  Focus:
+    The goal is to Pass the Exam
+
+  Summary
+
+    Key Takeaways:
+      - you do need basic background in AWS and Python
+      - the goal is to pass the exam
+      - keep a notebook and keep learning
+
+------------------------------------------------------
+1.3 Demo: Exploring the Exam Guide
+
+    Demo: Exam Guide
+      https://aws.amazon.com/certification/certified-machine-learning-specialty/
+
+
+  Summary
+
+    Key Takeaways:
+      - the guide is the foundation for this course and something you need to review periodically
+
+------------------------------------------------------
+1.4 Understanding Machine Learning in AWS
+
+  AI
+    - computer systems able to perform tasks normally requiring human intelligence
+    Machine Learning
+      - subset of AI
+      - gives computers that ability to 'Learn' without being programmed
+      Deep Learning
+        - subset of Machine Learning
+        - Artificial Neural Networks
+
+  3 Layers of the ML Stack on AWS
+    Layer 1: AI Services
+      - this is the collection of AI services that forms layer one.
+      Comprehend
+        - AWS Comprehend is a NLP (natural language processing service)
+        - it uses machine learning to uncover insights and relationships in text.
+      Lex.
+        - It builts it into applications using voice and text.
+         - automatic speech recognition for converting speech to text and natural language understanding (NLU)
+           to recognize the intent of that text.
+      AWS Transcribe
+        - automatic speech recognition service (ASR) that makes it easy for developers to add speech-to-text
+          capability to their different applications.
+      AWS Rekognition
+        - an image and video analysis service that can identify objects, people, text, scenes.
+        - It can identify activities in images and videos, so if there's someone playing soccer,
+          for instance, it could point that out and say that that's a person playing soccer.
+        - can also be used for detecting inappropriate content,
+      AWS Polly,
+        - it turns text into lifelike speech.
+
+    Layer 2: Machine Learning Services
+      AWS SageMaker,
+      AWS GroundTruth.
+        - a data labeling service that makes it really easy to label large datasets for your machine learning jobs
+      Augmented AI.
+        - enables developers to build applications to incorporate human judgments into the workflow of machine
+          learning models.
+        - It's particularly useful for tasks that are challenging for AI to perform with high accuracy,
+        - used for text extraction from complex documents, and sentiment analysis in some cases.
+
+    Layer 3: ML Frameworks and Infrastructure
+      Elastic Interference,
+        - allows you to attach just the right amount of GPU-powered inference acceleration to EC2 or your SageMaker instances.
+      Apache MXNet,
+        - this is open-source deep learning frameworks.
+        - It supports fast model training, scales across multiple GPUs and multiple machines
+        - an optimization tool for very high-performance deep learning ecosystems.
+      Deep learning AMIs
+        - provide machine learning practitioners and researchers with infrastructure and tools to accelerate
+          deep learning in the AWS cloud specifically.
+      TensorFlow
+        - open-source deep learning framework fully supported on AWS
+      Deep Learning Containers
+        - Docker images that are pre-installed with deep learning frameworks and libraries
+
+
+  Summary
+    Key Takeaways
+      - Understand how AI and ML relate to each other
+      - Learn the key services in each of the layers
+      - course will revisit all these services in greater depth
+
+------------------------------------------------------
+1.5 Setting up Amazon SageMaker Studio
+
+
+  Introducing SageMaker Studio
+    - AWS Integrated Development Environment (IDE) for Machine Learning
+
+
+  Getting Started
+    - AWS account with the required permissions
+      - required roles and policies
+      - Network setup (VPC)
+    - SageMaker Studio Domain
+      - acts as a dedicated workspace  that users will use to manage all of the various machine
+        learning resources within SageMaker
+      - allows configuration of the underlying infrastructure
+
+      SageMaker Domain purpose
+        1. Isolation and Security
+          - provides a secure and isolated environment for all of your machine learning projects.
+          - help you to manage those user permissions and ensure that your resources aren't shared
+            or altered by unauthorized people
+        2. Resource Management
+          - within your domain, you can configure specific resources like storage options, instance types,
+            how to access those data sources.
+          - one user interface platform that you can access all of the resources that you need to for your
+            machine learning projects
+        3. Collaboration
+          - allow multiple users that have access to the same domain to create teams and work on joint projects.
+          - can get version control out of it, you can share your datasets, and you also can get concurrent notebook usage.
+
+    - Configure Underlying Resources
+
+  Jupyter Notebook
+    - Interactive development environment
+    - Integration with lifecycle
+    - built-in support
+      - give you all of those machine learning libraries and frameworks that are most common
+        such as TensorFlow, PyTorch, & scikit-learn
+    - collaboration and version control
+      -  integrate with Git to do version controlling,
+    - visualization
+
+  Summary
+    Key Takeaways
+      - need to know SageMaker for the exam
+
+
+------------------------------------------------------
+1.6 Demo: Setting up Amazon SageMaker Studio
+
+
+  Demo: SageMaker studio
+
+     AWS Console -> SageMaker -> Domains -> Create Domain -> Select "Set up for organizations" -> set up ->
+        Domain Name: pat-org-domain, Login Through IAM, add IAM users, add user "pat" -> add -> Next
+        "Create a new role", ML activies (use default 11 activities) ,
+        S3 Bucket Access: bucket: pat-org-domain-bkt -> Next
+        Configure Applications (use defaults) -> Next ->
+        Customize Studio UI <use defaults> -> Next ->
+        Set up network settings: "Virtual Private Cloud (VPC) Only, VPC: <vpc>, subnets: <subnets>, Security Groups: <sgs>
+        Configure Storage <use defaults>  -> Next -> Review -> Cancel
+
+     AWS Console -> SageMaker -> Notebooks -> Open Jupyter Notebook (after creating notebook instance)
+
+  Summary
+    Key Takeways
+      - SageMaker Studio is a critical service for Machine Learning in AWS
+      - should be familiar with the components and how to configure the environment for the exam
+
+------------------------------------------------------
+1.7 Why Data Engineering in Machine Learning Course
+
+
+  Data Engineering is Foundational to ML
+
+    1. Data Collection and Ingestion
+      - typically from multiple sources
+      - automation is critical when deal with
+        - as we get multiple sources of very big data, which is pretty typical for machine learning,
+          automation becomes absolutely critical
+        - it becomes absolutely critical that as we ingest all of this data into the system, we have robust
+          models and methods to be able to streamline and efficiently pull all of this information in and
+          be able to push it into the next system.
+
+    2. Data Cleaning and Preparation
+      - Feature Engineering requires model selection
+      - requires large amounts of clean data
+      - data cleanliness directly effects ML Output
+      - cost effective methods to do the data cleaning and preparation
+
+    3. Scalability and Performance
+      - design scalable data architectures
+      - implement distributed computing environments
+
+    4. Data Storage and Management
+      - Data Training often requires large amounts of storage
+      - Design and optimization requires data engineers
+
+    5. Data Goverance and Compliance
+      - Regulatory Requirements
+      - ethical Standards
+
+
+  Summary
+
+    Key Takeways
+      - data engineering is critical to effective Machine Learning predictions
+      - understanding how data engineering works will make you a more effective data scientist
+
+------------------------------------------------------
+
+Chapter 2 Creating Data Repositories for Machine Learning
+
+------------------------------------------------------
+2.1 Introduction to the Machine Learning Lifecycle and Data Sources
+
+  Creating Data Repositories for Machine Learning
+
+    Core Services
+      - Data engineering at a glance
+      - basic of ML Pipelines
+    S3
+      - S3 Overview
+      - S3 Storage Classes
+      - Demo: S3
+      - S3 Encryption
+    File and Block Store
+      Elastic File System (EFS)
+      Elastic Block Store (EBS)
+
+
+  summary
+    Key Takeaways
+      - this section is about data storage
+      - critical that you come away with the knowledge of
+        - options for storing data in AWS
+        - understanding of when you should choose S3 vs EFS vs EBS
+      - how to work with those services
+------------------------------------------------------
+2.2 Data Engineering at a Glance
+
+
+  Data Engineering is Foundational to ML
+
+  The story
+    Data Collection and Ingestion
+    Data Transformation
+      - cleaning and preparing the data
+    Data Movement
+      - may return data to the source so they can use it to make business decisions
+    SageMaker
+      - collect the data, then do machine learning stuff with the data to get predictions back,
+        and then we dump that into a database, which then goes to the customer.
+    Automation
+      - automation is a critical component of data engineering.
+
+  Summary
+    Key Takeaways
+      - Data Engineering is a study of how to move data and create actionable insights.
+        for customers and business users
+      - Data engineering is the understanding of how to move clean, select and automate that data
+        and that will greatly effect the costs and the prediction ability of machine learning models,
+
+------------------------------------------------------
+2.3 The Basics of Machine Learning Pipeline
+
+ ML Pipeline Stages:
+   1. Data Collection and Ingestion
+     - data from multiple sources to one place
+     - automation is critical
+   2. Data Cleaning and Preparation
+     - all about "Feature Engineering"
+        - feature engineering is comprised of feature selection, picking those features and then
+          cleaning up and preparing those features so that they're ready to be ingested into your model.
+     - requires large amount of clean data
+     - data cleanliness directly effects ML outputs
+     - cost effective
+       - If you don't have clean, highly targeted data, you're going to have a lot more processing than
+         you need to have, and that's going to lead to a lot more time and a lot more expense
+   3. Scalability and Performance
+     - design scalable data architectures
+     - implement distributed computing environments
+   4. Data Storage and Management
+     - data training often requires large amount of storage
+     - design and optimization requires data engineers
+   5. Data Governance and Compliance
+     - Regulatory Requirements
+     - ethical standards
+
+  Summary
+    Key Takeaways
+      - data engineering is critical to effective Machine Learning Predictions
+      - understand how data engineering works will make you a more effective data scientist
+
+
+------------------------------------------------------
+2.4 Amazon S3 Overview
+
+
+  Storage in AWS (4 key storage types ML exam)
+    S3
+      - durable object storage for all types of data
+    Glacier
+      - archival storage for infrequently used data
+    EBs (Elastic Block Storage)
+      - Block storage
+    EFS (Elastic File Storage)
+      - file storage
+
+
+  S3 - Simple Storage Service
+    - a service for the storage of objects in buckets
+    objects
+      - files
+      - objects have keys
+      - max object size is 5TB
+    key
+      - a full path to the file: <my_bucket>/my_file.txt
+    buckets
+      - directories
+
+
+  S3 Naming Conventions
+    Buckets naming
+      - global unique names
+      - length: between 3 and 63 characters
+      - valid characters: lowercase, hyphens, periods (dots)
+      - names should follow DNS Naming conventions
+         - should not use underscores, periods, and dashes (hyphens)
+         - should stick to lowercase and numbers
+    object naming
+      - length: from 1 to 1024 bytes (byte length, not character length)
+      - delimiters: forward slash
+        - forward slash simulates folder structure in the bucket
+      - case sensitivity: object keys are case sensitive
+
+
+  Summary
+    Key Takeaways
+      - S3 is a service for the storage of objects in buckets
+      - Data quality is incredibly important
+        - the data quality is affected by the organization and nomenclature of the S3 storage
+          - this is true for both the bucket and the object
+
+------------------------------------------------------
+2.5 Amazon S3 Storage Classes
+
+
+  Amazon S3 Storage Classes
+    - below order is from most frequently accessed data to least frequently accessed data
+    S3 Standard
+      - General purpose storage for any type of data, typically used for frequently accessed data
+      - millisecond access
+      - Use Cases: Content distribution, big data analytics, cloud applications
+      - well suited form ML due to performance
+    S3 Intelligent Tiering
+      - Automatic cost savings for data with unknown or changing access patterns
+      - 2 tiers: frequent and infrequent access
+      - uses machine learning to optimize your storage costs
+      - optimize costs by automatically moving data to the most cost-effective access
+      - millisecond access for frequently accessed tier
+      - cost $0.0125 to $0.023 /GB
+      - monitoring fee per object
+      - Use cases: For ML projects with datasets that have changing or unpredictable access patterns
+    S3 Standard IA (Infrequently Accessed)
+      - for less frequently accessed data
+      - millisecond access
+      - cost $0.0125 / GB / month
+      - retrieval fee per GB
+      - min storage duration (30 days)
+      - min object size
+      - use cases: Disaster recovery, backups,
+    S3 Express One Zone
+      - High-performance storage for your most frequently accessed data
+      - cost $0.16 / GB / month
+    S3 One Zone IA
+      - for less frequently accessed data
+      - the key is One Zone (stored in one Availability Zone)
+      - cost $0.01 / GB
+      - retrieval fee per GB
+      - min storage duration (30 days)
+      - min object size
+      - use cases: Disaster recovery (less critical data), backups (less critical data), or regulatory
+        requirements that data must be stored in a specific location
+    S3 Glacier Flexible Retrival
+      - For long-term backups and archives with retrieval option from 1 minute to 12 hours
+      - Archive data
+      - minutes to hour access
+      - cost $0.0036 / GB
+      - retrieval fee per GB
+      - min storage duration (90 days)
+      - use cases: Archive offsite, media archives, compliance
+    S3 Glacier Instant Retrival
+      - For long-lived archive data accessed once a quarter with instant retrieval in milliseconds
+      - cost $0.004 / GB
+    S3 Glacier Deep Archive
+      - Archive data
+      - hour(s) access
+      - cost $0.00099 / GB
+      - retrieval fee per GB
+      - min storage duration (180 days)
+      - use cases: Archive offsite, media archives, compliance
+      - Use cases: Digital preservation, compliance
+
+  Summary
+    Key Takeaways
+      - Know the differences between S3 storage classes
+        - cases:
+           machine learning:    Amazon S3 Standard because it's the fastest access.
+           compliance:          store data for compliance, Glacier or Glacier Deep Archive
+           access data quickly: 3 Standard or S3 Intelligent-Tiering.
+
+------------------------------------------------------
+2.6 Demo: Amazon S3 Storage Classes
+
+       Demo: S3 storage works
+         - how is it configured?
+         - how are storage classes utilized?
+
+
+  Storage classes
+    - set at object-level not bucket level
+    - can set storage class when uploading or after uploaded
+    - if changing storage class after uploaded using "Edit storage class" on object, then it makes a
+      copy of the object with the updated storage class:
+        Edit storage class  Info
+           This action creates a copy of the object with updated settings and a new last-modified date.
+           You can change the storage class without making a new copy of the object using a lifecycle rule.
+
+  Lifecycle rules
+    - can be set on bucket under "management rules"
+    - can move objects based on:
+       Lifecycle rule actions
+        Choose the actions you want this rule to perform. P
+         - Move current versions of objects between storage classes
+         - Move noncurrent versions of objects between storage classes
+         - Expire current versions of objects
+         - Permanently delete noncurrent versions of objects
+         - Delete expired object delete markers or incomplete multipart uploads
+
+  Summary
+    Key Takeaways
+      - understand how storage classes and lifecycle version works for the exam
+      - S3 is a critical component of ML
+      - should be comfortable with:
+        - standing up an instance
+        - moving data between storage classes
+        - working with encryption
+
+------------------------------------------------------
+2.7 Amazon S3 Encryption
+
+  Why Encrypt Data in S3
+    Protection
+      - protection against unauthorized access
+    Compliance
+      - compliance with regulatory requirements
+    Prevention
+      - ensuring data privacy and security
+
+
+  Ensuring Data Privacy and Security
+    Data in transit
+      - secure sockets layer (SSL) or Transport Layer Security (TLS)
+    Server Side Encryption (SSE)
+      SSE-S3
+        - using AES-256
+        - AWS is managing encryption key and encryption process
+      SSE-KMS
+        - leverages AWS Key Management Service (KMS)
+        - KMS is managing the encryption key
+      SSE-C
+        - customer managed encryption
+        - AWS manages the encryption process but customer manages the encryption keys
+    Client Side Encryption (cSE)
+      - data is encrypted before being uploaded to S3
+
+    Access Controls and Audit Trails
+      - can set up S3 to work with IAM, or identity access management, and access control list to control
+        who accesses encrypted data.
+      - can also set up audit trails. So if someone is accessing a specific file, you can log and manage
+        both the access to that file and where that file is moving.
+
+  Demo: look at the encryption settings for S3
+       - showed under Bucket -> "Permissions" tab, you can set "Block public Access", Bucket policy,
+         object ownership, ACcess control list, etc,
+
+
+  Best Practices
+    Key Management
+      - Use AWS Key Management Service (KMS)
+      - Rotate keys
+    Access Control
+      - use bucket policies to control access
+      - use IAM Policies
+     Establish monitoring protocols
+      - set up AWS cloud trail and server access to audit who's accessing files and how those files
+        are being utilized
+
+  Summary
+    Key Takeaways
+      - encryption is critical especially around data
+      - for exam, need to be familiar with basic security protocols for S3
+
+------------------------------------------------------
+2.8 Amazon Elastic File System
+
+
+  Elastic File System (EFS) intro
+    - fully managed
+    - available / durable / Scalable
+      - stored across multiple Availability Zones
+    - secure
+      - integrates with IAM
+    - priciing: based on region but comprised of storage and throughput
+
+  S3 vs EFS for Machine Learning Applications
+    Large amounts of Data:  S3
+      - S3 is designed to store and retrieve really any amount of data.
+      - S3 can store up to exabytes of data, which makes it ideal for large-scale data storage.
+      - S3 is generally gonna offer lower storage costs.
+      - for simple PUT, GET, DELETE kinds of operations, S3 is gonna be more suitable, which is
+        generally what you're going to see for training data types of applications
+    Hierarchical Storage: EFS
+      - hierarchical storage is simply a file system.
+      - if using a traditional file system for your machine learning, you're going to want EFS over S3.
+    Simultaneous Read or Write (high IOPs): EFS
+      - EFS offers lower latency than S3.
+      - if your application needs real-time read/write operations on files, EFS is gonna be a better solution
+    Cost Efficiency: S3
+      - In general, S3 is going to be more cost efficient than EFS.
+
+  Summary
+    Key Takeaways
+      - understand where EFS might be beneficial over S3
+
+------------------------------------------------------
+2.9 Amazon Elastic Block Store
+
+
+
+  Amazon Elastic Block Store Intro
+    Single EC2 instance
+      - high-performance block storage service that is specifically designed for use with
+        Elastic Cloud Compute, or EC2
+    Compliance
+      - single Availability Zone
+      - for regulatory frameworks that mandate that you to store data within a specific geographic area.
+    High IOPs
+      - over 100K IOPs
+
+
+  S3 vs EFS vs EBS for Machine Learning Applications
+    Preprocessing on a Local disk: EBS
+    Low Latency Requirements:      EBS
+    High IOPs Requirements:        EBS
+    Shared File System:            EFS
+
+
+  Summary
+    Key Takeaways
+      - Low Latency and High IOPs are keys to EBS
+      - associated with EC2 instances or single AZs, then EBS
+
+
+   Create:
+     1. Create S3 bucket
+     2. Create SageMaker Instance
+   Work with Data
+     3. Create Jupyter Notebook
+     4. Write/Read to S3 using DataFrames
+     5. Visualize the data
+
+------------------------------------------------------
+2.10 Using Amazon S3 as a Machine Learning Lab
+
+
+About this lab
+
+Imagine you are a starting Data Engineer. You have been tasked with preparing an environment for model building.
+In order to complete this task you need to ingest a csv file into S3 and then load that data source into a Jupyter
+Notebook. Finally you need to save that data back into S3 under a different table.
+
+Learning objectives
+  - Prepare the Environment
+  - Ingest Data Into SageMaker
+
+
+    ------------------------------------------------------
+Ingesting Data Into S3
+
+    Go to the top of the page and in the search bar search for S3
+    Select the S3 service to open the Amazon S3 page.
+    Click Create Bucket
+    Name the Bucket something unique
+    Go to the bottom of page and click Create Bucket
+    Once created, click on the Bucket name
+    Go to https://open.toronto.ca/dataset/parking-tickets/
+    Click Download Data
+    Download parking-tickets-2022 and unzip on your computer
+    Go back to your S3 Bucket page
+    Click Upload
+    Click Add Files and select Parking_Tags_Data_2022.000.csv from your unzipped parking-tickets-2022 file.
+    Click Upload
+
+Working with Data in Jupyter Notebooks
+
+    Go to the top of the page and in the search bar search for SageMaker
+    Click on Open Jupyter to the right of your notebook name
+    On the right side of the Jupyter page, click New then select the dropdown option conda_python3
+    In the first cell enter
+
+  import numpy as np
+  import pandas as pd
+  import matplotlib.pyplot as plt
+
+    Click Shift and Enter to run the cell
+    In the next cell enter
+
+   df = pd.read_csv('s3://YOURBUCKETNAME/Parking_Tags_Data_2022.000.csv')
+   df.head()
+
+    Replace YOURBUCKETNAME with the name of your bucket
+    Click Shift and Enter to run the cell
+    In that same cell add an 11 inside the parentheses
+
+   df.head(11)
+
+    Click Shift and Enter to run the cell
+    In a new cell enter
+
+   df.drop(columns='location3')
+
+    Click Shift and Enter to run the cell
+    In a new cell enter
+
+   df.to_csv('s3://YOURBUCKETNAME/Result.csv')
+
+    Replace YOURBUCKETNAME with the name of your bucket
+    Click Shift and Enter to run the cell
+    Go back to the S3 bucket tab and click on the bucket.
+    Verify that Result.csv is a file in the bucket.
+
+Congratulations, you have completed this hands-on lab!
+
+    ------------------------------------------------------
+    code: lab 2.10 read S3 csv, drop column, write results csv to S3
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import matplotlib.pyplot as plt
+
+        >>> df = pd.read_csv('s3://my-ml-repo-bkt/Parking_Tags_Data_2022.000.csv')
+        >>> df.head(11)
+
+        >>> df.drop(columns='location3')
+
+        >>> df.to_csv('s3://my-ml-repo-bkt/Result.csv')
+
+    ------------------------------------------------------
+
+
+------------------------------------------------------
+2.11 Creating Data Repositories for Machine Learning Review
+
+
+  The story
+    Data Collection and Ingestion
+    Data Transformation
+      - cleaning and preparing the data
+    Data Movement
+      - may return data to the source so they can use it to make business decisions
+    SageMaker
+      - collect the data, then do machine learning stuff with the data to get predictions back,
+        and then we dump that into a database, which then goes to the customer.
+    Automation
+      - automation is a critical component of data engineering.
+
+  Storage in AWs
+    S3
+      - durable object storage for all types of data
+    Glacier
+      - archival storage for infrequentlyc used data
+    EBS
+      Block Storage
+    EFS
+      File storage
+
+
+  S3
+    - service for the storage of objects in buckets
+    - objects are files
+    - buckets are the [top-level] directories
+    - objects have keys
+      - key is the full path [to the file/object]
+
+
+  Amazon S3 Storage Classes
+    - below order is from most frequently accessed data to least frequently accessed data
+    S3 Express One Zone
+      - High-performance storage for your most frequently accessed data
+    S3 Standard
+      - Use Cases: Content distribution, big data analytics, cloud applications
+    S3 Intelligent Tiering
+      - Automatic cost savings for data with unknown or changing access patterns
+    S3 Standard IA (Infrequently Accessed)
+      - for less frequently accessed data
+    S3 One Zone IA
+      - for less frequently accessed data
+    S3 Glacier Flexible Retrival
+      - For long-term backups and archives with retrieval option from 1 minute to 12 hours
+    S3 Glacier Instant Retrival
+      - For long-lived archive data accessed once a quarter with instant retrieval in milliseconds
+    S3 Glacier Deep Archive
+      - Archive data
+
+  Ensuring Data Privacy and Security
+    Data in transit
+      - secure sockets layer (SSL) or Transport Layer Security (TLS)
+    Server Side Encryption (SSE)
+      SSE-S3
+        - using AES-256
+        - AWS is managing encryption key and encryption process
+      SSE-KMS
+        - leverages AWS Key Management Service (KMS)
+        - KMS is managing the encryption key
+      SSE-C
+        - customer managed encryption
+        - AWS manages the encryption process but customer manages the encryption keys
+    Client Side Encryption (cSE)
+      - data is encrypted before being uploaded to S3
+
+    Access Controls and Audit Trails
+      - can set up S3 to work with IAM, or identity access management, and access control list to control
+        who accesses encrypted data.
+      - can also set up audit trails. So if someone is accessing a specific file, you can log and manage
+        both the access to that file and where that file is moving.
+
+   -------
+   Amazon Simple Storage Service (S3) User Guide -> Logging options for Amazon S3
+     https://docs.aws.amazon.com/AmazonS3/latest/userguide/logging-with-S3.html
+       - You can record the actions that are taken by users, roles, or AWS services on Amazon S3 resources and maintain log
+         records for auditing and compliance purposes.
+       - To do this, you can use server-access logging, AWS CloudTrail logging, or a combination of both.
+       - We recommend that you use CloudTrail for logging bucket-level and object-level actions for your Amazon S3 resources.
+       - For more information about each option, see the following sections:
+          Logging requests with server access logging
+            https://docs.aws.amazon.com/AmazonS3/latest/userguide/ServerLogs.html
+          Logging Amazon S3 API calls using AWS CloudTrail
+            https://docs.aws.amazon.com/AmazonS3/latest/userguide/cloudtrail-logging.html
+   -------
+
+
+  S3 vs EFS for Machine Learning Applications
+    Large amounts of Data:  S3
+      - S3 is designed to store and retrieve really any amount of data.
+      - S3 can store up to exabytes of data, which makes it ideal for large-scale data storage.
+      - S3 is generally gonna offer lower storage costs.
+      - for simple PUT, GET, DELETE kinds of operations, S3 is gonna be more suitable, which is
+        generally what you're going to see for training data types of applications
+    Hierarchical Storage: EFS
+      - hierarchical storage is simply a file system.
+      - if using a traditional file system for your machine learning, you're going to want EFS over S3.
+    Simultaneous Read or Write (high IOPs): EFS
+      - EFS offers lower latency than S3.
+      - if your application needs real-time read/write operations on files, EFS is gonna be a better solution
+    Cost Efficiency: S3
+      - In general, S3 is going to be more cost efficient than EFS.
+
+
+  S3 vs EFS vs EBS for Machine Learning Applications
+    Preprocessing on a Local disk: EBS
+    Low Latency Requirements:      EBS
+    High IOPs Requirements:        EBS
+    Shared File System:            EFS
+
+
+  Summary
+    Key Takeaways
+      - where your data is stored is a critical component to any ML project
+      - need to understand:
+        - AWS Storage options
+        - when to choose a particular storage option
+        - basics of storage classes and which class is faster
+      - Expect S3 and storage options to be on the exam
+
+------------------------------------------------------
+2.12 Quiz: Creating Data Repositories for Machine Learning
+
+Question 1
+
+You are configuring an S3 bucket to house ML data for a new project. You want to use AWS Key Management Service (AWS KMS)
+for server-side encryption. What is the best way to do this?
+
+choices:
+  - Use SSE-C when creating the bucket.
+  - You must configure AWS Key Management Service at the object level, not the bucket level.  <- incorrect answer
+  - Use SSE-KMS when creating the S3 bucket.      -> Correct answer
+  - Use SSE-S3 when creating the bucket.
+Sorry!
+  AWS KMS can be configured at the bucket level through SSE-KMS, not just at the object level
+Correct Answer
+   SSE-KMS uses AWS KMS to manage encryption keys.
+
+
+Question 2
+
+Review the following item: parking/tickets.csv. What does 'parking' denote, what is the significance of 'tickets.csv,'
+and what does the combination 'parking/tickets.csv' signify?
+
+choices:
+  - 'parking' is the key, 'tickets.csv' is the object, and 'parking/tickets.csv' is the bucket.
+
+  - 'parking' is the bucket, 'tickets.csv' is the object, and 'parking/tickets.csv' is the key.    <- correct answer
+
+  - 'parking' is the bucket, 'tickets.csv' is the key, and 'parking/tickets.csv' is the object.
+
+  - 'parking' is the object, 'tickets.csv' is the bucket, and 'parking/tickets.csv' is the key.
+Good work!
+
+  In S3, 'parking' is commonly the name of the bucket, 'tickets.csv' is the file or object stored, and 'parking/tickets.csv'
+  represents the complete key that references the object within the bucket.
+
+
+Question 5
+
+You are configuring storage for inference data. This data will be moved in and out of the storage 20,000 times per second.
+What is the best storage service for this requirement?
+choices:
+  - EFS    <- correct answer
+  - S3
+  - EBS    <- incorrect answer
+  - MongoDB
+Sorry!
+
+  EBS provides block-level storage primarily suited for high throughput and low latency on a single instance but may not
+  handle 20,000 operations per second efficiently when scaled.
+
+Correct Answer
+
+  EFS is designed for high-performance, scalable file operations, making it suitable for environments with extremely
+  high data transfer rates, like 20,000 transfers per second.
+
+------------------------------------------------------
+
+Chapter 3 Identify and Implement a Data Ingestion Solution
+
+------------------------------------------------------
+3.1 Introduction to Data Engineering Concepts
+
+  Identify and Implement a Data Ingestion Solution
+    - take data from all kinds of different sources,  need to be able to identify it, and then
+      need to be able to transform and focus that data so that we can get some very highly-targeted
+      and effective outputs.
+
+  Core Services
+    Batch Processing
+    Stream Processing
+
+  Stream Processing
+    Streaming ML Workloads using Kinesis Data Streams
+    Demo: Storing Data in S3 using Kinesis Data Streams
+    Storing Data in S3 using Kinesis Data Firehose
+
+  Batch Processing
+    Ingesting DAta usgin AWS Glue Crawler
+    Demo: Ingesting Data Using AWS Glue Crawler
+    AWS Data Stores in Machine Learning
+
+
+  Summary
+    Key Takeaways
+      - this section is all about data movement
+      - need knowledge of:
+        - the differences between batch and stream processing
+        - services associated with batch and stream
+        - how to work with these services
+
+------------------------------------------------------
+3.2 Batch Processing
+
+
+  Batch Processing
+    - for data not required immediately
+    - large transformations
+      - can do much larger, more complex transformations with batch processing for a much lower cost
+    - lower cost
+    - larger data
+
+  Batch Processing Use Cases
+    Banking
+      - normally do something called a nightly run, where they take all of the transactions for the day, and
+        they process them all at once into their big databases so that then they can do reporting on them
+    Retail
+      - all the transactions from today that need to be recorded and stored, so that you can figure out what kinds
+        of goods you need to order, and you can figure out how well your things are selling, and if you're making
+         money or you're losing money.
+    Hospitals
+      - inventory management practices, need to understand revenue, scheduling, etc
+
+    Marketing
+      - click through rate, the number of people that are visiting a site, the impressions on that site, the
+        marketing campaigns and how they're performing, who's looked at them, etc
+
+  Batch Processing Challenges to Consider
+    Data Format
+      - consistent data field formating
+    Encoding
+      - common file encoding (e.g. csv vs xml)
+    Windows and Missed Runs
+      - what happens if a batch run fails but you need the batch data by a certain time
+      - how to handle missed runs, failed runs, etc
+
+
+  Summary
+   Key Takeaways:
+     - consider how data should move into your enviroment and how to clean it up
+        - what does the data formating, the file encoding, what fields are important, etc. ???
+     - understand Batch processing key characteristics
+       - data not required immedidately
+       - large transformations
+       - lower costs
+       - handle larger data sources
+------------------------------------------------------
+3.3 Stream Processing
+
+  Stream Processing
+    - data needed now (live processing)
+    - less complex transformations
+      - need to minimize latency so transformations need to be less complex
+    - higher cost
+      - transformations need to happen in near real time. so lots of compute needs to be allocated
+
+
+  Stream Processing Use cases
+    Fraud
+      - need real-time detection for credit card fraud, bank transaction fraud, etc
+    Stock trading
+      - when you need real-time stock trading decisions
+    Customer Activity
+      - streaming services need to process in real-time
+      - ride-share need to process in real-time
+
+  Stream Processing Challenges
+    Time windows
+      - What happens if that time window is missed?
+      - How big should that time window be?
+    missed data
+      - What if we have an event that comes into our system, but it comes in late?
+    transformation challenges
+      - transformations need to be performed in near real-time
+    missed data
+
+  Summary
+    Key Takeaways
+      - do you really need streaming?
+      - understand the key characterisitics of streaming
+        - data needed right now
+        - less complex transformations so they can be performed in near real-time
+        - higher cost
+
+------------------------------------------------------
+3.4 Streaming ML Workload Using Amazon Kinesis Data Streams
+
+  Amazon Kinesis
+    Input
+    transformation
+    output
+
+    Shared
+      - sequence of data records in a stream
+        - 5 transactions per second for reads, and 1000 records per second for writes
+
+                ---------------------------------------
+                | -------- -------- -------- -------- |
+        ingres  | |record| |record| |record| |record| |  Egress
+                | -------- -------- -------- -------- |
+                ---------------------------------------
+
+    Shared
+      - each shard is a sequence of one or more data records and provides a fixed unit of capacity
+      - data records are composed of a [shard] sequence number, a partition key, and a
+        data blob, which is an immutable sequence of bytes
+        Sequence number
+          - a unique number or identifier that's assigned by Kinesis to each data record within a shard
+          - Each data record has a sequence number that is unique per partition-key within its shard.
+          - Sequence numbers for the same partition key generally increase over time.
+        Partition key
+          - kinesis uses the partition key that is associated with each data record to determine which shard
+            a given data record belongs to
+          - used to group data by shard within a stream
+          - Partition keys are Unicode strings, with a maximum length limit of 256 characters for each key.
+          - When an application puts data into a kinesis stream, it must specify a partition key
+        Data Blog
+          - up to 1MB of data
+          - actual data record that is carried by kinesis data streams
+        Hash function
+          - An MD5 hash function is used to map partition keys to 128-bit integer values and to map associated
+            data records to shards using the hash key ranges of the shards.
+
+
+  Kinesis Data Streams vs Kinesis Data Firehose
+    Kinesis Data Streams
+      - mostly managed service
+      - data storage 1 to 7 days
+      - real-time processing
+      - multiple consumers / destinations
+        - support for spark
+      - primarily designed for custom, realtime data processing applications
+      - if you need to perform detailed analysis or complex transformations on streaming data,
+        Data Streams is a good solution
+    Kinesis Data Firehose
+      - fully managed service
+      - no data storage in firehose
+      - near real-time processing
+      - management by Firehose
+        - no support for spark
+      - designed for just the straightforward loading or streaming of data into AWS data stores, S3,
+        analytics services, etc.,
+      - Data Firehose is be best when you need to capture, do light transformations, then store into
+        storage service like S3 or something similar.
+
+
+   Kinesis bigger picture
+     - you're not gonna use Kinesis by itself.
+     - You're always gonna do something else with the data - input the data and we do transformations on it,
+       and then we stream it to SageMaker so that we can do some sort of machine learning or S3 so that we
+       can store it and then pull it out to have reporting done on it
+
+  Summary
+    Key Takeaways
+      - understand what a Kinesis streams data shard
+      - hash function is just a mathematical way of distributing partitions to optimize read / write
+      - kinesis is a processing tool that involves a input, a transformation, and an output
+
+
+
+------------------------------------------------------
+3.5 Demo: Storing data in S3 Using Amazon Kinesis Data Streams
+
+  Amazon Data Firehose: how it works:
+
+    Ingest
+      - select data source such as topic in Amazon Manage Streaming for Kafka (MFK), a stream in Kinesis Data Streams,
+        or using Firehose Direct PUT API
+    Transform (optional)
+      - specify how you want to transform your data such as selecting an option to convert the data to Parquet/ORC
+        or invoking AWS Lambda function to transform streamed records
+    Deliver
+      - specify a destination for your streams such as S3, Amazon OpenSearch Service, Redshift, Splunk, Snowflake,
+        or a custom HTTP endpoint
+
+
+   Amazon Kinesis Streams Capacity Types:
+
+     on-demand
+       - Use this mode when your data stream's throughput requirements are unpredictable and variable.
+       - With on-demand mode, your data stream's capacity scales automatically.
+     Provisioned
+       - Use provisioned mode when you can reliably estimate throughput requirements of your data stream.
+       - With provisioned mode, your data stream's capacity is fixed.
+
+  Demo: Kinesis Firehose and Data Streams basics settings
+
+
+  AWS Console -> Amazon Data Firehose [formerly Kinesis Data Firehose] -> Create firehose stream
+      Source: Amazon Kinesis Data Streams, Destination: S3
+      Source Setting: Kinesis data Stream -> Create
+          Data Stream Name: Test, Capacity mode: on-demand -> Create [shows many additional options]
+            -> under 'configuration' tab
+            -> can set Encryption, Data Retention (default 1 day)
+
+  Summary
+
+    Key Takeaways
+      - Kinesis Data Streams are very common in machine learning applications
+      - need to understand:
+         - characteristics of a Kinesis Data Stream
+         - common use cases
+         - basics of how streams are configured
+
+------------------------------------------------------
+3.6 Using Amazon Kinesis Data Firehose in a Machine Learning Pipeline
+
+
+  Kinesis in Machine Learning Applications
+    1. Collection and Ingestion
+      Kinesis Data Streams is the Kinesis choice
+      - includes temporary data store (from default 24 hours to 7 days)
+      - Kinesis Data Streams allows for the collection of large data streams in real time from
+        various sources like web applications, mobile devices, sensors, and logs.
+      - And these streams can temporarily store data, making it available for processing for 24 hours or
+        extendable up to 7 days, depending upon how you want to configure that.
+
+
+    2. Preprocessing
+       Kinesis Data Firehose is the kinesis choice
+       - Kinesis analytics allows for the real-time SQL or Apache Flink preprocessing
+       - Firehose service can capture, transform, load streaming data into your data stores.
+       - And this is really helpful for machine learning model training because it can filter and
+         aggregate or transform that data before it's stored.
+
+    3. ML Model Training
+       S3, Batch Process, SageMaker
+       - store your processed data in S3, and then you can use S3 as your source for machine learning
+         training models such as SageMaker or machine learning frameworks (typically a batch process)
+
+    4. Real-time Inference
+      Kinesis Data Analytics
+      - allows you to run Apache Flink
+      - to host machine learning models for real-time inferencing on streaming data
+
+    5. Monitoring
+      Data Drift
+      - over time, your real data inference results drift away from your trained model prediction results
+      Kinesis Data Analytics or Cloudwatch
+        - use Kinesis Data Analytics or CloudWatch as a monitoring service that will allow you to track
+          the performance of your machine learning applications and understand or detect anomalies in real time
+
+  Summary
+    Key Takeaways
+      - use of Kinesis is not a one step solution
+      - it can be used in multiple areas of your ML pipeline
+      - more than one option when moving data. Know the difference between Streams and Firehose (or Glue)
+      - consider the process and requirements and allow that to define the solution
+
+------------------------------------------------------
+3.7 Storing Data in S3 Using Kinesis Data Firehose
+
+
+About this lab
+
+In this Hands on Lab you will gain experience working as a Data Engineer to create a Kinesis Data Firehose
+stream that moves data into an S3 bucket that you will create. Once created you will learn how to test the
+stream with demo data, and then create alerts that will enable you to monitor your streams once they become
+production ready.
+
+Learning objectives
+  - Configure your Data Stream
+  - Test Kinesis Data Stream
+  - Create an Alert
+
+
+      VPC
+      Kinesis Test        -------->   Kinesis         -------->   S3 Bucket
+      Server                          Data Firehose
+
+
+    ------------------------------------------------------
+Configure your Data Stream
+
+    Log in to the AWS Management Console using the credentials provided on the lab instructions page.
+    Go to the top of the page and in the search bar search for Kinesis
+    Select Amazon Data Firehose and click Create Firehose stream
+    Choose Amazon Kinesis Data Streams as the Source and Amazon S3 as the Destination
+
+Configure Source and Destination Settings
+
+Click Create under Source Settings, Kinesis data stream
+
+    Enter “ml-kinesis-stream-1” as the Data stream name
+    Click Create data stream
+    Back under the Create Firehose stream page, click Browse under Source settings, refresh, and select “ml-kinesis-stream-1”. Click Choose
+    Scroll down to "Destination settings and under S3 Bucket, click Create
+    Under Bucket name choose a unique name
+    Click Create bucket
+    Back under the Create Firehose stream page, click Browse under Destination settings, refresh, and select your newly created S3 bucket. Click Choose
+    Back on the Create Firehose stream page, scroll to the bottom and click Create Firehose stream
+
+Test Kinesis Data Stream
+
+    Expand the “Test with demo data” blade and click Start sending demo data
+    Let that run for about 5 minutes
+    Go to your S3 bucket and confirm that data is being streamed there
+    Click “Stop sending demo data”
+
+Create an Alert
+
+    Scroll your mouse to Records read from Kinesis Data Streams. At the bottom of the chart a small window will appear with a bell at the bottom right hand corner. Click on the bell.
+    For period click 1 minute.
+    Choose Lower for the alarm condition.
+    Type 10000 for the threshold value.
+    Click Next
+    Click Create new topic
+    Choose an email address and type it in Email endpoints window. The email may be real if you want to actually receive alerts or fake if you do not.
+    Click Create topic
+    Click Next at the bottom of the page.
+    Type lowerlimit for the alarm name.
+    Click Next and then click Create Alarm
+    Back on the Amazon Data Firehose page, select the Firehose stream and expand the “Test with demo data” blade and click Start sending demo data
+    Let that run for about 3 minutes
+    On the CloudWatch page, view the "lowerlimit" alarm, and Refresh the page.
+    Verify the status of the alarm has changed from "insufficient data" to "In alarm"
+    Go back to Amazon Data Firehose and review Firehose stream metrics to confirm data is being captured 
+    ------------------------------------------------------
+
+
+------------------------------------------------------
+3.8 Ingesting Data using AWS Glue Crawler
+
+  How AWS Glue Crawler Fits into AWS Glue
+    - Crawler can automatically search through all of your data stores and come back with meaningful information
+      to populate a data catalog.
+    - data catalog is really big index that tells you all kinds of information about your data and where it lives.
+    - Crawler can be set up to search through your data stores (S3) and then populate a data catalog.
+    - you setup Crawler jobs to search through a data store
+
+     Data Stores       ------>  Glue Crawler    ------> Populates       ---> Jobs
+     S3, Redshift,              searches the            Data Catalog         Create Crawler Jobs
+     databases, ...             Data Stores                                  to search Data Store
+
+  AWS Glue Crawler overviews
+    Designed to automate the discovery of data
+      - scanning or "crawling" data stores
+      - purpose: Discovery, detection, cataloging
+      - type of sources: S3, dynamoDB, RDS, Redshift, MongoDB
+        notes:
+            - Crawler uses JDBC to access Redshift and RDS databases
+            JDBC: Java Database Connectivity (JDBC) is an application programming interface (API) for the Java
+                  programming language which defines how a client may access a database
+
+  Data Discovery in AWS
+    - with massive data sources (e.g. terabytes of data) and a very large organization, it becomes very hard
+      to understand the data footprint, where that data is, where it's moving.
+    - this where the data catalog is so helpful.
+    - a data catalog still requires population and something or someone to keep it up to date,
+
+
+  Summary
+    Key Takeaways
+      - AWS Glue is a BATCH processing service
+      - AWS Glue Crawler is used to explore data stores, to update the Glue Catalog
+
+
+------------------------------------------------------
+3.9 Demo: Ingesting Data Using AWS Glue Crawler
+
+
+
+  3 Main steps for GLUE:
+    Prepare your account for AWS Glue
+      - Admins: Grant access to AWS Glue and set a default IAM role.
+      - The first is preparing your account, you have to set up roles and users in order to actually
+        access AWS Glue and give it the proper permissions so that it can access data in S3 and other places
+    Catalog and search for datasets
+      - View your databases & tables and catalog data using Crawlers.
+    Move and transform data
+     - Transform data using a visual, notebook, or code interface.
+
+   Glue ETL Jobs types:
+    Create job  Info
+      Visual ETL:
+        - Author in a visual interface focused on data flow.
+        - visually/graphically connect sources, transforms, and targets (destinations)
+      Notebook:
+        - Author using an interactive code notebook.
+      Script Editor:
+        - Author code with a script editor.
+
+
+  Demo: take a look at Glue
+     - Examine the AWS Glue
+     - how to set up a batch process job
+
+
+  AWs console -> AWS Glue -> Data Catalog <left tab> -> Crawlers -> Create Crawler ->
+    Name: testcrawler -> Next ->
+      Data aleady mapped to Glue Tables: "Not yet", click on "Add a data source" ->
+        Data Source: S3, S3 path: s3://pat-demo-bkt, "crawl all sub-folders" -> Add an S3 Data Source
+     -> Next
+     -> IAM Role: AWSGlueServiceRole-HotelBookings -> Next
+     -> Crawler schedule : Frequency: Daily <pick time of day>, Target Database: default -> Next
+     -> Review and create -> Create
+
+     Note: It will run once daily or you can run it manually
+
+
+  AWs console -> AWS Glue -> ETL jobs <left tab> ->  Create Job: Visually -> ....
+
+
+
+  Summary
+
+    Key Takeaways
+      - Glue Crawler is a very common service in AWS Machine Learning
+      - need to understand
+        - characteristics
+           - primarily that data catalog component and then our job for batch processing,
+        - common use cases,
+        - the basics of how a batch process is configured
+
+
+------------------------------------------------------
+3.10 Ingesting Data Uinsg AwS Glue
+
+About this lab
+
+You are a data engineer tasked with migrating some new CSV files into S3. Once there, you need to add the
+schema to Glue using Glue Crawler. The Data Science team would like to train some new models on a combined
+table of this information but only using a few select columns. To decrease cost and improve processing time,
+you need to create a job in Glue that will combine the CSV files together into one table but only including
+the needed columns. Then, you need to run the job and verify success in S3. After that, you will be ready to
+inform the Data Science team that the data is ready for training.
+
+Learning objectives
+  - Prepare the Environment
+  - Create a Glue Crawler
+  - Create a Job in Glue
+
+                                                        AWS Glue
+                                      |-----------------------------------------------------|
+    download   --> S3            ---->| Glue    ---> Data    ---> transform   --->  Save to |  --> S3
+    data           Parking Tags       | Crawler      Catalog      drop columns       S3     |
+                                      |-----------------------------------------------------|
+
+    ------------------------------------------------------
+Solution
+
+Log in to the AWS Management Console using the credentials provided on the lab instructions page.
+Prepare the Environment
+
+    In the search bar on top of the console, enter S3.
+    From the search results, select S3.
+    Click Create bucket.
+    On the Create bucket page, for Bucket name, enter a globally unique name, such as bucket followed by random numbers.
+    Scroll to the bottom of page and click Create bucket.
+    Once created, click on the bucket name.
+    Click Create folder.
+    On the Create folder page, for the Folder name, enter parking_data.
+    Click Create folder.
+    Open a new browser window or tab and navigate to the parking ticket dataset.
+    Select the DOWNLOAD DATA tab.
+    Next to parking-tickets-2022, click DOWNLOAD to download the folder.
+    Once downloaded, unzip the folder.
+    Return to the browser window or tab showing your S3 bucket.
+    Click Upload.
+    Click Add files.
+    Select Parking_Tags_Data_2022.000.csv from your unzipped parking-tickets-2022 folder.
+    Click Open.
+    Click Upload. You may need to wait a minute or so for the file to be uploaded.
+
+Create a Glue Crawler
+
+    In the search bar on top of the console, enter glue.
+    From the search results, select AWS Glue.
+    In the left navigation menu, under Data Catalog, select Crawlers.
+    Click Create crawler.
+    On the Set crawler properties page, in Name, enter parking.
+    Click Next.
+    On the Chose data sources and classifiers page, click Add a data source.
+    On the Add data source pop-up pane, in Data source: Select S3 from the dropdown menu.
+    Under S3 path, click Browse S3.
+    Select your parking bucket.
+    Select parking-data.
+    Select the Parking_Tags_Data_2022.000.csv file.
+    Click Choose.
+    Once back on the Add data source pane, you may see an error message. You will just need to click somewhere on the screen and the error message will go away.
+    Click Add an S3 data source.
+    Click Next.
+    Click Create new IAM role.
+    On the Create new IAM role pop-up pane, under Enter new IAM role, enter parking after the AWSGlueServiceRole-.
+    Click Create.
+    Click Next.
+    Click Add database. This will open a new browser tab.
+    On the Create a database page, in Name, enter parking.
+    Click Create Database
+    Go back to the Glue tab.
+    On the Set output and scheduling page, click the refresh icon next to the field under Target database.
+    In the dropdown menu under Target database, select the new parking database.
+    Click Next
+    Click Create crawler.
+    Click Run crawler. It may take a few minutes to run.
+    In the left navigation menu, under Databases, select Tables.
+    On the Tables page, click the refresh icon next to Delete. You should see a new table listed.
+    Select the table. You should be able to view the schema for the CSV file.
+
+Create a Job in Glue
+
+    In the left nevigation menu, select Getting started.
+    Click Set up roles and users.
+    Click Choose roles.
+    Select AWSGlueServiceRole-Parking.
+    Click Confirm.
+    Click Next.
+    On the Grant Amazon S3 access page, under Data access permissions select Read and write.
+    Click Next.
+    Click Next again.
+    On the Review and confirm page, click Apply changes.
+    Click Author and edit ETL jobs.
+    Click Visual ETL .
+    In the + Add nodes menu, in the Sources tab, select Amazon S3.
+    Select the Amazon S3 node now visible on the canvas.
+    In the Data source properties - S3 pane on the right, click Browse S3.
+    Select your bucket.
+    Select parking-data.
+    Select the file parking_data/Parking_Tags_Data_2022.000.csv.
+    Click Choose.
+    Under Data format, select CSV from the dropdown menu.
+    In the top left corner of the canvas, click the + button.
+    In the + Add nodes menu, select the Transforms tab.
+    Select Drop Fields.
+    On the canvas, select the Drop Fields node. It may take a few seconds for the Transform pane on the right to populate with the correct information.
+    Under DropFields, check all fields except date_of_infraction, infraction_code, and infraction_description.
+    In the top left corner of the canvas, click the + button.
+    In the + Add nodes menu, select the Targets tab.
+    Select Amazon S3.
+    In the canvas, select the new Amazon S3 node.
+    In the Data target properties - S3 pane on the right, under Node parents, make sure Drop Fields is selected.
+    Under Format, select Parquet from the dropdown menu.
+    Under S3 Target Location, click Browse S3.
+    Select your bucket.
+    Select the radio circle next to parking_data.
+    Click Choose.
+    Under Data Catalog update options, select Create a table in the Data Catalog and on subsequent runs update schema and add new partitions.
+    Under Database, select parking from the dropdown menu.
+    Under Table Name, enter results.
+    On top of the canvas, replace Untitled job by entering the name Parking.
+    Click Save in the upper right corner.
+    Click Run. This may take a minute or two to complete.
+    In the new green banner, click Run details to see the results of the job.
+    In the top left corner, select the hamburger menu icon (the icon that looks like three horizontal lines).
+    In the left navigation menu, select Tables.
+    Under Tables, select results. You should see under Schema that the table only contains the three columns we did not select.
+    In the search bar on top of the console, enter S3.
+    From the search results, select S3.
+    Select the bucket you created.
+    Select the parking-data folder. You should see inside the folder that a new Parquet file has been created.
+    ------------------------------------------------------
+
+ parking tickets dataset:
+ https://open.toronto.ca/dataset/parking-tickets/
+
+------------------------------------------------------
+3.11 AWs Data Stores in Machine Learning
+
+
+  Storage Service
+    -  EFS, EBS and S3 are the only storage services that are most likely to be on the exam
+    S3
+      - scalable storage
+      - excellent for data lakes builds
+      - very important service for ML exam
+    RDS (Relational Database Service)
+      - Managed Relational Database
+      - not a core ML exam service
+    DynamoDB
+      - manage NoSQL (non-relational) database
+      - not a core ML exam service
+    Redshift
+      - data warehousing
+      - Large scale massive parallel processing
+      - key for data management, but not key for ML
+      - not a core ML exam service
+
+  Processing and Movement
+    Neptune
+      - Graph Database
+      - not a core exam service
+    AWS Glue
+      - data cataloging and transformation
+      - glue crawler to search and catalog data stores
+      - very important service for ML exam
+    Elasticsearch
+      - search and analytics engine
+      - not a core exam service
+    Kinesis
+      - real-time data processing
+      - very important service for ML exam
+
+  Summary
+    Key Takeaways
+      - understand distractor services to help answer exam questions
+      - distractors are amazing AWS services, just not core to the ML exam
+
+------------------------------------------------------
+3.12 Identify and Implement a Data Ingestion Solution Review
+
+
+  Batch Processing
+    - for data not required immediately
+    - large transformations
+      - can do much larger, more complex transformations with batch processing for a much lower cost
+    - lower cost
+    - larger data
+
+
+  Stream Processing
+    - data needed now (live processing)
+    - less complex transformations
+      - need to minimize latency so transformations need to be less complex
+    - higher cost
+      - transformations need to happen in near real time. so lots of compute needs to be allocated
+
+  Kinesis Data Streams vs Kinesis Data Firehose
+    Kinesis Data Streams
+      - mostly managed service
+      - data storage 1 to 7 days
+      - real-time processing
+      - multiple consumers / destinations
+        - support for spark
+      - primarily designed for custom, realtime data processing applications
+      - if you need to perform detailed analysis or complex transformations on streaming data,
+        Data Streams is a good solution
+    Kinesis Data Firehose
+      - fully managed service
+      - no data storage in firehose
+      - near real-time processing
+      - management by Firehose
+        - no support for spark
+      - designed for just the straightforward loading or streaming of data into AWS data stores, S3,
+        analytics services, etc.,
+      - Data Firehose is be best when you need to capture, do light transformations, then store into
+        storage service like S3 or something similar.
+
+
+  How AWS Glue Crawler Fits into AWS Glue
+    - Crawler can automatically search through all of your data stores and come back with meaningful information
+      to populate a data catalog.
+    - data catalog is really big index that tells you all kinds of information about your data and where it lives.
+    - Crawler can be set up to search through your data stores (S3) and then populate a data catalog.
+    - you setup Crawler jobs to search through a data store
+
+     Data Stores       ------>  Glue Crawler    ------> Populates       ---> Jobs
+     S3, Redshift,              searches the            Data Catalog         Create Crawler Jobs
+     databases, ...             Data Stores                                  to search Data Store
+
+
+  Avoiding Distractors
+    likely on the exam:
+      S3
+      Glue
+      Kinesis
+    likely distractors (not core services for ML exam)
+      RDS
+      DynamoDB
+      Redshift
+      Neptune
+      Elasticsearch Service
+
+
+  Summary
+    Key Takeaways
+      - know batch vs stream - which is the right fit
+      - Glue and Kinesis are important services in the ML pipeline
+        - understand the labs
+
+------------------------------------------------------
+3.13 Quiz: Identify and Implement a Data Ingestion Solution
+------------------------------------------------------
+
+Chapter 4 Identify and Implement a Data Transformation Solution
+
+------------------------------------------------------
+4.1 Introduction to Key Services
+
+  Core Concepts
+    Extract Transform and Load (ETL)
+    Extract Load and Transform (ELT)
+    A Practical Look at ETL and ELT in AWS
+      - which services you should use for what purposes
+
+   AWS Services
+     A Look at Amazon EMR
+     A Look at Apache Flink
+
+   Big Data Processing
+     What you Need to Know about Apache Spark
+     A Brief Overview of Apache Hadoop and Hive
+
+  Summary
+    Key Takeaways
+      - this section is about how data moves
+      - critical knowledge
+        - ETL vs ELT
+        - The services associated with ETL and ELT
+        - basics of big data concepts
+          - just understand Hadoop, Hive and Spark at a what they are doing level.
+
+------------------------------------------------------
+4.2 Introduction to ETL (Extract Transform and Load)
+
+  Introduction to ETL (Extract Transform and Load)
+
+       Ingest
+     |---------|
+     |         |
+     |  Data   |  ----> Extract      -----> Transform   ---> Load       ----> Report
+     |  Sources|        (from Data                           (to target       (optionally)
+     |         |         sources)                             database)
+     |---------|
+
+
+  Extract Phase
+    - Collect and Retrieve data (from multiple data sources)
+      - identification of [data] sources
+      Data Extraction
+        Extraction types:
+        - full
+          - taking all of the data that exists and just transferring all of it
+        - Incremental
+          - extract an incremental data update
+      Goal
+        - minimize impact on source systems
+        - minimuze the cost
+
+  Transform Phase
+    Data Cleaning
+    Data Validation
+    Data Transformation
+    Data Enrichment
+      - e.g., adding columns, or doing summations, ...
+    Data Anonymization
+      - e.g., not exposing data to employees that doesn't need to be exposed.
+    Data Structuring and Reformating
+
+  Load Phase
+    loading types
+      Full
+      Incremental
+      Upsert
+        - combination of update and insert.
+        - going to look and see if a specified value already exists in a row, and
+          if it doesn't, then it's going to add it.
+    Batch vs Streaming
+
+
+  When to Use ETL
+    Privacy or security concerns
+      - less movement and risk
+      - We're going to transform all of the data at once, move it into the source system, and then we're done
+    Compliance
+      - less movement and risk, which makes less exposure for compliance issues
+    Smaller Datasets
+    Legacy Infrastructure
+      - if you're not set up for an ELT environment, then you probably are going to use ETL
+      - older environments are mostly ETL
+
+  Summary
+    Key Takeaways
+      - ETL is core data concept for ML exam and data engineering ML pipelines
+      - ETL is composed of:
+         - Extract
+         - Transform
+         - Load
+      - With ETL, everything gets transformed before loading into the target system
+
+
+------------------------------------------------------
+4.3 Introduction to ELT (Extract Load and Transform)
+
+
+  Introduction to ELT (Extract Load and Transform )
+    Why loading before transforming the data?
+      - it does not always make sense to transform all of that data because that can be very costly,
+        especially if we're ingesting things into our system, but we're not 100% certain what the use case is.
+    Loading to Data Lakes
+      - when we load this into an ELT, most often that's going to be loading it into 'data lake'
+
+      Ingestion
+     |---------|                           Staging
+     |  Data   |  ----> Extract      ----->  Load    ---> Transform  ----> Data Lake (preprocess data zone)
+     |  Sources|        (from Data          (to target               |
+     |         |         sources)            data Lake)              |--> Reporting
+     |         |                             (raw data Zone)              (optionally)
+     |---------|
+
+  When to use ELT
+    Data Lakes
+    Large Data
+      - with large data, transforming all of our data can be very costly
+      - Instead, put it all into our ELT system and only transform the pieces that actually need to be transformed
+    Multiple Uses
+      - if we have lots of different types of reports that are being built
+    Speed
+      - better for speed in general because we're not transforming all that data.
+      - We can just pick it up, put it all into our data lake, and then we can only transform those pieces
+        we need, getting us our insights faste
+    cost
+      - if we're not transforming everything, then we can save money unless we really need to transform everything
+
+
+  Summary
+    Key Takeaways
+      - ELT is the modern approach to data [vs ETL]
+        - most encountered in Machine Learning
+        - with ELT, usually using Data Lakes
+      - ETL still has applications
+        - know when to use ELT vs ETL
+          - with ML, generally it is ELT
+
+------------------------------------------------------
+4.4 A Practical Look at ETL and ELT in AWS
+
+
+  AWS Services for various ETL phases
+
+     Amazon Glue
+      Crawler         Amazon Kinesis
+          |    -----> Amazon Glue  -----> Amazon EMR    -----> S3
+          |                            Amazon Redshift*        DynamoDB*
+          V                                                    Amazon RDS*
+
+       Data     ----> Extract      -----> Transform     -----> Load       ----> Report
+       Sources        (from Data                               (to target       (optionally)
+                       sources)                                 database)
+
+
+      * services not likely to be on ML exam
+
+
+  AWS Services for various ELT phases
+     AWS Lake Formation
+        - a tool to really help you streamline the building and management of a data lake in AWS.
+
+            ----> AWS Pipeline ----->
+                                           AWS Lake
+                                           Formation
+                                             |
+                                             V
+
+                                           Staging
+       Data     ----> Extract      ----->  Load    ---> Transform  ----> Data Lake (preprocess data zone)
+       Sources        (from Data          (to target               |
+                       sources)            data Lake)              |--> Reporting
+                                           (raw data Zone)              (optionally)
+
+                                                                           ^
+                                                                           |
+                                                                           |
+                                                                    Amazon QuickSight
+                                                                    Amazon Athena
+
+  Summary
+    Key Takeaways
+      - services to use for various ELT and ETL phases
+      - think holistically:
+          - What is the goal?
+          - what is the data size?
+          - what is the data frequency (how often is the data going to be moving around)?
+
+------------------------------------------------------
+4.5 What is Amazon EMR
+
+  ------------------
+  from Certified Solution Architect course:
+
+     EMR (Elastic MapReduce)
+       Overview
+         - is a managed big data platform that allows you to process vast amounts of data using open-source
+           tools, such as Spark, Hive, HBase, Flink, Hudi, and Presto
+         - it is a open-source managed ETL tool
+         - it's AWS's ETL tool
+         - EMR is used to transform (processs) and move data
+         Note: EMR does offer a serverless option
+       EC2 Instances
+         - EMR is a managed fleet of EC2 instances running open-source tools for
+            ETL (Extract/Transform/load) workloads
+          - similar to other open-source managed architecture in that it gets the
+            fleet up and running quickly, but the technology isn't proprietary to AWS
+         EC2 rules apply
+           - you can use Reserved Instances (RI) and spot instance to reduce you costs
+
+  ------------------
+
+  Introduction to Elastic Map Reduce (EMR)
+    Simplifies big Data Frameworks including:
+       Spark
+       Hadoop
+    Managed Hadoop Framework
+      - EMR runs on Hadoop open source framework
+      - utilizes EC2 instances for processing
+    EMR Used for:
+      Data Transformation and Enrichment
+      Log Analysis
+      Data Visualization
+    Takeaway: Ease of Use
+      - makes Hadoop and spark easier to use
+
+
+  EMR in Machine Learning
+    Preinstalled with popular ML fraworks
+      - e.g. TensorFlow, PySpark
+      - get started really quickly without having to install a bunch of libraries
+    Facilitates large scale data processing
+      - designed for that use case to process and analyze big data very efficiently which means faster
+        and less expensive
+    Enables Predictive Analytics
+      - commonly used for enabling predictive analytics
+      - ability to grow with the dataset and provide predicting capabilities that grow with the data size
+    Can leverage Streaming Data
+
+
+  EMR Other Use Cases
+    Big Data Processing
+    Log Analysis
+      - frequently used to process and analyze log files
+      - this lets companies gain insights into their application and performance, identify issues with their
+        data, and it can also help them to understand user behavior
+    Live Dashboards
+      - can process streaming data in real time to power actual live dashboards.
+      - you can get dashboards that display up-to-the-minute information on, you know, various metrics,
+        website traffic, those sorts of things.
+
+
+  Summary
+    Key Takeaways
+      - EMR is a service that will likely appear on the ML exam
+      - don't need to be an expert in Hadoop, just understand what Hadoop is
+      - need to understand
+        - EMR key characteristics
+           - big data processing
+           - runs on EC2 instances
+        - how EMR is used in ML
+        - how to configure EMR (in next lesson)
+
+------------------------------------------------------
+
+
+  Intro to Amazon EMR - Big DAta Tutorial usinng Spark
+    https://www.youtube.com/watch?v=8bOgOvz6Tcg
+
+    EMR cluster architecture
+      An EMR cluster is made of 3 node types:
+        Primary Node
+          - coordinates the distribution of data and tasks
+          - tracks status of tasks and monitors health of cluster
+        Core Node
+          - run tasks and stores data in HDFS (Hadoop Distributed File System).
+          - in HDFS, data is stored across multiple instances, with multiple copies
+          - Storage is ephemeral (temporary, lasting a short time)
+        Task Node
+          - (optional) runs tasks but does not store data
+
+     EMR scaling
+       - vertical scaling with 1) manual or 2) auto-scaling
+       - EMR managed scaling allows you to set min/max cluster size
+
+     Running EMR jobs
+       - you run EMR jobs but triggering steps. There are 3 ways to trigger EMR steps:
+          - Management Console
+          - SSH into the primary node and manually run a task
+          - AWS Command line Interface (recommended)
+
+      EMR clusters run on 3 different compute platforms:
+        - EC2: default option. High Performance and expensive
+        - EKS: Run light-weight applications
+        - Serverless: small, low code applications
+
+     pyspark code used in youtube demo:
+
+        >>> import argparse
+        >>>
+        >>> from pyspark.sql import SparkSession
+        >>> from pyspark.sql.functions import col
+        >>>
+        >>> # create function to transform data
+        >>> def transform_data(data_source: str, output_uri: str) -> None
+        >>>     with SparkSession.builder.appName("My First Application"),getOrCreate() as spark:
+        >>>
+        >>>         # load csv file
+        >>>         df = spark.read.option("header", "true").csv(data_source)
+        >>>
+        >>>         # rename columns
+        >>>         df = df.select(
+        >>>             col("Name").alias("name"),
+        >>>             col("Violation Type").alias("violoation_type"),
+        >>>         )
+        >>>
+        >>>         # create an in-memory dataframe
+        >>>         df.createOrReplaceTempView("restaurant_violations")
+        >>>
+        >>>         # construct SQL query
+        >>>         GROUP_BY_QUERY =  """
+        >>>             SELECT name, count(*) AS total_red_violations
+        >>>             FROM restaurant_violations
+        >>>             WHERE violoation_type = "RED"
+        >>>             GROUP by name
+        >>>         """
+        >>>
+        >>>         # Transform data
+        >>>         transformed_df = spark.sql(GROUP_BY_QUERY)
+        >>>
+        >>>         # log into EMR stdout
+        >>>         print(f"Number of rows in SQL query: {transformed_df.count()}")
+        >>>
+        >>>         # write results as parquet files (uses column format instead row format which is more efficient for queries)
+        >>>         transformed_df.write_model("overwrite").parquet(output_uri)
+        >>>
+        >>> if __name__ == "__main__":
+        >>>     parser = argparse.ArgumentParser()
+        >>>     parser.add_argument('--data_source")
+        >>>     parser.add_argument('--output_uri")
+        >>>     args = parser.parse_args()
+        >>>
+        >>>     transform_data(args.data_source, args.output_uri)
+
+     Running steps options:
+        Run step using Management Console
+          -> upload pyspark script to S3 bucket
+          -> upload dataset to S3 bucket
+          -> specify encryption key
+          -> AWS Console -> EMR ->> EMR on EC2 Cluster -> <clusterName> -> Steps <tab> -> Add Step ->
+             type: Spark Application, Name: <stepName>, Deploy Mode: Cluster mode, Application Location: <s3 file uri>,
+             Arguments: --data_source <datasetS3Uri>  --output_uri <s3OutputFolderUri>
+             -> Add step
+
+             -> This runs the step -> Examine Steps Status for "completed"
+             -> examine S3 bucket output folder
+
+         Run step using SSH to primary node and manually run from EMR instance:
+           -> modify Security group -> add inbound rule for type: "SSH" Source Type: "My Ip"
+           -> add SSH key pair to your console window and chmod 400 <keyPair>
+          -> AWS Console -> EMR ->> EMR on EC2 Cluster -> <clusterName> -> Connect to Primary Node
+             # use provided ssh command, e.g.
+             ssh -i <keyPair> hadoop@<ec2-...<region>.compute.amazon.com
+
+             # copy python script to instance, e.g "main.py"
+             $ spark-submit main.py --data_source <datasetS3Uri>  --output_uri <s3OutputFolderUri>
+             -> examine S3 bucket output folder
+
+         Run step using AWS Command line Interface (recommended)
+
+         # from console window
+         $ aws emr add-steps \
+           cluster-id <clusterId from EMR cluster console window> --region <awsRegion> \
+           steps Type=CUSTOM_JAR,Name=MyCmdLineStep,ActionOnFailure=CONTINUE,Jar=command-runner.jar,Args='[--data_source <datasetS3Uri>  --output_uri <s3OutputFolderUri>]'
+           -> returns your step ID
+           -> go to EMR console Steps, example step id
+
+
+     How to SSH to resource manager
+          -> AWS Console -> EMR ->> EMR on EC2 Cluster -> <clusterName> -> Applications <tab> ->
+             under "Applications UIs on the primary node" copy "Resource Manager" UI URI
+
+          # from console window (port forward to local port 8157)
+          $ ssh -i <keyPair> -N -L 8157:<resourceManagerInstance>:8088 hadoop@<ec2-...<region>.compute.amazon.com
+          # in web brower:
+          localhost:8157
+
+Note: to change PEM file permissions on windows:
+https://superuser.com/questions/1296024/windows-ssh-permissions-for-private-key-are-too-open
+
+     Get YARN logs
+       # on hadoop primary node:
+       $ yarn logs --applicationId <applicationID - found on resource manger>
+
+     Change ERM autoscaling
+          -> AWS Console -> EMR ->> EMR on EC2 Cluster -> <clusterName> -> Instances (Hardware) <tab> ->
+             -> Edit Cluster Scale Options -> Cluster Scaling: "Use EMR-managed Scaling",
+             # set:
+             minium cluster size
+             maximum cluster size
+             Maximum core nodes in the cluster
+             Maximum On-Demand instances in the cluster
+
+    Types of Jobs that EMR is great for running:
+      1. long running streaming jobs [with autoscaling]
+      2. short purposeful jobs
+
+------------------------------------------------------
+
+  AWS EMR Tutorial - by Johnny Chivers:
+    https://www.youtube.com/watch?v=v9nk6mVxJDU
+
+    see files in: acloudguru-machine-learning-aws-data-engineering-course\tutorials\aws_emr_tutorial
+
+    Slides:
+      https://docs.aws.amazon.com/emr/latest/ManagementGuide/emr-overview.html
+      -> PDF download in AWS_EMR_Tutorial directory
+
+    Doing AWS ETL on Amazon Workshop booklet
+    https://catalog.us-east-1.prod.workshops.aws/workshops/c86bd131-f6bf-4e8f-b798-58fd450d3c44/en-US/setup
+
+    setup:
+       1. create vpc
+       Create a VPC -> "VPC and more", tag: "emr-tutorial", IPv4: 10.0.0.0/16, No of AZs: 2, public subnets: 2,
+         private subments: 0, NAT gateway: None, VPC Endpoints: S3 Gateway
+          -> Create VPC
+
+       2. create cloud9 IDE
+         -> Cloud9 IDE not available to new customers after 7/25/24
+
+       4. create  Key pair
+         EC2 -> Key pairs -> Create Key Pair -> Name: emr-tutorial, RSA, PEM -> create
+
+         chmod 400 emr-tutorial.pem
+
+       5. download git repo
+          download and unzip
+
+
+
+  EMR (Elastic MapReduce)
+    - Managed cluster platform that simplifies running big data frameworks
+    - data processsing framework (or it contains data processing framework)
+    - on the cluster, there are different data proceessing frameworks that can be setup (e.g. spark, hive, pig)
+
+    Master node:
+      - A node that manages the cluster by running software components to coordinate the distribution of
+        data and tasks among other nodes
+    Core node:
+      - A node with software components that run tasks and store data in the Hadoop Distributed File System
+        (HDFS) on your cluster.
+      - data is stored on core nodes in HDFS or on S3 using EMRFS
+      - Multi-node clusters have at least one core node.
+    Task node (optional):
+      - A node with software components that only runs tasks and does not store data in HDFS.
+
+    Note:
+      - must have at least 1 core node and 1 master node for a multi-node cluster
+
+    Data Processing Frameworks
+      - Engine used to process and analyze data
+      - Different frameworks are available for different kinds of processing needs
+      - The main processing frameworks available for Amazon EMR are Hadoop MapReduce and Spark
+    Storage
+      - Hadoop Distributed File System (HDFS) is adistributed, scalable file system for Hadoop.
+      - Using the EMR File System (EMRFS), Amazon EMR extends Hadoop to add the ability to directly
+        access data stored in Amazon S3 as if it were a file systemlike HDFS. (most common approach)
+      - The local file system refers to a locally connected disk. (just small disks used for OS, etc)
+    Cluster Resource Management
+      - The resource management layer is responsible for managing cluster resources and scheduling the jobs
+        for processing data.
+      - By default, Amazon EMR uses YARN (Yet Another Resource Negotiator).
+
+  Spark ETL
+
+    What is Spark?
+      - Apache Spark™ is a multi-language engine forexecuting data engineering, data science, and machine
+        learning on single-node machines orclusters.
+    Faster Processing
+      - Spark contains Resilient Distributed Dataset(RDD) which saves time in reading and writing operations,
+        allowing it to run almost ten to onehundred times faster than Hadoop with MapReduce.
+    In Memory Computing
+      - Spark stores the data in the RAM of servers which allows quick access and in turn accelerates the
+        speed of analytics.
+      - Note: MapReduce stores data on disk and then reduces it together in memory pulling it writes back
+        to disk over several steps. With Spark, it tries to keep as much of the data in memory for faster
+        processing
+    Flexibility
+      - Apache Spark supports multiple languages and allows the developers to write applicationsin Java,
+        Scala, R, or Python.
+
+
+  Hive
+    What is Hive?
+      - The Apache Hive ™ data warehouse software facilitates reading, writing, and managing large
+        datasets residing in distributed storage usingSQL.
+      - Structure can be projected onto data already in storage.
+      - A command line tool and JDBC driver are provided to connect users to Hive.
+    SQL Like Interface
+      - Hive provides the necessary SQL abstraction to integrate SQL-like queries (HiveQL) into the
+        underlying Java without the need to implement queries in the low-level Java API.
+    Storage
+      - Different storage types such as plain text, RCFile , HBase , ORC, and others.
+
+  PIG
+    What is PIG?
+      - Apache Pig is a platform for analyzing large data sets that consists of a high-level language
+        for expressing data analysis programs, coupled with infrastructure for evaluating these programs.
+      - The salient property of Pig programs is that their structure is amenable to substantial
+        parallelization, which in turns enables them to handle very large data sets.
+    How Does It Work?
+      - It is an abstraction of Map Reduce which integrates with the lower level java api which means
+        parallel processing is easily achieved.
+    Storage
+      - Different storage types such as plain text, RCFile , HBase , ORC, and others.
+    Note:
+      - PIG is going out of fashion slightly because it is slower that spark but it is still used
+      - provided parallelization of your data without writing low-level java code (presumably compared to MapReduce)
+
+  AWS Step Functions
+
+    What Are Step Functions?
+      - AWS Step Functions is a low-code, visual workflow service that developers use to build distributed
+        applications, automate IT and business processes, and build data and machine learning pipelines
+        using AWS services.
+      - Workflows manage failures, retries, parallelization, service integrations, and observability so
+        developers can focus on higher-value business logic.
+
+    EMR Autoscaling
+      How does it work?
+        - Autoscaling policies are added to an EMR cluster which define how nodes should be added or removed.
+        - There options in terms of available RAM, disc, app running, apps pending etc.
+
+
+
+   AWS Console -> EMR -> Create Cluster ->
+
+   name: emr-tutorial-cluster1,
+   EMR release: emr-5.35.0,
+   Application bundle: Hadoop 2.10.1, Hive 2.3.9, Hue 4.10.0, JupyterEnterpriseGateway 2.1.0, JupyterHub 1.4.1,
+       Livy 0.7.1, Pig 0.17.0, Spark 2.4.8
+       vpc: emr-tutorial-vpc,
+       cluster composition: Uniform instance groups
+       remove task node instance group
+       Primary instance type: m5.xlarge
+       core instance type: m5.xlarge
+       core node: 2
+       key pair: emr-tutorial
+       create service role
+       create instance profile, All S3 buckets ... read and write access"
+       -> create cluster
+
+     -> primary node -> Security Group
+         -> add rule:  SSH (port 22) from: MyIP -> add rule
+         -> add rule:  Custom TcP port 9443 from: MyIP -> add rule
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Summary (top) -> Cluster Management
+        -> Connect to the Primary node using SSH
+        ssh -i ~/emr-tutorial.pem hadoop@ec2-54-234-27-130.compute-1.amazonaws.com
+
+
+   # create S3 bucket for tutorial
+   AWS Console -> S3 -> Create Bucket -> Name: emr-tutorial-bkt-ph -> create bucket
+      -> Create folders -> input, output, files, logs
+      -> updoad "tripdata.csv" to "input" folder
+
+
+   # ssh on to EMR primary node
+        ssh -i ./emr-tutorial.pem hadoop@ec2-54-234-27-130.compute-1.amazonaws.com
+        # create file "spark-etl.py" from provided github file
+        vi spark-etl.ph
+
+        # run the following commands from "sparkCommands.txt" with <YOUR-BUCKET> replaced with S3 bucket name
+        export PATH=$PATH:/etc/hadoop/conf:/etc/hive/conf:/usr/lib/hadoop-lzo/lib/:/usr/share/aws/aws-java-sdk/:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/:/usr/share/aws/emr/emrfs/auxlib/
+
+         export PATH=$PATH:spark.driver.extraClassPath/etc/hadoop/conf:/etc/hive/conf:/usr/lib/hadoop-lzo/lib/:/usr/share/aws/aws-java-sdk/:/usr/share/aws/emr/emrfs/conf:/usr/share/aws/emr/emrfs/lib/:/usr/share/aws/emr/emrfs/auxlib/
+
+        spark-submit spark-etl.py s3://emr-tutorial-bkt-ph/input/ s3://emr-tutorial-bkt-ph/output/spark
+
+        -> runs -> reads in tripdata.csv, adds "current_date" column , writes parquet output file to S3
+
+       # examine spark
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Summary (top) -> Cluster Management
+        -> click on "Spark History Server" -> wait ~5 min for it to update
+
+     -> Go to Primary Node Jupyter Notebook website (9443)
+        https://<primaryNodePublicIP>:9443
+           -> can type in browers "this is unsafe"  or click "Advanced" -> accept risks
+
+           # from AWS EMR tutorial doc
+           Username: jovyan
+           password: jupyter
+
+           -> create new notebook -> click "new" type: PySpark
+              -> copy in notebook steps from "JupyterHubNotebookCode.py
+              -> similar to
+              -> runs:  reads in tripdata.csv, printSchema, adds "current_date" column , printSchema,
+
+
+        Code: JupyterHubNotebookCode.py PySpark code
+        >>> # Step 1
+        >>> import sys
+        >>> from datetime import datetime
+        >>> from pyspark.sql import SparkSession
+        >>> from pyspark.sql.functions import *
+        >>>
+        >>> # Step 2
+        >>> input_path = "s3://emr-tutorial-bkt-ph/input/tripdata.csv"
+        >>> output_path = "s3://emr-tutorial-bkt-ph/output/"
+        >>>
+        >>> # Step 3
+        >>> nyTaxi = spark.read.option("inferSchema", "true").option("header", "true").csv(input_path)
+        >>>
+        >>> # Step 4
+        >>> nyTaxi.count()
+        >>>
+        >>> # Step 5
+        >>> nyTaxi.show()
+        >>>
+        >>> # Step 6
+        >>> nyTaxi.printSchema()
+        >>>
+        >>> # Step 7
+        >>> updatedNYTaxi = nyTaxi
+
+    EMR Step section of Tutorial
+
+      -> upload "emrZeroToHero-main/sparkEmrSteps/spark-etl.py" to "files" folder in "emr-tutorial-bkt-ph"
+         -> same as previous "spark-etl.py" except parquet write includes .mode("overwrite")
+
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Step (tab) -> Add Step
+        Type: Custom JAR
+        Name: Custom JAT, JAR location: command-runner.jar,
+        Arguments: spark-submit s3://emr-tutorial-bkt-ph/files/spark-etl.py s3://emr-tutorial-bkt-ph/input s3://emr-tutorial-bkt-ph/output
+        -> add step
+        -> wait for step "completed"
+        note: need to wait a few minutes after "completed" to view logs
+        -> view logs -> stdout
+
+   Hive section of Tutorial - Using Hive CLI
+
+   # ssh on to EMR primary node
+        ssh -i ./emr-tutorial.pem hadoop@ec2-54-234-27-130.compute-1.amazonaws.com
+
+        # log into Hive
+        $ hive
+        # copy "emrZeroToHero-main/hive/ny_taxi.hql", after changing <YOUR-BUCKET> to bucket name, to hive prompt
+        # this will create a table
+
+        hive> CREATE EXTERNAL TABLE ny_taxi_test (
+                            vendor_id int,
+                            lpep_pickup_datetime string,
+                            lpep_dropoff_datetime string,
+                            store_and_fwd_flag string,
+                            rate_code_id smallint,
+                            pu_location_id int,
+                            do_location_id int,
+                            passenger_count int,
+                            trip_distance double,
+                            fare_amount double,
+                            mta_tax double,
+                            tip_amount double,
+                            tolls_amount double,
+                            ehail_fee double,
+                            improvement_surcharge double,
+                            total_amount double,
+                            payment_type smallint,
+                            trip_type smallint
+                     )
+                     ROW FORMAT DELIMITED
+                     FIELDS TERMINATED BY ','
+                     LINES TERMINATED BY '\n'
+                     STORED AS TEXTFILE
+                     LOCATION "s3://emr-tutorial-bkt-ph/input/";
+
+           # return the unique rate_code_id values
+           hive> SELECT DISTINCT rate_code_id FROM ny_taxi_test;
+
+           ----------------------------------------------------------------------------------------------
+                   VERTICES      MODE        STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+           ----------------------------------------------------------------------------------------------
+           Map 1 .......... container     SUCCEEDED      1          1        0        0       0       0
+           Reducer 2 ...... container     SUCCEEDED      2          2        0        0       0       0
+           ----------------------------------------------------------------------------------------------
+           VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 9.84 s
+           ----------------------------------------------------------------------------------------------
+           OK
+           1
+           2
+           4
+           NULL
+           3
+           5
+           Time taken: 17.304 seconds, Fetched: 6 row(s)
+
+
+   Hive section of Tutorial - EMR steps
+
+      -> upload "emrZeroToHero-main/hive/ny-taxi.hql" to "files" folder in "emr-tutorial-bkt-ph"
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Step (tab) -> Add Step
+        Type: Hive Progam
+        Name: Hive Program
+        Hive Script location: s3://emr-tutorial-bkt-ph/files/ny-taxi.hql
+        input location: s3://emr-tutorial-bkt-ph/input/
+        output location: s3://emr-tutorial-bkt-ph/output/hive/
+        Arguments:
+        -> add step
+        -> wait for step "completed"
+        note: need to wait a few minutes after "completed" to view logs
+        -> Check S3 bucket for "output/hive/00000_0" file
+
+   PIG section of Tutorial -
+
+      -> upload "emrZeroToHero-main/pig/ny-taxi.pig" to "files" folder in "emr-tutorial-bkt-ph"
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Step (tab) -> Add Step
+        Type: Pig Progam
+        Name: Pig Program
+        Hive Script location: s3://emr-tutorial-bkt-ph/files/ny-taxi.hql
+        input location: s3://emr-tutorial-bkt-ph/input/
+        output location: s3://emr-tutorial-bkt-ph/output/pig/
+        Arguments:
+        -> add step
+        -> wait for step "completed"
+        note: need to wait a few minutes after "completed" to view logs
+        -> Check S3 bucket for "output/pig/part-v000-o000-r-00000" CSV file
+
+   EMR Notebook and SageMaker section of Tutorial -
+      -> skipped in video, but notebook provided at:  EMRSparkNotebook.ipynb
+
+   Orchestrating Amazon EMR with AWS StepFunctions section of Tutorial
+     -> will add the following steps: spark step, hive step,  pig step, run steps
+
+     -> AWS Console -> Step Functions -> State machines <left tab> -> Create state machine ->
+        Blank -> Select ->
+        Config <tab> -> Name: EMR-tutorial-steps Type: Standard, Execution Role: Create new role ->
+
+        Code <tab> -> replace code with "sfn.json" code
+         -> visualization shows:
+                                   Start
+                Add: Spark Step to EMR Cluster
+                Add: Hive Step to EMR Cluster
+                Add: Pig Step to EMR Cluster
+                Choice: Terminate Clusters?
+                default                     $deleteCluster == true
+                  Pass State: Wrap Up           Disable TErmination Protection
+                                                Terminate EMR cluster
+                                                Pass State: Wrap Up
+                                   END
+
+
+       Create <top left> -> Confirm
+
+       click "start execution"
+         Name: emr-tutorial-steps-execution
+         input -> import "args.json" but first change: <S3_BUCKET_NAME> to emr-tutorial-bkt-ph"
+                                            change: <CLUSTER_ID> to "j-3K10A0CX6T68N"
+          -> start execution
+          -> wait for execution to be completed
+
+   EMR Autoscaling section of Tutorial -
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Step (tab) ->  concurrent step: 5   (default:1)
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> hardware (tab) ->
+        "edit cluster scaling options" -> Custer scaling: custom scaling: min: 2, max 5,
+          select "scale out" -> Rule name: addNode, Add: 1 instance if "AppsRunning" greater than or equal to 2 count for 1 five min period,
+          cooldown 60 sec
+
+          select "scale in" -> Rule name: removeNode, Add: 1 instance if "AppsRunning" less than 2 count for 1 five min period,
+          cooldown 60 sec
+
+
+
+   Setup using CloudFormation Stack
+      CloudFormation stack template:
+         https://aws-data-analytics-workshops.s3.amazonaws.com/emr-dev-exp-workshop/cfn/emr-dev-exp-self-paced.template
+
+
+   Cluster Create section of Tutorial - redo based on doc (instead of Video)
+
+   AWS Console -> EMR -> Create Cluster ->
+
+   name: emr-tutorial-cluster-2-1,
+   EMR release: emr-6.11.0,
+   Application bundle: Hadoop 2.10.1, Hive 3.1.3, Hue 4.11.0, JupyterEnterpriseGateway 2.6.0, JupyterHub 1.4.1,
+       Livy 0.7.1, Pig 0.17.0, Spark 3.3.2, Tez 0.10.2
+       AWS Glue Data Catalog settings: select "Use for Hive Table metadata" and "Use for Spark Table Metadata"
+       vpc: emr-tutorial-vpc,
+       cluster compoistion: Uniform instance groups
+       remove task node instance group
+       Primary instance type: m5.xlarge
+       core instance type: m5.xlarge
+       core node: 2
+       cluster termination and node replacement: Idle time: 05:00:00 (5 hours), no termination protection, unhealthy replacement: turn off
+       cluster logs: S3 Location: s3://emr-tutorial-bkt-ph/logs
+       key pair: emr-tutorial
+       Amazon EMR Service Role: Choose an Existing service role, Service Role: EMRDevExp-EMRClusterServiceRole
+       EC2 Instance profile form Amazon EMR: Choose an Existing instance profile, Instance Profile: EMRDevExp-EMR_Restricted_Role
+       create instance profile, All S3 buckets ... read and write access"
+       -> create cluster
+
+     -> primary node -> Security Group
+         -> add rule:  SSH (port 22) from: MyIP -> add rule
+         -> add rule:  Custom TcP port 9443 from: MyIP -> add rule
+
+     -> EMR -> Clusters -> emr-tutorial-cluster1 -> Summary (top) -> Cluster Management
+        -> Connect to the Primary node using SSH
+        ssh -i ~/emr-tutorial.pem hadoop@ec2-54-234-27-130.compute-1.amazonaws.com
+
+   EMR Notebook and SageMaker section of Tutorial -
+
+      Modify IAM Role for EMR Cluster to include SageMaker access
+
+     -> EMR -> Clusters -> emr-tutorial-cluster-2-1 -> Hardware (tab) ->  Core Instance -> Instance ID -> IAM Role (for core EC2 instance)
+         -> Add Permission -> AmazonSageMakerFullAccess -> attach
+
+      Create a SageMaker IAM role
+
+        IAM -> Roles -> Create Role ->  Trusted Entity Type: AWS Service, Use Case: SageMaker -> Next
+           -> Permissions -> AmazonSageMakerFullAccess -> Next
+           -> Role Name: SageMaker-EMR-ExecutionRole  -> Create Role
+
+           -> copy ARN: arn:aws:iam::012345678901:role/SageMaker-EMR-ExecutionRole
+
+
+      Create an EMR Notebook
+
+      Notes:
+        - With the IAM permission set up, you can now create your EMR Notebook.
+        - EMR Notebooks are serverless Jupyter notebooks that connect to an EMR cluster using Apache Livy.
+        - They come preconfigured with Spark, allowing you to interactively run Spark jobs in a familiar Jupyter environment.
+        - The code and visualizations that you create in the notebook are saved durably to S3.
+
+        -> EMR ->  Workspace (Notebooks) -> Create Notebooks  -> Create Studio (required before creating workspace) -> Create Studio
+           -> Edit -> add VPC (emr-tutorial-vpc) and Subnet (emr-tutorial_subnet...1b) -> save
+           -> Add permissions to workspace role: add EMRFullAccess
+           -> attach emr-tutorial-2-1 cluster to workspace
+           -> launch workspace
+           -> in Jupyter Notebook window -> upload 'EMRSparkNotebook.ipynb"
+              -> open EMRSparkNotebook.ipynb
+                change: region = 'us-east-1'
+                change sagemaker_execution_role = 'arn:aws:iam::012345678901:role/SageMaker-EMR-ExecutionRole'
+
+
+        -> EMR Studios -> Launch workspace -> Launch with Options ->
+           Launch with Jupyter, EMR Cluster: emr-tutorial-cluster-2-1 -> launch Workspace ->
+
+
+
+        -> EMR ->  Workspace (Notebooks) -> Create Notebooks  ->  -> Workspace (Notebooks) <bottom pane> -> Attach Cluster
+           -> Attach Cluster: "Launch in Jupyter
+
+
+
+
+      Cloudformation Stack created Roles Notes:
+
+         EMRDevExp-EMRClusterServiceRole
+            -> Trusted Entities: AWS Service: elasticmapreduce
+            -> Permissions: AmazonElasticMapReduceRole (AWS Managed)
+
+         EMRDevExp-EMR_EC2_Restricted_Role
+            -> Trusted Entities: AWS Service: ec2
+            -> Permissions: EMRDevExp-EMR_EC2_Restricted_Role_Policy  (customer inline)
+
+         EMRDevExp-EMRStudioServiceRole
+            -> Trusted Entities: AWS Service: elasticmapreduce
+            -> Permissions: EMRDevExp-Studio-Service-Policy (customer inline)
+
+         EMRDevExp-SCLaunchRole
+            -> Trusted Entities: AWS Service: elasticmapreduce, and servicecatalog.amazonaws.com
+            -> Permissions: SC-Launch-Role-Limited-IAM-Policy (Customer inline)
+                            SC-Launch-Role-Policy (Customer inline)
+
+         EMR_DefaultRole
+           -> Trusted Entities: AWS Service: elasticmapreduce
+           -> Permissions:  AmazonElasticMapReduceRole (AWS managed)
+
+         EMR_EC2_DefaultRole
+           -> Trusted Entities: AWS Service: ec2
+           -> Permissions:  AmazonElasticMapReduceforEC2Role (AWS managed)
+
+         EMR_Notebooks_DefaultRole
+           -> Trusted Entities: AWS Service: elasticmapreduce
+           -> Permissions: AmazonElasticMapReduceEditorsRole (AWS managed)
+                           AmazonS3FullAccess                (AWS managed)
+
+
+     Hudi Workshop section of Tutorial
+        Hudi
+
+        Apache Hudi
+          - an open-source data management framework used to simplify incremental data processing and data pipeline development
+            by providing record-level insert, update, upsert, and delete capabilities. Upsert refers to the ability to insert records
+            into an existing dataset if they do not already exist or to update them if they do.
+          - By efficiently managing how data is laid out in S3, Hudi allows data to be ingested and updated in near real time.
+          - Hudi carefully maintains metadata of the actions performed on the dataset to help ensure that the actions are atomic and consistent.
+
+        LAB-COW.ipynb Scope
+          - Create Hudi Copy on Write table and perform insert, update and delete operations
+          - Create Hudi Merge on Read table and perform insert, update and delete operations
+          - Create Hive style partitioning for Copy on Write table
+
+     -> Copy below listed files into HDFS
+          # ssh to cluster primary node
+          ssh -i ~/xxxx.pem hadoop@<ec2-xx-xxx-xx-xx.us-west-2.compute.amazonaws.com>
+          # copy required files to HDFS - Ensure  the below listed files are copied into HDFS.
+
+            $ hdfs dfs -copyFromLocal /usr/lib/hudi/hudi-spark-bundle.jar hdfs:///user/hadoop/
+            $ hdfs dfs -copyFromLocal /usr/lib/spark/external/lib/spark-avro.jar hdfs:///user/hadoop/
+            $ hdfs dfs -copyFromLocal /usr/share/aws/aws-java-sdk/aws-java-sdk-bundle-1.12.31.jar hdfs:///user/hadoop/
+
+
+     -> Go to Primary Node Jupyter Notebook website (9443)
+        https://<primaryNodePublicIP>:9443
+          -> in Jupyter Notebook:
+              -> upload "LAB-COW.ipynb"
+
+------------------------------------------------------
+4.6 Demo: A look at Amazon EMR
+
+
+  Amazon EMR
+    - Easily run and scale Apache Spark, Apache Hive, Presto, and other big data workloads.
+
+    - Amazon EMR is a cloud big data platform for running large-scale distributed data processing jobs,
+      interactive SQL queries, and machine learning (ML) applications using open-source analytics framework
+      such as Apache Spark, Apache Hive, Presto, and more.
+
+    Explore Amazon EMR now
+     Amazon EMR running on Amazon EC2
+       - Process and analyze data for Machine Learning, scientific simulation, data mining, web indexing,
+         log file analysis, and data warehousing.
+     Amazon EMR Studio
+       - Manage Jupyter notebooks that run on Amazon EMR clusters and debug applications such as Apache Spark.
+     Amazon EMR Serverless
+       - Run big data applications using open-source frameworks without managing clusters and servers.
+     Amazon EMR on EKS
+       - Run open-source big data frameworks on Amazon Elastic Kubernetes Service (Amazon EKS).
+
+   Application bundle options:
+     Notes: Spark and Hadoop are the two main app bundles;
+            For each bundle, you can select versions and addition installation options
+     - Spark Interactive
+     - Core Hadoop
+     - Flink
+     - HBase
+        - Apache HBase is an open-source, NoSQL, distributed big data store
+        - HBase is a column-oriented, non-relational database.
+     - Presto
+     - Trino
+     - Custom
+
+
+  Apache Hadoop:
+    https://aws.amazon.com/what-is/hadoop/
+    - open source framework that is used to efficiently store and process large datasets ranging in size from
+      gigabytes to petabytes of data.
+    - Instead of using one large computer to store and process the data, Hadoop allows clustering multiple computers
+      to analyze massive datasets in parallel more quickly.
+
+    Four main modules of Hadoop:
+
+      Hadoop Distributed File System (HDFS)
+        – A distributed file system that runs on standard or low-end hardware.
+        - HDFS provides better data throughput than traditional file systems, in addition to high fault tolerance
+          and native support of large datasets.
+
+      Yet Another Resource Negotiator (YARN)
+        – Manages and monitors cluster nodes and resource usage. It schedules jobs and tasks.
+
+      MapReduce
+        – A framework that helps programs do the parallel computation on data.
+        - The map task takes input data and converts it into a dataset that can be computed in key value pairs.
+        - The output of the map task is consumed by reduce tasks to aggregate output and provide the desired result.
+
+      Hadoop Common
+        – Provides common Java libraries that can be used across all modules.
+
+
+      https://www.codecademy.com/resources/blog/hadoop-interview-questions/
+      The primary components of Hadoop include:
+
+          Hadoop Distributed File System (HDFS)
+          Hadoop MapReduce
+          Hadoop Common
+          YARN
+          PIG and HIVE — components of data access
+          HBase — for storage
+          Ambari, Oozie, and ZooKeeper — for managing and monitoring data
+          Thrift and Avro — for serializing data
+          Apache Flume, Sqoop, Chukwa — for integrating data
+          Apache Mahout and Drill — for data intelligence
+
+      Three components make up Apache HBase. They are:
+      https://www.codecademy.com/resources/blog/hadoop-interview-questions/
+
+          Region Server:
+            - forwards clusters of regions to the client using the Region Server.
+            - This occurs after a table divides into multiple regions.
+          HMaster
+            - a tool that helps manage and coordinate the Region Server.
+          ZooKeeper:
+            - a coordinator in the HBase distributed environment that provides fault tolerance by monitoring
+              the transaction state of servers.
+
+
+
+  EMR Notebooks:
+    - Notebooks are now Workspaces
+      -> to use click on "Go to Workspaces (notebooks)"
+    - Your old EMR console notebooks are now called EMR Studio Workspaces in the new console.
+    - Go to the Workspaces (Notebooks) page to access your notebooks as Workspaces and create new Workspaces.
+  EMR Git Repos:
+    - Git repository management is in JupyterLab
+
+  Apache Hive:
+    https://aws.amazon.com/what-is/apache-hive/
+    - a distributed, fault-tolerant data warehouse system that enables analytics at a massive scale.
+    - Hive allows users to read, write, and manage petabytes of data using SQL.
+    - Hive is built on top of Apache Hadoop, which is an open-source framework used to efficiently store
+      and process large datasets.
+    - Hive was created to allow non-programmers familiar with SQL to work with petabytes of data, using a
+      SQL-like interface called HiveQL.
+
+  Apache Spark:
+    https://aws.amazon.com/what-is/apache-spark/
+    - Apache Spark is an open-source, distributed processing system used for big data workloads.
+    - It utilizes in-memory caching, and optimized query execution for fast analytic queries against data of any size.
+    - It provides development APIs in Java, Scala, Python and R, and supports code reuse across multiple
+      workloads—batch processing, interactive queries, real-time analytics, machine learning, and graph processing.
+
+    - Spark was created to address the limitations to MapReduce, by doing processing in-memory, reducing the
+      number of steps in a job, and by reusing data across multiple parallel operations.
+    - With Spark, only one-step is needed where data is read into memory, operations performed, and the results
+      written back—resulting in a much faster execution.
+
+  Apache Presto:
+    https://aws.amazon.com/what-is/presto/
+    - Presto (or PrestoDB) is an open source, distributed SQL query engine, designed from the ground up for fast
+      analytic queries against data of any size.
+    - It supports both non-relational sources, such as the Hadoop Distributed File System (HDFS), Amazon S3, Cassandra,
+      MongoDB, and HBase, and relational data sources such as MySQL, PostgreSQL, Amazon Redshift, Microsoft SQL
+      Server, and Teradata.
+
+  Demo: How to configure EMR
+
+    AWS console -> EMR -> select (default) "Amazon EMR running on Amazon EC2"->  Create Cluster ->
+      Name: My-Cluster, Application Bundles: Hadoop,
+      Primary: Ec2 instance type: m5.xlarge,
+      Core: Ec2 instance type: m5.xlarge,
+      Cluster scaling and provisioning options
+      Network options
+        -> create cluster
+
+
+    AWS console -> EMR -> Notebooks and Git repos <left tab>
+
+
+      Notebooks:
+        -  notebooks are how you're going to access Hadoop and Spark most often.
+
+
+Summary
+  Key Takeaways:
+    - will take a brief look at hadoop later in this section
+    - for the EMR servies, know:
+      - what they are
+      - when they should be used
+      - how to use them in AWS
+
+
+
+------------------------------------------------------
+4.7 What You Need to Know about Apache Spark
+
+  Apache Spark Introduction
+    Unified Analytics Engine
+      - basic data processing, Machine Learning, and Real-time Analytics
+    Large Scale Data Processing
+      - primarily for BIG data
+    Open Source
+      - developed in 2009 by UC Berkley and then donatated to Apache Software Fundation
+
+  Apache Spark Core Components
+
+    Spark Core
+      https://luminousmen.com/post/spark-core-concepts-explained
+      - job execution engine
+
+      Driver ---> Cluster   ---> Work Nodes
+                  Manager   --->  ...
+                            ---> Work Nodes
+                                   Executor
+                                     Task
+         Driver
+           - the central hub of the Spark application
+           - Spark driver is all about getting the necessary power and resources to perform the computations
+             that you need to perform.
+         Cluster Manager
+           - cluster manager the central hub of the Spark application.
+           - powers the work nodes
+         work nodes:
+           - worker nodes are individual systems that are gonna be working on your job execution in parallel.
+           - work nodes will be working on a problem in parallel and there's multiple worker nodes.
+           - inside of that worker node, there is an executor, And inside of that executor, you would have tasks
+
+    Resilient Distributed Datasets (RDDs)
+      - immutable (unchanging) collection data items (objects)
+         - RDDs are designated by a collection of objects that can be processed in parallel.
+      - fault Tolerant
+        - RDDs are designed to automatically rebuild themselves in case of a data loss, this makes Spark
+          extremely resilient to failures.
+      - Lazy Transformation
+        - Lazy transformations just mean that when you run individual cells or pieces of code, they don't compute
+          their results right away.
+        - Instead, they just remember the transformations that need to happen.
+        - this gives you the ability to optimize your pipelines and to avoid unnecessary computation.
+
+
+          Data Source             RDD  ------>
+          Hadoop, Mesos, ----->   ...  <------   Transformation
+          File System,   ----->   ...  <------
+          other                   RDD  ------>
+                                               ------> Action   ------> Result
+
+      - RDD
+        - RDD are created from data source
+        - RDD is stored as an object in the JVM driver and refers to data stored either in permanent storage
+          (HDFS, Cassandra, HBase, etc.) or in a cache (memory, memory+disks, disk only, etc.), or on another RDD
+        - Two types of operations can be performed via RDD (and, accordingly, all work with data is performed in
+          the sequence of these two types): transformations and actions.
+      - Transfomration
+        - applies a function to the RDD
+        - transformations are gonna happen to those RDDs.
+        - The result of applying this operation to RDD is new RDD.
+        - from those lazy transformations, actions will be triggered
+      - actions
+        - Actions are applied when it is necessary to materialize the result — save the data to disk, write the data
+          to a database or output a part of the data to the console. `
+        - essentially, work gets done, transformations happen, and then actions are operations that return a final value.
+        - once a final value gets returned, that's considered an action.
+      - Result
+        - you have your RDDs that are being transformed, driving to an action that then leads you to a result,
+        - result is the update/chage to a database or table or chart or whatever it is you're trying to receive
+
+    Spark in AWS
+      Amazon EMR (Elastic MapReduce)
+        - main way to work spark on AWS
+        - EMR provides a simplified way to create and work with [spark] clusters
+      Amazon Glue
+        - Spark is hidden, but it is what powers Glue
+
+  Summary
+    Key Takeaways
+      - don't go to deep on Apache Spark
+      - high-level EMR concepts is fine, but understand what EMR is and how it works
+
+------------------------------------------------------
+4.8 A Look at Apache Flink
+
+  Apache Flink in AWS:
+     Amazon Managed Service for Apache Flink
+       - query and analyze streaming data
+       sources include:
+         Kinesis data stream
+         Amazon MSK (Managed Streaming for Apache Kafka)
+         S3
+         ...
+       Output (destinations) include:
+         Kinesis data stream
+         Amazon MSK
+         S3
+         ...
+
+  Apache Flink Core Concepts
+    Stream and Batch
+      - used for basic data processing, Machine Learning, and Real-time analytics tasks
+    Architecture
+      - comprised of:
+         A client
+           - interact with a Job Manager
+         Job Manager
+           - the manage task managers
+         Task Managers
+           - response for running your tasks
+
+                                       ------> Task Manager
+                                       <------
+              Client -----> Job Manager
+                                       ------> Task Manager
+                                       <------
+
+    The flow of Time
+      Event Time
+        - when the event occurs
+      Processing time
+        - when the event moves into your system (entered to Database)
+      Watermarks
+        - The watermark is taking a look at what you've already processed and then looking at the processing time
+          of the events as they come in.
+        - because of those timestamps, you can figure out what's arriving late and figure out what you need to
+          do about it.
+
+
+
+                                   |------------------|
+                                   |System            |
+                     Event ------> ||----------------||
+                                   ||Processing Time ||
+                                   ||----------------||
+                                   |------------------|
+
+
+  Kinesis vs Flink
+    Kinesis
+      - Managed by AWS
+      - Streaming Service
+      - tight integration with AWS eco system
+      - when to use Kinesis:
+         - if you are already in AWS and you have a lot of services in AWS, Kinesis might be a better fit
+         - It's easier to manage and scale because it's all managed by AWS
+    Flink
+      - open source
+      - batch and streaming
+      - lots of API options
+      - multiple cluster managers
+        - can choose the cluster manager (YARN or Mesos or Kubernetes)
+      - when to use Flink:
+        - flink is an ideal solution if open source and fine-tuning are very important for your solution.
+        - have to ask, do you have the resources to configure and maintain that solution
+
+  Summary
+    Key Takeaways
+      - flink is ideal open source and fine-tining are important for your solution
+      - do you have the resources to configure Flink and maintain the Flink solution?
+
+------------------------------------------------------
+4.9 A Brief Overview of Apache Hadoop and Hive
+
+
+  Hadoop
+    Open-source framework
+    Distributed Processing of Large Data
+      - used for distributed processing of Large data across clusters of computers
+        using simple programming models
+    Fault Tolerant
+      - designed to be a highly fault tolerant system that can scale up from a single server to thousands
+        of machines and process and store big data.
+    Hadoop Distributed File System (HDFS)
+      - split and distribute data
+      - HDFS function is to split large files into blocks and then distribute them into nodes across a cluster.
+    MapReduce
+      Map step
+        - processing & filtering
+      Reduce step
+        - aggregating results
+
+            -------------
+            |           | ----> Map ----->
+            |           | ----> Map -----> Reduce  ----> |--------|
+            |           |                                |        |
+            | Big Data  | ----> Map ----->               |        |
+            |           | ----> Map -----> Reduce  ----> | Output |
+            |           |                                |        |
+            |           | ----> Map ----->               |        |
+            ------------- ----> Map -----> Reduce  ----> |--------|
+
+
+
+     Hive   ------>  Hive    -----> MapReduce  -----> HDFS
+     Client          Server
+
+  Hive
+    - Data warehousing solution built on Hadoop
+    - it's a data warehousing software that helps you to interact with your big datasets
+    components:
+      HiveQL (HQL)
+        - query using your HiveQL which is SQL-like language
+          - make transition easier
+      Data Warehousing
+       - still organizes data into tables and databases
+          - this makes it similar to a relational database
+       - allows partitioning and bucketing
+         - being able to query specific partitions or pieces of your data rather than having to
+           go through the entire thing helps improve efficiency
+      HiveQL (HQL)
+
+  Hadoop / Hive in AWs
+    Amazon EMR (Elastic MapReduce)
+      - main way to work with Hadoop/Hive on AWS
+    Amazon Glue
+      - integrated metadata repository
+        - unlike Spark, you can actually work with Glue through an integrated metadata repository.
+
+
+  Summary
+    Key Takeaways:
+      - don't go to deep on Hadoop / Hive for ML exam - just understand the basics of Hadoop & Hive
+      - Need to understand EMR at a high-level
+
+------------------------------------------------------
+Announcing Amazon Managed Service for Apache Flink Renamed from Amazon Kinesis Data Analytics
+https://aws.amazon.com/blogs/aws/announcing-amazon-managed-service-for-apache-flink-renamed-from-amazon-kinesis-data-analytics/
+30 Aug 2023
+
+   Today we are announcing the rename of Amazon Kinesis Data Analytics to Amazon Managed Service for Apache Flink,
+   a fully managed and serverless service for you to build and run real-time streaming applications using Apache Flink.
+
+  History
+    Since we launched Amazon Kinesis Data Analytics based on a proprietary SQL engine in 2016, we learned that SQL alone
+    was not sufficient to provide the capabilities that customers needed for efficient stateful stream processing. So, we
+    started investing in Apache Flink, a popular open-source framework and engine for processing real-time data streams.
+
+    In 2018, we provided support for Amazon Kinesis Data Analytics for Java as a programmable option for customers to build
+    streaming applications using Apache Flink libraries and choose their own integrated development environment (IDE) to build
+    their applications. In 2020, we repositioned Amazon Kinesis Data Analytics for Java to Amazon Kinesis Data Analytics for
+    Apache Flink to emphasize our continued support for Apache Flink. In 2021, we launched Kinesis Data Analytics Studio (now,
+    Amazon Managed Service for Apache Flink Studio) with a simple, familiar notebook interface for rapid development powered
+    by Apache Zeppelin and using Apache Flink as the processing engine.
+
+------------------------------------------------------
+
+AWS re:Invent 2020: Building real-time applications using Apache Flink
+https://www.youtube.com/watch?v=xu3A_7DcRgQ
+
+
+ Apache Flink
+   - state computations over data streams
+   Diverse Use cases
+     - Event-driven applications
+     - Streaming and analytics and ETL
+     - Batch analytics
+   Processing guarantees
+     - distributed processing engine for stateful computations of a bounded and unbound data streams
+       - means flink provides a unified engine for both batch and streaming
+     - built to address common stream processing challenges
+       - provides strong and consistent state and is exactly-once messaging out-of-the-box (Exactly once state consistency)
+       - supports event-time processing
+       - provides means to handle late arriving events
+   Expressive APIs
+     - can either use SQL to analyze your streaming data or the more declarative data streams API
+       as well has looking for individual events,  correlationg individual events and look for patterns
+       iin your streaming data by means of complex events processing
+       - SQL
+       - Table and datastream APIs
+       - complex event processing
+     - supports an agent-based paradigm called stateful function that can be evaluated on top of a batch flink
+   Scale-out architecture
+     - provides low latency stream processing with low latency guarentees even if you are scaling the processing
+       out to leverage terabytes of states
+       - adapt to desired throughput
+       - Support for TBs of state
+   Strong Community
+     - vibrant open-source community
+     - broad set of connectors
+
+  Running Apache Flink of AWS
+      - flink support YARN, Mesos, and Kubernetes cluster managers as deployment targets
+      - alternatively, you can create managed YARN and Kubernetes clusters for your Flink workloads by
+        leveraging EMR or Elastic Kubernetes Service (EKS)
+      - you can also run your applications in a fully managed environment on Kinesis Data Analytics
+    Hadoop / YARN
+    Apache Mesos
+    Kubernetes
+    Kinesis Data Analytics
+
+  Flink Deployment on EKS (Amazon Elastic Kubernetes Service)
+    - flink communuity maintains docker images to deploy flink in a containerized environment
+    - flink session clusters have two main parts: a job manager and task managers
+    Task manager
+      - task manager provides the compute resources for your flink application
+      - job manager orchestrates the execution of the application
+    deployment
+      - to provision a Flink cluster on top of Kubernetes, you would have a deployment for a single job manager
+        for the deployment of a pool of task managers, and then you can submit your job to the cluster
+    production deployment
+      issues:
+        - need means to tell if application is healthy
+        - a good monitor in place for stream applications
+        - task manger failure detection
+        - job manger failure detection
+      central logs and metrics collection
+        - need a central component to collect metrics from job and task managers
+        - need a central component to collect logs job and task managers and scrap the logs
+      Storage for checkpoints and savepoints
+         - persist checkpoints and savepoints (operator state) in S3 for failure recovery
+         - with savepoint, if a task manager fails, the job manager can restart the jobs from the savepoint
+      Store job meter data for Job manager failure recovery
+        - persist job metadata store off cluster in zookeeper
+      Dealing with streaming data traffic patterns
+        - streaming data pattern in throughput changes throughout the day
+        - need autoscaling based on trigger scaling activity (accessed from metrics collected)
+      Submitting Flink applications into the  cluster
+        - need encryption and authentication for your users
+        - can use rest proxy to handle these authenication and security aspects
+
+
+   Using Amazon Kinesis Data Analytics (now AWS Managed Service for Flink Apache)
+     Value Add:
+       - includes Autoscaling, Zookeeper, and Storage for checkpoings and savepoints
+       - integrated with CloudWatch for log and metric collection
+       - will provision and manage these additional  resources for you (e.g. log and metric collection, autoscaling, ...)
+       - provides tight integration with the AWS platform
+
+   Kinesis Data Analytics vs  Self-Managed Cluster
+     Self-Managed Cluster
+       - full flexibility of instance types
+       - optimize cost with reserved instances, savings plan, and spot instances
+       - fine-grain control over cluster settings, debugging tools, and more
+     Kinesis Data Analytics
+       - no management of infrastructure
+       - monitoring and high availability
+       - automatic scaling capabilities
+
+
+
+   How to build low latency Flink Applications
+     - look at low latency applications consuming from Apache Kafka and Kinesis Data Streams
+     comsuming data from Apache Kafka clusters with a Flink cluster
+       - usually means establishing network connectivigy to brokers
+       - assume your Kafka cluster is already running  in your VPC
+          - means network interfaces of the Kafka brokers are exposed in the subnets or your VPC
+       Deploy Task managers in same subnets
+         - need to configure Kafka brokers security groups to allow Flink Task mangers to consume from Kafka brokers
+         - if task managers cannot be deploy in the Kafka subnets, then you can use peering, transit gateways,
+           shared subnets, etc.
+     comsuming data from Apache Kafka clusters with Kinesis Data Analytics (KDA)
+       - task managers are provisioned by the service and are running in a different VPC and different account
+       - can enable VPC support which exposes the network interfaces (EnI) the the Kafka subnets
+
+     consuming data from Kinesis Data Streams (KDS) with Flink
+       - has a public endpoint and can authenticate through IAM so Flink application can pickup credentials from the env
+       - KDS uses a throughput provisioning model
+       - KDS stream consists of Shards and a shard can ingest 1K events / sec and up to a MB / sec
+         and egress up to 2MB / sec
+       - can read 5 times per sec from a Kinesis Stream or from a shard
+       - scaling throughput by adding or removing shards from your stream
+       - KDS imposes those limits, you must make sure your flink application is respecting these limits
+       1 shard stream example
+         - to read shard, consumer application uses "GetRecords(), and up to 2MB of data is returned
+            - once data is processed, another GetRecords() call is issued
+            - a single shard supports up to 5 GetRecords() call per second
+            - with 1 consumer application, records can be retrieved every 200ms
+            - with 5 consumer application, then each consumer can read 1 time per sec and up to 400KB /sec
+       Default Protocol
+         For the default protocol, fine tune latency and number of consumers
+           - need to fine-tune that latency and throughput and the number of consumers
+           - configuration options to fine-tune with:
+             SHARED_GETRECORDS_INTERVAL_MILLIS:
+               - how long flink will pause between two getRecords calls (default: 200ms)
+             SHARE_USE_ADAPTIvE_READS:
+               - automatically fine-tune the number of messages that are read per GetRecords() calls so the global
+                 throughput remains below 2MBs limit
+             DEFAULT_SHARD_GETRECORDS_MAX
+               - set an upper limit to the number of records read by each individual get records call
+         Enhanced fan-out support:
+           - apache flink added support for newer http 2 based protocol can enhanced fan-out
+           - with enhanced fan-out, each individual consumer first registers with a stream, and this creates a
+             dedicated EFO pipe for each consumer
+           - each consumer can read a full 2MB per second
+           - the deliver message mechanizm is no longer pull-based, but changes to a push-based model
+         Consider enhanced fan-out for use cases with:
+           - more than 2 consumer applications
+           - low latency requirements
+
+         Kinesis Sink
+            - to use a Kinesis stream, you simply use a Kinesis Sink
+            - Kinesis Sink uses the Kinesis Producer Library (KPL) to actually produce events in the stream
+            - KPL takes care of retrying events that could not be delivered in the stream
+            - KPL sends events in batches to improve the efficiency
+            - KPL uses an internal buffer
+               - sink accepts all records and store them in the internal queue of the KPL
+               - KPL will persists this events into the stream
+
+                   ----> Kinesis Data Stream Sink  ---> Kinesis Data Stream
+                          Use: KPL
+                          ^    |
+                          |    V
+                          Queue
+
+               Underprovision KDS
+                 - events will pile up in the KPL queue and eventually exhaust the resources of the task manager
+                 Enable backpressure of the Kinesis sink
+                   - you need to limit the number messages in the KPL queue:
+                   - default buffering, a queue size of 100kB per shard should be sufficient:
+                     sink.setQueueLimit(number of shards * 100KB  / record size)
+                   - then if the Queue is full, the Kinesis sink will no longer accept messages, and this will build
+                     up backpressure and eventually slow down the source
+                   - this is more graceful than exhausting the KPL queue resources
+
+
+  Apache Flink best practices
+     High-level APIs
+       - use them to your advantage (over the low-level APIs)
+       - only use the low-level APIs as a last resort
+     1st Deploy applications locally in your IDE to debug
+       - can set breakpoints, see backtraces, identify and resolve performance bottlenecks
+       - although different than your production environment, will make easiler to debug issues
+     Structure of a Flink Application
+        streaming word count application:
+           source ---> map --->  count ---> sink
+
+           source: Twitter tweets
+           map function: splits tweets into words
+           count:  words are counted over tumbling window
+           sink:   persist the words
+           - this case has one parallel instance of every operator of the application
+           - these operators are executed on a 'slot'
+           - each task manager provides slots
+           - when task managers register with the job manager, they offer slots to the job manager, then the job
+             manager can schedule a set of operators on each slot
+           - in practice, we parallize the application by having multiple instances for some or all operators
+
+                      ---> map --->  count --->
+               source          --->             sink
+                      ---> map --->  count --->
+
+            - an operators are scheduled on one of the slots
+
+               --------------------------------------------
+               |slot  ---> map --->  count --->           |
+               |source          --->             sink     |
+               --------------------------------------------
+               |Slot                                      |
+               |        ---> map --->  count --->         |
+               --------------------------------------------
+
+      Flink Scaling operators with slow IO
+        KDA scales in terms of Kinesis Processing Units (KPUs)
+          - 1 vCPU, 4GB mem, 50 GB disk
+
+                   Task Manager                 Task Manager
+                       slot                       slot   Slot
+
+                      1 KPU                          1 KPU
+                 1 parallelisimPerKPU            2 parallelismPerKPU
+
+
+           - With Flink, you can specify the number of slots per task manager
+           - with KDA, do something similar by adapting the parallelism per KPU
+           - this generally works well only for IO bound applications, and may introduce overhead for other applications
+
+      Monitoring Flink applications
+        Flink application resources utilization
+          - monitor resource metrics - cpu utilization, memory utilization, checkpoint size and duration
+        Flink application - Monitor the entire architecture
+          metrics of the sources and sinks
+            - for kafka and Kinesis, you can get information whether your application can keep up of the stream throughput
+              by looking at the records lags or milliBehindLatest
+            - monitor resource untilization of your sources and sinks
+          backpressure
+            - examine the flink backpressure
+
+
+------------------------------------------------------
+
+Building a Leaderboard with Amazon Managed Service for Apache Flink | 1/5
+https://www.youtube.com/watch?v=ZrybveqaWls
+
+  See files in: tutorials/aws_building_leaderboard_tutorial
+
+
+  Resources:
+  Github repository:
+  https://github.com/build-on-aws/real-time-gaming-leaderboard-apache-flink
+
+  Resources used in this video:
+  🔗 Overview of AWS CDK (Cloud Development Kit):
+  https://docs.aws.amazon.com/cdk/v2/guide/home.html
+  https://docs.aws.amazon.com/cdk/v2/gu...
+  🔗 Using a Studio notebook with Managed Service for Apache Flink:
+  https://docs.aws.amazon.com/managed-flink/latest/java/how-notebook.html
+  🔗 Apache Flink SQL API:
+  https://nightlies.apache.org/flink/flink-docs-release-1.18/docs/dev/table/sql/gettingstarted/
+  🔗 Intro to Amazon Managed Service for Apache Flink:
+  https://docs.aws.amazon.com/managed-flink/latest/java/what-is.html
+  🔗 Intro to Amazon Kinesis Data Streams:
+  https://docs.aws.amazon.com/streams/latest/dev/introduction.html
+
+
+
+  Most common streaming use cases:
+    - anomaly detection
+    - IoT Analytics
+    - rapid response or emergency response
+    - Real-time personalization
+    - Asset tracking (gaming leaderboard)
+
+  Streaming Architecture stages
+
+     Ingestion --> Streaming Storage ---> Enrich/Process/Analyze ---> Result Storage --> Visualization
+
+     Streaming storage:
+         Amazon MSK (Managed Streaming for Apache Kafka)
+         Kinesis Data Streams (KDS)
+     Enrich/Process/Analyze
+       - about applying the business logic
+     Result Storage:
+       database, data lakes
+
+  Gaming leaderboard use case
+     Gather gaming event data from online gaming (e.g. for car racing game: player ID, total distance, speed)
+
+                                 Kinesis
+                    -----------> firehose   ---> S3         ----> MSF     ---->  KDS
+                    |            archiver        Datalake         Replay         leaderboard
+                    |                                                            replay
+     Lambda         |            Zepplin
+     Lambda         |            notebook
+     Gaming  ----> KDS         ---> MSF      ----> KDS        ---> Lambda
+     events        leaderboard      ^ ^            Leaderboard     Redis Sync
+                   events           | |            results          results
+                                    | |                              |
+     Lambda   ---> Aurora ----------| |                              V
+     Player         MySQL             |                            MemoryDB for Redis
+                                      |                             results storage
+     Lamda    --->  KDS  -------------|                              |
+     Config                                                          V                        Dashboard
+     Pusher                                                         EC2             --------> Users
+                                                                    Gaming Server
+                                                                    (public subnet)
+
+
+  Pre-requisites
+
+    Latest Node JS and npm
+    Latest cdk npm install -g aws-cdk
+    Python 3 with pip3
+
+  Deploying
+
+    Take a check out of a main branch.
+    Switch to the folder infra/functions/players and run pip3 install -r requirements.txt -t .
+    Switch to the folder infra/functions/redis-sync and run pip3 install -r requirements.txt -t .
+    Go to the infra folder and run npm install
+    Go to the infra folder and run cdk bootstrap  # if using CDK for the first time in the given AWS account and region, else skip this step.
+    Go to the infra folder and run cdk deploy
+
+  cdk shutdown stacks:
+    cdk destroy [STACKS..]          Destroy the stack(s) named STACKS
+
+cdk deploy:
+  - deploys 2 cloudformation stacks
+                CDKToolkit
+                  - includes ECR::Repository, IAM:Roles, IAM::Policies, S3 Bucket
+                GamingLeaderboardStack
+                  - includes Kinesis::Stream, Lambda::Functions, Glue::Database, Log::LogGroup, Log::LogStream,
+                    KinesisAnalyticsV2::Application. VPC with subnets, IGW, & GW, EC2::SecurityGroups, SecretManage::Secrets,
+                    EC2::Instance, MemoryDB::Cluster, and CDK::Metadata
+
+  Open MSF (Kinesis Analytics) studio notebook:
+
+     Kinesis Analytics (Managed Apache Flink) -> Studio Notebooks <left tab> ->  Create Studio notebook ->
+       Creation Method: Create with Custom Settings, name: gaming-demo-1 -> Next
+        -> IAM: Choose from IAM roles ..., Service Role: GamingLeaderBoardStack-notebookcommonnotbookrole,
+        AWS Glue Database: leaderboard  -> Next
+        -> Configuration <use defaults> -> Next -> Review -> Create Studio Notebook
+        # after notebook is created
+        from 'gaming-demo-1' page -> click "Run" <top right>
+        # after notebook is started
+        click "Open in Apache Zeppelin" -> Import -> real-time-gaming-leaderboard-apache-flink-main\notebooks\challenges.zpln
+        -> click "challenges"
+        -> in code block 2, change region to "us-east-1"
+        -> run 1st two code blocks
+
+------------------------------------------------------
+
+4.10 Identify and Implement a Data Transformation Solution Review
+
+
+
+  Introduction to ETL (Extract Transform and Load)
+    key things
+      - extracting all of it, and then transforming all of the data.
+      - Once we've done those extract and transform steps, we load everything in.
+      - we're extracting, transforming everything all at once
+
+       Ingest
+     |---------|
+     |         |
+     |  Data   |  ----> Extract      -----> Transform   ---> Load       ----> Report
+     |  Sources|        (from Data                           (to target       (optionally)
+     |         |         sources)                             database)
+     |---------|
+
+
+  Introduction to ELT (Extract Load and Transform )
+    key things:
+      - not gonna be transforming all of our data, just transforming the bits of the data that we
+        need to get usable reports.
+      - often switch to data lake
+      - might load something into a staging database or data lake.
+      - you might have multiple stages of a data lake as we transform and manipulate that data.
+
+    Why loading before transforming the data?
+      - it does not always make sense to transform all of that data because that can be very costly,
+        especially if we're ingesting things into our system, but we're not 100% certain what the use case is.
+    Loading to Data Lakes
+      - when we load this into an ELT, most often that's going to be loading it into 'data lake'
+
+      Ingestion
+     |---------|                           Staging
+     |  Data   |  ----> Extract      ----->  Load    ---> Transform  ----> Data Lake (preprocess data zone)
+     |  Sources|        (from Data          (to target               |
+     |         |         sources)            data Lake)              |--> Reporting
+     |         |                             (raw data Zone)              (optionally)
+     |---------|
+
+
+
+  AWS Services for various ETL phases
+
+     Amazon Glue
+      Crawler         Amazon Kinesis
+          |    -----> Amazon Glue  -----> Amazon EMR    -----> S3
+          |                            Amazon Redshift*        DynamoDB*
+          V                                                    Amazon RDS*
+
+       Data     ----> Extract      -----> Transform     -----> Load       ----> Report
+       Sources        (from Data                               (to target       (optionally)
+                       sources)                                 database)
+
+
+      * services not likely to be on ML exam
+
+  ELT vs ETL:
+  https://rivery.io/blog/etl-vs-elt/
+   -> includes ETL vs ELT: Side-by-side comparison table
+
+
+  Introduction to Elastic Map Reduce (EMR)
+    Simplifies big Data Frameworks including:
+       Spark
+       Hadoop
+    Managed Hadoop Framework
+      - EMR runs on Hadoop open source framework
+      - utilizes EC2 instances for processing
+    EMR Used for:
+      Data Transformation and Enrichment
+      Log Analysis
+      Data Visualization
+    Takeaway: Ease of Use
+      - makes Hadoop and spark easier to use
+
+
+  Apache Spark Core Components
+
+    Spark Core
+      - job execution engine
+
+      Driver ---> Cluster   ---> Work Nodes
+                  Manager   --->  ...
+                            ---> Work Nodes
+                                   Executor
+                                     Task
+
+    Resilient Distributed Datasets (RDDs)
+      - immutable (unchanging) collection data items (objects)
+         - RDDs are designated by a collection of objects that can be processed in parallel.
+      - fault Tolerant
+        - RDDs are designed to automatically rebuild themselves in case of a data loss, this makes Spark
+          extremely resilient to failures.
+      - Lazy Transformation
+        - Lazy transformations just mean that when you run individual cells or pieces of code, they don't compute
+          their results right away.
+        - Instead, they just remember the transformations that need to happen.
+        - this gives you the ability to optimize your pipelines and to avoid unnecessary computation.
+
+
+          Data Source             RDD  ------>
+          Hadoop, Mesos, ----->   ...  <------   Transformation
+          File System,   ----->   ...  <------
+          other                   RDD  ------>
+                                               ------> Action   ------> Result
+
+  Apache Flink Core Concepts
+    Stream and Batch
+      - used for basic data processing, Machine Learning, and Real-time analytics tasks
+    Architecture
+      - comprised of:
+         A client
+           - interact with a Job Manager
+         Job Manager
+           - the manage task managers
+         Task Managers
+           - response for running your tasks
+
+                                       ------> Task Manager
+                                       <------
+              Client -----> Job Manager
+                                       ------> Task Manager
+                                       <------
+
+    The flow of Time
+      Event Time
+        - when the event occurs
+      Processing time
+        - when the event moves into your system (entered to Database)
+      Watermarks
+        - The watermark is taking a look at what you've already processed and then looking at the processing time
+          of the events as they come in.
+        - because of those timestamps, you can figure out what's arriving late and figure out what you need to
+          do about it.
+
+
+
+                                   |------------------|
+                                   |System            |
+                     Event ------> ||----------------||
+                                   ||Processing Time ||
+                                   ||----------------||
+                                   |------------------|
+
+    Flink
+      - open source
+      - batch and streaming
+      - lots of API options
+      - multiple cluster managers
+        - can choose the cluster manager (YARN or Mesos or Kubernetes)
+      - when to use Flink:
+        - flink is an ideal solution if open source and fine-tuning are very important for your solution.
+        - have to ask, do you have the resources to configure and maintain that solution
+      - requires more work to use than EMR
+
+
+  Hadoop
+    Open-source framework
+    Distributed Processing of Large Data
+      - used for distributed processing of Large data across clusters of computers
+        using simple programming models
+    Fault Tolerant
+      - designed to be a highly fault tolerant system that can scale up from a single server to thousands
+        of machines and process and store big data.
+    Hadoop Distributed File System (HDFS)
+      - split and distribute data
+      - HDFS function is to split large files into blocks and then distribute them into nodes across a cluster.
+    MapReduce
+      Map step
+        - processing & filtering
+      Reduce step
+        - aggregating results
+
+            -------------
+            |           | ----> Map ----->
+            |           | ----> Map -----> Reduce  ----> |--------|
+            |           |                                |        |
+            | Big Data  | ----> Map ----->               |        |
+            |           | ----> Map -----> Reduce  ----> | Output |
+            |           |                                |        |
+            |           | ----> Map ----->               |        |
+            ------------- ----> Map -----> Reduce  ----> |--------|
+
+  Summary
+    Key Takeaways
+      - need to understand ETL and ELT and services associated with them
+      - for Hadoop, Hive, and Spark
+        - understand Flink
+        - understand EMR
+        - don't get lost in the weeds
+
+
+
+------------------------------------------------------
+4.11 Quiz: Identify and Implement a Data Transformation Solution
+------------------------------------------------------
+
+Question 2
+
+In data processing, companies often choose between ETL (Extract, Transform, Load) and ELT (Extract,
+Load, Transform) methodologies. Considering security concerns, why might a company prefer ELT over ETL?
+
+choices:
+  - Faster processing speeds
+  - Lower costs
+  - Less movement of data reduces exposure and risk  <- correct answer
+  - Improved data quality
+Good work!
+
+ELT processes data directly within the target data warehouse, minimizing the movement of sensitive
+data across multiple systems, which reduces the risk of data breaches and security vulnerabilities.
+
+
+
+Question 3
+
+In Apache Flink, when dealing with streaming data, what mechanism is used to handle out-of-order events based on the concept
+of event time, ensuring that the state of computations can be accurately determined even if data arrives late?
+
+choices:
+  - Processing time
+  - Event time
+  - Watermark    <- correct answer
+  - Timestamp
+Good work!
+
+Watermarks in Apache Flink are special types of data points that allow the system to measure the progress of event time,
+thus managing the latency and order in which events are processed to handle out-of-order arrivals accurately.
+
+------------------------------------------------------
+
+Chapter 5 Conclusion
+
+------------------------------------------------------
+5.1 Course Summary
+
+  Core concepts of Data Engineering
+      Machine Learning Pipelines
+        - how to ingest data, preprocessing, cleaning, feature selection
+        - how to move data through our system from start to finish
+      Storage and Storage Classes - S3
+      AWS Services
+        SageMaker
+        S3
+        EBS
+          - VM or High IOPs
+        EFS
+          - hierarchical namespace
+
+  core concepts of batch processing and stream processing
+    Batch Processing
+      - used for training data
+    Stream Processing
+      - more likely to be used for inference
+    AWS Services
+      Kinesis
+      Glue
+        Glue Crawler
+
+  core concepts of ETL and ELT
+    - ETL and ELT are about data ingestion, data movement.
+    - Apache Spark, Hadoop, Hive are more complicated big data concepts
+    ETL
+    ELT
+    Apache Spark
+    - Apache Spark is an open-source, distributed processing system used for big data workloads.
+    Hadoop
+      - open source framework that is used to efficiently store and process large datasets ranging in size from
+        gigabytes to petabytes of data.
+      - Instead of using one large computer to store and process the data, Hadoop allows clustering multiple computers
+      to analyze massive datasets in parallel more quickly.
+    Hive
+    - a distributed, fault-tolerant data warehouse system that enables analytics at a massive scale.
+    AWS Services:
+      EMR
+      Flink
+        - used for basic batch and streamin data processing, Machine Learning, and Real-time analytics tasks
+
+  Summary
+    Key Takeaways
+      - stay focused on the ML exam
+      - understand the concepts and the application of the concepts
+
+------------------------------------------------------
+5.2 Conclusion and What's Next
+
+  What are the next steps:
+    1 of Four Courses
+      Data Engineer (this course)
+      Exploratory Data Analysis - 2nd course
+      - what are the other 2 course ???
+
+      Review Quizes
+        - review material as needed
+
+      Notes and Hands on Labs
+       - review notes
+       - review hands on labs
+
+
+
+------------------------------------------------------

@@ -1,0 +1,32 @@
+{
+    "clusterId": "j-3K10A0CX6T68N",
+    "sparkArgs": [
+        "spark-submit",
+        "s3://emr-tutorial-bkt-ph/files/spark-etl.py",
+        "s3://emr-tutorial-bkt-ph/input",
+        "s3://emr-tutorial-bkt-ph/output"
+    ],
+    "hiveArgs": [
+        "hive-script",
+        "--run-hive-script",
+        "--args",
+        "-f",
+        "s3://emr-tutorial-bkt-ph/files/ny-taxi.hql",
+        "-d",
+        "INPUT=s3://emr-tutorial-bkt-ph/input/",
+        "-d",
+        "OUTPUT=s3://emr-tutorial-bkt-ph/output/hive"
+    ],
+    "pigArgs": [
+        "pig-script",
+        "--run-pig-script",
+        "--args",
+        "-f",
+        "s3://emr-tutorial-bkt-ph/files/ny-taxi.pig",
+        "-p",
+        "INPUT=s3://emr-tutorial-bkt-ph/input/",
+        "-p",
+        "OUTPUT=s3://emr-tutorial-bkt-ph/output/pig"
+    ],
+    "deleteCluster": false
+}

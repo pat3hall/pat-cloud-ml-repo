@@ -1,0 +1,2989 @@
+{
+  "Description": "Gaming Leaderboard Stack (uksb-ruuif573cd)",
+  "Resources": {
+    "events26E65764": {
+      "Type": "AWS::Kinesis::Stream",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-events"
+            ]
+          ]
+        },
+        "RetentionPeriodHours": 24,
+        "StreamEncryption": {
+          "EncryptionType": "KMS",
+          "KeyId": "alias/aws/kinesis"
+        },
+        "StreamModeDetails": {
+          "StreamMode": "ON_DEMAND"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/events/Resource"
+      }
+    },
+    "DatagenEventsfnServiceRole632230FF": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenEvents/fn/ServiceRole/Resource"
+      }
+    },
+    "DatagenEventsfnServiceRoleDefaultPolicy4377B353": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:ListShards",
+                "kinesis:PutRecord",
+                "kinesis:PutRecords"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "events26E65764",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "DatagenEventsfnServiceRoleDefaultPolicy4377B353",
+        "Roles": [
+          {
+            "Ref": "DatagenEventsfnServiceRole632230FF"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenEvents/fn/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "DatagenEventsfnFCBADD99": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "ZipFile": "import datetime\nimport json\nimport os\nimport random\nimport time\nimport boto3\n\nkinesis = boto3.client('kinesis')\n\n\ndef lambda_handler(event, context):\n    records = []\n\n    for j in range(1, 5):\n        for i in range(1, 50):\n            speed = random.randint(150, 350)\n            distance = random.randint(1, 50)\n            time_millis = datetime.datetime.now()\n            if random.randint(0, 4) == 0:\n                # Replay old data 25% of the time. 1 day to 7 day in the past.\n                time_millis = time_millis - datetime.timedelta(days=random.randint(1, 7))\n\n            data = json.dumps({\n                \"player_id\": \"player-{}\".format(i),\n                \"speed_kmph\": speed,\n                \"distance_meters\": distance,\n                \"event_time\": time_millis.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]\n            })\n            records.append({'Data': data.encode('utf-8'), 'PartitionKey': str(i)})\n            kinesis.put_records(Records=records, StreamName=os.environ[\"KINESIS_STREAM_NAME\"])\n\n            # Mimic real world retry and duplicate record ingestion 1 in 3 of the time (33% fail and retry)\n            if random.randint(1, 3) == 1:\n                time.sleep(2)\n                kinesis.put_records(Records=records, StreamName=os.environ[\"KINESIS_STREAM_NAME\"])\n        time.sleep(5)\n"
+        },
+        "Environment": {
+          "Variables": {
+            "KINESIS_STREAM_NAME": {
+              "Ref": "events26E65764"
+            }
+          }
+        },
+        "Handler": "index.lambda_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "DatagenEventsfnServiceRole632230FF",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9",
+        "Timeout": 60
+      },
+      "DependsOn": [
+        "DatagenEventsfnServiceRoleDefaultPolicy4377B353",
+        "DatagenEventsfnServiceRole632230FF"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenEvents/fn/Resource"
+      }
+    },
+    "DatagenEventstriggerC7F14EAC": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": "rate(1 minute)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "DatagenEventsfnFCBADD99",
+                "Arn"
+              ]
+            },
+            "Id": "Target0"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenEvents/trigger/Resource"
+      }
+    },
+    "DatagenEventstriggerAllowEventRuleGamingLeaderboardStackDatagenEventsfnA885B053400871AD": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "DatagenEventsfnFCBADD99",
+            "Arn"
+          ]
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "DatagenEventstriggerC7F14EAC",
+            "Arn"
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenEvents/trigger/AllowEventRuleGamingLeaderboardStackDatagenEventsfnA885B053"
+      }
+    },
+    "notebookcommongluedbDBD2E2B7": {
+      "Type": "AWS::Glue::Database",
+      "Properties": {
+        "CatalogId": {
+          "Ref": "AWS::AccountId"
+        },
+        "DatabaseInput": {
+          "Name": "leaderboard"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/notebook-common/glue-db"
+      }
+    },
+    "notebookcommonnotebookroleE11B3228": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "kinesisanalytics.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "ec2:CreateNetworkInterface",
+                    "ec2:CreateNetworkInterfacePermission",
+                    "ec2:DeleteNetworkInterface",
+                    "ec2:DescribeDhcpOptions",
+                    "ec2:DescribeNetworkInterfaces",
+                    "ec2:DescribeSecurityGroups",
+                    "ec2:DescribeSubnets",
+                    "ec2:DescribeVpcs"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "*"
+                },
+                {
+                  "Action": [
+                    "glue:*Partitions",
+                    "glue:*Table",
+                    "glue:*Tables",
+                    "glue:GetDatabase",
+                    "glue:GetDatabases",
+                    "glue:GetUserDefinedFunction",
+                    "kinesis:DescribeStream*",
+                    "kinesis:GetRecords",
+                    "kinesis:GetShardIterator",
+                    "kinesis:ListShards",
+                    "kinesis:ListStreams",
+                    "kinesis:PutRecord",
+                    "kinesis:PutRecords",
+                    "kinesis:SubscribeToShard",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "s3:GetObject"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":s3:::",
+                          {
+                            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:glue:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":catalog"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:glue:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":database/",
+                          {
+                            "Ref": "notebookcommongluedbDBD2E2B7"
+                          }
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:glue:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":database/hive"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:glue:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":table/",
+                          {
+                            "Ref": "notebookcommongluedbDBD2E2B7"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:glue:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":userDefinedFunction/",
+                          {
+                            "Ref": "notebookcommongluedbDBD2E2B7"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:kinesis:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":stream/",
+                          {
+                            "Ref": "AWS::StackName"
+                          },
+                          "-*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:logs:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":log-group:*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:logs:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":log-group:*:*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:aws:logs:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":log-group:*:log-stream:*"
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "Version": "2012-10-17"
+            },
+            "PolicyName": "defaultInlinePolicy"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/notebook-common/notebook-role/Resource"
+      }
+    },
+    "appappcfn22ED0F99": {
+      "Type": "AWS::KinesisAnalyticsV2::Application",
+      "Properties": {
+        "ApplicationConfiguration": {
+          "FlinkApplicationConfiguration": {
+            "ParallelismConfiguration": {
+              "ConfigurationType": "CUSTOM",
+              "Parallelism": 4
+            }
+          },
+          "ZeppelinApplicationConfiguration": {
+            "CatalogConfiguration": {
+              "GlueDataCatalogConfiguration": {
+                "DatabaseARN": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:glue:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":database/",
+                      {
+                        "Ref": "notebookcommongluedbDBD2E2B7"
+                      }
+                    ]
+                  ]
+                }
+              }
+            },
+            "CustomArtifactsConfiguration": [
+              {
+                "ArtifactType": "DEPENDENCY_JAR",
+                "MavenReference": {
+                  "ArtifactId": "flink-sql-connector-kinesis",
+                  "GroupId": "org.apache.flink",
+                  "Version": "1.15.4"
+                }
+              }
+            ],
+            "MonitoringConfiguration": {
+              "LogLevel": "INFO"
+            }
+          }
+        },
+        "ApplicationMode": "INTERACTIVE",
+        "ApplicationName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-notebook"
+            ]
+          ]
+        },
+        "RuntimeEnvironment": "ZEPPELIN-FLINK-3_0",
+        "ServiceExecutionRole": {
+          "Fn::GetAtt": [
+            "notebookcommonnotebookroleE11B3228",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "notebookcommongluedbDBD2E2B7",
+        "notebookcommonnotebookroleE11B3228"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app/app-cfn"
+      }
+    },
+    "applogGroupBE769FA8": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 30
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app/logGroup/Resource"
+      }
+    },
+    "applogStream1AEDE4F8": {
+      "Type": "AWS::Logs::LogStream",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "applogGroupBE769FA8"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app/logStream/Resource"
+      }
+    },
+    "apploggingattach2B70D608": {
+      "Type": "AWS::KinesisAnalyticsV2::ApplicationCloudWatchLoggingOption",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "appappcfn22ED0F99"
+        },
+        "CloudWatchLoggingOption": {
+          "LogStreamARN": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:logs:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ":log-group:",
+                {
+                  "Ref": "applogGroupBE769FA8"
+                },
+                ":log-stream:",
+                {
+                  "Ref": "applogStream1AEDE4F8"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app/logging-attach"
+      }
+    },
+    "networkvpcFB59E56F": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/Resource"
+      }
+    },
+    "networkvpcPublicSubnet1Subnet0ECF8D7B": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.0.0/18",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public"
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public"
+          },
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/Subnet"
+      }
+    },
+    "networkvpcPublicSubnet1RouteTable54663514": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/RouteTable"
+      }
+    },
+    "networkvpcPublicSubnet1RouteTableAssociation7624D6D3": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "networkvpcPublicSubnet1RouteTable54663514"
+        },
+        "SubnetId": {
+          "Ref": "networkvpcPublicSubnet1Subnet0ECF8D7B"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/RouteTableAssociation"
+      }
+    },
+    "networkvpcPublicSubnet1DefaultRouteFD1F2265": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "networkvpcIGWA706E8BE"
+        },
+        "RouteTableId": {
+          "Ref": "networkvpcPublicSubnet1RouteTable54663514"
+        }
+      },
+      "DependsOn": [
+        "networkvpcVPCGWFC117BC5"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/DefaultRoute"
+      }
+    },
+    "networkvpcPublicSubnet1EIP68D3E0AB": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet1"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/EIP"
+      }
+    },
+    "networkvpcPublicSubnet1NATGatewayF4D3D5ED": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "networkvpcPublicSubnet1EIP68D3E0AB",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "networkvpcPublicSubnet1Subnet0ECF8D7B"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet1"
+          }
+        ]
+      },
+      "DependsOn": [
+        "networkvpcPublicSubnet1DefaultRouteFD1F2265",
+        "networkvpcPublicSubnet1RouteTableAssociation7624D6D3"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet1/NATGateway"
+      }
+    },
+    "networkvpcPublicSubnet2Subnet9DF39550": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.64.0/18",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public"
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public"
+          },
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet2"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet2/Subnet"
+      }
+    },
+    "networkvpcPublicSubnet2RouteTableB4B93D73": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PublicSubnet2"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet2/RouteTable"
+      }
+    },
+    "networkvpcPublicSubnet2RouteTableAssociationAF2E92A9": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "networkvpcPublicSubnet2RouteTableB4B93D73"
+        },
+        "SubnetId": {
+          "Ref": "networkvpcPublicSubnet2Subnet9DF39550"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet2/RouteTableAssociation"
+      }
+    },
+    "networkvpcPublicSubnet2DefaultRoute82C7F1EC": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "networkvpcIGWA706E8BE"
+        },
+        "RouteTableId": {
+          "Ref": "networkvpcPublicSubnet2RouteTableB4B93D73"
+        }
+      },
+      "DependsOn": [
+        "networkvpcVPCGWFC117BC5"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PublicSubnet2/DefaultRoute"
+      }
+    },
+    "networkvpcPrivateSubnet1Subnet8CB60B9A": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.128.0/18",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private"
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private"
+          },
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PrivateSubnet1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet1/Subnet"
+      }
+    },
+    "networkvpcPrivateSubnet1RouteTable150C1D0C": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PrivateSubnet1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet1/RouteTable"
+      }
+    },
+    "networkvpcPrivateSubnet1RouteTableAssociation63CA992A": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "networkvpcPrivateSubnet1RouteTable150C1D0C"
+        },
+        "SubnetId": {
+          "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet1/RouteTableAssociation"
+      }
+    },
+    "networkvpcPrivateSubnet1DefaultRoute45AA1495": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "networkvpcPublicSubnet1NATGatewayF4D3D5ED"
+        },
+        "RouteTableId": {
+          "Ref": "networkvpcPrivateSubnet1RouteTable150C1D0C"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet1/DefaultRoute"
+      }
+    },
+    "networkvpcPrivateSubnet2SubnetF24F5B85": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "CidrBlock": "10.0.192.0/18",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private"
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private"
+          },
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PrivateSubnet2"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet2/Subnet"
+      }
+    },
+    "networkvpcPrivateSubnet2RouteTable215914BA": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc/PrivateSubnet2"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet2/RouteTable"
+      }
+    },
+    "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "networkvpcPrivateSubnet2RouteTable215914BA"
+        },
+        "SubnetId": {
+          "Ref": "networkvpcPrivateSubnet2SubnetF24F5B85"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet2/RouteTableAssociation"
+      }
+    },
+    "networkvpcPrivateSubnet2DefaultRoute69CDA200": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "networkvpcPublicSubnet1NATGatewayF4D3D5ED"
+        },
+        "RouteTableId": {
+          "Ref": "networkvpcPrivateSubnet2RouteTable215914BA"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/PrivateSubnet2/DefaultRoute"
+      }
+    },
+    "networkvpcIGWA706E8BE": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/network/vpc"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/IGW"
+      }
+    },
+    "networkvpcVPCGWFC117BC5": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "networkvpcIGWA706E8BE"
+        },
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/VPCGW"
+      }
+    },
+    "networkvpcRestrictDefaultSecurityGroupCustomResource13303B51": {
+      "Type": "Custom::VpcRestrictDefaultSG",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E",
+            "Arn"
+          ]
+        },
+        "DefaultSecurityGroupId": {
+          "Fn::GetAtt": [
+            "networkvpcFB59E56F",
+            "DefaultSecurityGroup"
+          ]
+        },
+        "Account": {
+          "Ref": "AWS::AccountId"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/network/vpc/RestrictDefaultSecurityGroupCustomResource/Default"
+      }
+    },
+    "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ]
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Sub": "arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+          }
+        ],
+        "Policies": [
+          {
+            "PolicyName": "Inline",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ec2:AuthorizeSecurityGroupIngress",
+                    "ec2:AuthorizeSecurityGroupEgress",
+                    "ec2:RevokeSecurityGroupIngress",
+                    "ec2:RevokeSecurityGroupEgress"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          "arn:",
+                          {
+                            "Ref": "AWS::Partition"
+                          },
+                          ":ec2:",
+                          {
+                            "Ref": "AWS::Region"
+                          },
+                          ":",
+                          {
+                            "Ref": "AWS::AccountId"
+                          },
+                          ":security-group/",
+                          {
+                            "Fn::GetAtt": [
+                              "networkvpcFB59E56F",
+                              "DefaultSecurityGroup"
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role"
+      }
+    },
+    "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+          },
+          "S3Key": "e77031893275c08bcaa0a774aa8b611727afd045b3b5d8e1e6f0f04063d9d386.zip"
+        },
+        "Timeout": 900,
+        "MemorySize": 128,
+        "Handler": "__entrypoint__.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs16.x",
+        "Description": "Lambda function for removing all inbound/outbound rules from the VPC default security group"
+      },
+      "DependsOn": [
+        "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler",
+        "aws:asset:path": "asset.e77031893275c08bcaa0a774aa8b611727afd045b3b5d8e1e6f0f04063d9d386",
+        "aws:asset:property": "Code"
+      }
+    },
+    "playerdbdbsgCCAA2A8B": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "GamingLeaderboardStack/player-db/db-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/db-sg/Resource"
+      }
+    },
+    "playerdbdbsgfromGamingLeaderboardStackDatagenPlayersfnSecurityGroupF25356563306FEBE7B98": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "Description": "from GamingLeaderboardStackDatagenPlayersfnSecurityGroupF2535656:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "playerdbdbsgCCAA2A8B",
+            "GroupId"
+          ]
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "DatagenPlayersfnSecurityGroup9EB4E3BB",
+            "GroupId"
+          ]
+        },
+        "ToPort": 3306
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/db-sg/from GamingLeaderboardStackDatagenPlayersfnSecurityGroupF2535656:3306"
+      }
+    },
+    "playerdbdbsgfromGamingLeaderboardStackappinvpcappsg0AFFEC4A3306A435B1F1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "Description": "from GamingLeaderboardStackappinvpcappsg0AFFEC4A:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "playerdbdbsgCCAA2A8B",
+            "GroupId"
+          ]
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "appinvpcappsg8FBE7A41",
+            "GroupId"
+          ]
+        },
+        "ToPort": 3306
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/db-sg/from GamingLeaderboardStackappinvpcappsg0AFFEC4A:3306"
+      }
+    },
+    "playerdbsecretFF6AFCB8": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "GenerateSecretString": {
+          "ExcludePunctuation": true,
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": "{\"username\":\"admin\", \"dbname\":\"gaming\", \"engine\":\"mysql\"}"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/secret/Resource"
+      }
+    },
+    "playerdbdockermysqlInstanceRole2754503A": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/player-db/docker-mysql"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/docker-mysql/InstanceRole/Resource"
+      }
+    },
+    "playerdbdockermysqlInstanceRoleDefaultPolicyA2E1394C": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "playerdbsecretFF6AFCB8"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "playerdbdockermysqlInstanceRoleDefaultPolicyA2E1394C",
+        "Roles": [
+          {
+            "Ref": "playerdbdockermysqlInstanceRole2754503A"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/docker-mysql/InstanceRole/DefaultPolicy/Resource"
+      }
+    },
+    "playerdbdockermysqlInstanceProfile28047985": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "playerdbdockermysqlInstanceRole2754503A"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/docker-mysql/InstanceProfile"
+      }
+    },
+    "playerdbdockermysql77B2DEC92b06a1f6cd5fb022": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "IamInstanceProfile": {
+          "Ref": "playerdbdockermysqlInstanceProfile28047985"
+        },
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amikernel510hvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter"
+        },
+        "InstanceType": "m5.large",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "playerdbdbsgCCAA2A8B",
+              "GroupId"
+            ]
+          }
+        ],
+        "SubnetId": {
+          "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/player-db/docker-mysql"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\nmkdir -p $(dirname '/tmp/a39ba1dd3c8ea8f96847f81fcdd355696d86a74d064842e12af4d4898b20aee5.sh')\naws s3 cp 's3://",
+                {
+                  "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                },
+                "/a39ba1dd3c8ea8f96847f81fcdd355696d86a74d064842e12af4d4898b20aee5.sh' '/tmp/a39ba1dd3c8ea8f96847f81fcdd355696d86a74d064842e12af4d4898b20aee5.sh'\nset -e\nchmod +x '/tmp/a39ba1dd3c8ea8f96847f81fcdd355696d86a74d064842e12af4d4898b20aee5.sh'\n'/tmp/a39ba1dd3c8ea8f96847f81fcdd355696d86a74d064842e12af4d4898b20aee5.sh' ",
+                {
+                  "Ref": "playerdbsecretFF6AFCB8"
+                },
+                " ",
+                {
+                  "Ref": "AWS::Region"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "DependsOn": [
+        "playerdbdockermysqlInstanceRoleDefaultPolicyA2E1394C",
+        "playerdbdockermysqlInstanceRole2754503A"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/player-db/docker-mysql/Resource"
+      }
+    },
+    "DatagenPlayersfnServiceRole9F856811": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/fn/ServiceRole/Resource"
+      }
+    },
+    "DatagenPlayersfnServiceRoleDefaultPolicyDEC7C94F": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "playerdbsecretFF6AFCB8"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "DatagenPlayersfnServiceRoleDefaultPolicyDEC7C94F",
+        "Roles": [
+          {
+            "Ref": "DatagenPlayersfnServiceRole9F856811"
+          }
+        ]
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/fn/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "DatagenPlayersfnSecurityGroup9EB4E3BB": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Automatic security group for Lambda Function GamingLeaderboardStackDatagenPlayersfn7390E01D",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/fn/SecurityGroup/Resource"
+      }
+    },
+    "DatagenPlayersfnDC4EC51D": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+          },
+          "S3Key": "5499908577000f89bb2bb9846c749b12e1e05505d1e88cba4524570b67758e1c.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "SECRET_ARN": {
+              "Ref": "playerdbsecretFF6AFCB8"
+            },
+            "DATABASE_HOST": {
+              "Fn::GetAtt": [
+                "playerdbdockermysql77B2DEC92b06a1f6cd5fb022",
+                "PrivateDnsName"
+              ]
+            }
+          }
+        },
+        "Handler": "app.lambda_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "DatagenPlayersfnServiceRole9F856811",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9",
+        "Timeout": 60,
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "DatagenPlayersfnSecurityGroup9EB4E3BB",
+                "GroupId"
+              ]
+            }
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+            },
+            {
+              "Ref": "networkvpcPrivateSubnet2SubnetF24F5B85"
+            }
+          ]
+        }
+      },
+      "DependsOn": [
+        "DatagenPlayersfnServiceRoleDefaultPolicyDEC7C94F",
+        "DatagenPlayersfnServiceRole9F856811",
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/fn/Resource",
+        "aws:asset:path": "asset.5499908577000f89bb2bb9846c749b12e1e05505d1e88cba4524570b67758e1c",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "DatagenPlayerstrigger2343E21C": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "ScheduleExpression": "rate(1 minute)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "DatagenPlayersfnDC4EC51D",
+                "Arn"
+              ]
+            },
+            "Id": "Target0"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/trigger/Resource"
+      }
+    },
+    "DatagenPlayerstriggerAllowEventRuleGamingLeaderboardStackDatagenPlayersfn7390E01D27CA8879": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "DatagenPlayersfnDC4EC51D",
+            "Arn"
+          ]
+        },
+        "Principal": "events.amazonaws.com",
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "DatagenPlayerstrigger2343E21C",
+            "Arn"
+          ]
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPlayers/trigger/AllowEventRuleGamingLeaderboardStackDatagenPlayersfn7390E01D"
+      }
+    },
+    "appinvpcappsg8FBE7A41": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "GamingLeaderboardStack/app-in-vpc/app-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app-in-vpc/app-sg/Resource"
+      }
+    },
+    "appinvpcapplication6DBB9BAE": {
+      "Type": "AWS::KinesisAnalyticsV2::Application",
+      "Properties": {
+        "ApplicationConfiguration": {
+          "FlinkApplicationConfiguration": {
+            "ParallelismConfiguration": {
+              "ConfigurationType": "CUSTOM",
+              "Parallelism": 4
+            }
+          },
+          "VpcConfigurations": [
+            {
+              "SecurityGroupIds": [
+                {
+                  "Fn::GetAtt": [
+                    "appinvpcappsg8FBE7A41",
+                    "GroupId"
+                  ]
+                }
+              ],
+              "SubnetIds": [
+                {
+                  "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+                },
+                {
+                  "Ref": "networkvpcPrivateSubnet2SubnetF24F5B85"
+                }
+              ]
+            }
+          ],
+          "ZeppelinApplicationConfiguration": {
+            "CatalogConfiguration": {
+              "GlueDataCatalogConfiguration": {
+                "DatabaseARN": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:glue:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":database/",
+                      {
+                        "Ref": "notebookcommongluedbDBD2E2B7"
+                      }
+                    ]
+                  ]
+                }
+              }
+            },
+            "CustomArtifactsConfiguration": [
+              {
+                "ArtifactType": "DEPENDENCY_JAR",
+                "MavenReference": {
+                  "ArtifactId": "flink-sql-connector-kinesis",
+                  "GroupId": "org.apache.flink",
+                  "Version": "1.15.4"
+                }
+              },
+              {
+                "ArtifactType": "DEPENDENCY_JAR",
+                "S3ContentLocation": {
+                  "BucketARN": {
+                    "Fn::Join": [
+                      "",
+                      [
+                        "arn:",
+                        {
+                          "Ref": "AWS::Partition"
+                        },
+                        ":s3:::",
+                        {
+                          "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                        }
+                      ]
+                    ]
+                  },
+                  "FileKey": "4b2d61607f7a3e0d08004594e8f2e15ce52c249836273fe80735ae5edf1b3b80.jar"
+                }
+              }
+            ],
+            "MonitoringConfiguration": {
+              "LogLevel": "INFO"
+            }
+          }
+        },
+        "ApplicationMode": "INTERACTIVE",
+        "ApplicationName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-notebook-in-vpc"
+            ]
+          ]
+        },
+        "RuntimeEnvironment": "ZEPPELIN-FLINK-3_0",
+        "ServiceExecutionRole": {
+          "Fn::GetAtt": [
+            "notebookcommonnotebookroleE11B3228",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "notebookcommongluedbDBD2E2B7",
+        "notebookcommonnotebookroleE11B3228"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app-in-vpc/application"
+      }
+    },
+    "appinvpclogGroup952ABD1A": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "RetentionInDays": 30
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app-in-vpc/logGroup/Resource"
+      }
+    },
+    "appinvpclogStream6E6A03EE": {
+      "Type": "AWS::Logs::LogStream",
+      "Properties": {
+        "LogGroupName": {
+          "Ref": "appinvpclogGroup952ABD1A"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app-in-vpc/logStream/Resource"
+      }
+    },
+    "appinvpcloggingattach983F0DD1": {
+      "Type": "AWS::KinesisAnalyticsV2::ApplicationCloudWatchLoggingOption",
+      "Properties": {
+        "ApplicationName": {
+          "Ref": "appinvpcapplication6DBB9BAE"
+        },
+        "CloudWatchLoggingOption": {
+          "LogStreamARN": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:logs:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":",
+                {
+                  "Ref": "AWS::AccountId"
+                },
+                ":log-group:",
+                {
+                  "Ref": "appinvpclogGroup952ABD1A"
+                },
+                ":log-stream:",
+                {
+                  "Ref": "appinvpclogStream6E6A03EE"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/app-in-vpc/logging-attach"
+      }
+    },
+    "results7EA05C64": {
+      "Type": "AWS::Kinesis::Stream",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-results"
+            ]
+          ]
+        },
+        "RetentionPeriodHours": 24,
+        "StreamEncryption": {
+          "EncryptionType": "KMS",
+          "KeyId": "alias/aws/kinesis"
+        },
+        "StreamModeDetails": {
+          "StreamMode": "ON_DEMAND"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/results/Resource"
+      }
+    },
+    "MemorydbSynclambdasg068B57F4": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "GamingLeaderboardStack/MemorydbSync/lambda-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/lambda-sg/Resource"
+      }
+    },
+    "MemorydbSyncredissgF792DFB2": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "GamingLeaderboardStack/MemorydbSync/redis-sg",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/redis-sg/Resource"
+      }
+    },
+    "MemorydbSyncredissgfromGamingLeaderboardStackMemorydbSynclambdasgDBE056B56379EEB79D02": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "Description": "from GamingLeaderboardStackMemorydbSynclambdasgDBE056B5:6379",
+        "FromPort": 6379,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "MemorydbSyncredissgF792DFB2",
+            "GroupId"
+          ]
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "MemorydbSynclambdasg068B57F4",
+            "GroupId"
+          ]
+        },
+        "ToPort": 6379
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/redis-sg/from GamingLeaderboardStackMemorydbSynclambdasgDBE056B5:6379"
+      }
+    },
+    "MemorydbSyncredissgfromGamingLeaderboardStackGrafanaDashboardgrafanaInstanceSecurityGroupEDF8A3356379FF694ABF": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "Description": "from GamingLeaderboardStackGrafanaDashboardgrafanaInstanceSecurityGroupEDF8A335:6379",
+        "FromPort": 6379,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "MemorydbSyncredissgF792DFB2",
+            "GroupId"
+          ]
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaDashboardgrafanaInstanceSecurityGroup6758F177",
+            "GroupId"
+          ]
+        },
+        "ToPort": 6379
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/redis-sg/from GamingLeaderboardStackGrafanaDashboardgrafanaInstanceSecurityGroupEDF8A335:6379"
+      }
+    },
+    "MemorydbSyncsgroup3D0907C6": {
+      "Type": "AWS::MemoryDB::SubnetGroup",
+      "Properties": {
+        "SubnetGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "leaderboard-subnet-",
+              {
+                "Ref": "AWS::Region"
+              }
+            ]
+          ]
+        },
+        "SubnetIds": [
+          {
+            "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+          },
+          {
+            "Ref": "networkvpcPrivateSubnet2SubnetF24F5B85"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/s-group"
+      }
+    },
+    "MemorydbSyncmemorydbE42658D6": {
+      "Type": "AWS::MemoryDB::Cluster",
+      "Properties": {
+        "ACLName": "open-access",
+        "ClusterName": {
+          "Fn::Join": [
+            "",
+            [
+              "leaderboard-",
+              {
+                "Ref": "AWS::Region"
+              }
+            ]
+          ]
+        },
+        "EngineVersion": "7.0",
+        "NodeType": "db.r6g.large",
+        "NumReplicasPerShard": 0,
+        "NumShards": 1,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "MemorydbSyncredissgF792DFB2",
+              "GroupId"
+            ]
+          }
+        ],
+        "SubnetGroupName": {
+          "Fn::Join": [
+            "",
+            [
+              "leaderboard-subnet-",
+              {
+                "Ref": "AWS::Region"
+              }
+            ]
+          ]
+        },
+        "TLSEnabled": false
+      },
+      "DependsOn": [
+        "MemorydbSyncsgroup3D0907C6"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/memorydb"
+      }
+    },
+    "MemorydbSyncfnServiceRoleB131D949": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          },
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/fn/ServiceRole/Resource"
+      }
+    },
+    "MemorydbSyncfnServiceRoleDefaultPolicyE49768E1": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "kinesis:DescribeStream",
+                "kinesis:DescribeStreamConsumer",
+                "kinesis:DescribeStreamSummary",
+                "kinesis:GetRecords",
+                "kinesis:GetShardIterator",
+                "kinesis:ListShards",
+                "kinesis:ListStreams",
+                "kinesis:SubscribeToShard"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "results7EA05C64",
+                  "Arn"
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "MemorydbSyncfnServiceRoleDefaultPolicyE49768E1",
+        "Roles": [
+          {
+            "Ref": "MemorydbSyncfnServiceRoleB131D949"
+          }
+        ]
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/fn/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "MemorydbSyncfnF439D233": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+          },
+          "S3Key": "153969712264c197ee2f24df8503566c021568f444273bb0c4a0abfd29b29462.zip"
+        },
+        "Environment": {
+          "Variables": {
+            "REDIS_HOST": {
+              "Fn::GetAtt": [
+                "MemorydbSyncmemorydbE42658D6",
+                "ClusterEndpoint.Address"
+              ]
+            }
+          }
+        },
+        "Handler": "app.lambda_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "MemorydbSyncfnServiceRoleB131D949",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9",
+        "VpcConfig": {
+          "SecurityGroupIds": [
+            {
+              "Fn::GetAtt": [
+                "MemorydbSynclambdasg068B57F4",
+                "GroupId"
+              ]
+            }
+          ],
+          "SubnetIds": [
+            {
+              "Ref": "networkvpcPrivateSubnet1Subnet8CB60B9A"
+            },
+            {
+              "Ref": "networkvpcPrivateSubnet2SubnetF24F5B85"
+            }
+          ]
+        }
+      },
+      "DependsOn": [
+        "MemorydbSyncfnServiceRoleDefaultPolicyE49768E1",
+        "MemorydbSyncfnServiceRoleB131D949",
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/fn/Resource",
+        "aws:asset:path": "asset.153969712264c197ee2f24df8503566c021568f444273bb0c4a0abfd29b29462",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "MemorydbSyncfnKinesisEventSourceGamingLeaderboardStackresults5AD3A57FE57F1A23": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 5,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "results7EA05C64",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Ref": "MemorydbSyncfnF439D233"
+        },
+        "StartingPosition": "LATEST"
+      },
+      "DependsOn": [
+        "networkvpcPrivateSubnet1DefaultRoute45AA1495",
+        "networkvpcPrivateSubnet1RouteTableAssociation63CA992A",
+        "networkvpcPrivateSubnet2DefaultRoute69CDA200",
+        "networkvpcPrivateSubnet2RouteTableAssociation64E8FAD2"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/MemorydbSync/fn/KinesisEventSource:GamingLeaderboardStackresults5AD3A57F/Resource"
+      }
+    },
+    "GrafanaDashboardsecret9443CBC5": {
+      "Type": "AWS::SecretsManager::Secret",
+      "Properties": {
+        "GenerateSecretString": {
+          "ExcludePunctuation": true,
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": "{\"username\":\"admin\"}"
+        }
+      },
+      "UpdateReplacePolicy": "Delete",
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/secret/Resource"
+      }
+    },
+    "GrafanaDashboardgrafanaInstanceSecurityGroup6758F177": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "GamingLeaderboardStack/GrafanaDashboard/grafana/InstanceSecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1"
+          }
+        ],
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "from 0.0.0.0/0:3000",
+            "FromPort": 3000,
+            "IpProtocol": "tcp",
+            "ToPort": 3000
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/GrafanaDashboard/grafana"
+          }
+        ],
+        "VpcId": {
+          "Ref": "networkvpcFB59E56F"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/grafana/InstanceSecurityGroup/Resource"
+      }
+    },
+    "GrafanaDashboardgrafanaInstanceRoleF0CA5CF6": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/GrafanaDashboard/grafana"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/grafana/InstanceRole/Resource"
+      }
+    },
+    "GrafanaDashboardgrafanaInstanceRoleDefaultPolicy29ADC93D": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "s3:GetBucket*",
+                "s3:GetObject*",
+                "s3:List*"
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                      }
+                    ]
+                  ]
+                }
+              ]
+            },
+            {
+              "Action": [
+                "secretsmanager:DescribeSecret",
+                "secretsmanager:GetSecretValue"
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "GrafanaDashboardsecret9443CBC5"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "GrafanaDashboardgrafanaInstanceRoleDefaultPolicy29ADC93D",
+        "Roles": [
+          {
+            "Ref": "GrafanaDashboardgrafanaInstanceRoleF0CA5CF6"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/grafana/InstanceRole/DefaultPolicy/Resource"
+      }
+    },
+    "GrafanaDashboardgrafanaInstanceProfileFA5C9B90": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "GrafanaDashboardgrafanaInstanceRoleF0CA5CF6"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/grafana/InstanceProfile"
+      }
+    },
+    "GrafanaDashboardgrafana2CFE2AC9a023d6df1979f03e": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": ""
+            }
+          ]
+        },
+        "IamInstanceProfile": {
+          "Ref": "GrafanaDashboardgrafanaInstanceProfileFA5C9B90"
+        },
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amikernel510hvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter"
+        },
+        "InstanceType": "m5.large",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "GrafanaDashboardgrafanaInstanceSecurityGroup6758F177",
+              "GroupId"
+            ]
+          }
+        ],
+        "SubnetId": {
+          "Ref": "networkvpcPublicSubnet1Subnet0ECF8D7B"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "GamingLeaderboardStack/GrafanaDashboard/grafana"
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\nmkdir -p $(dirname '/tmp/758458b8c664bd28be2fb1937de34670ac9798bbb435db800c9a9116de41649b.sh')\naws s3 cp 's3://",
+                {
+                  "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+                },
+                "/758458b8c664bd28be2fb1937de34670ac9798bbb435db800c9a9116de41649b.sh' '/tmp/758458b8c664bd28be2fb1937de34670ac9798bbb435db800c9a9116de41649b.sh'\nset -e\nchmod +x '/tmp/758458b8c664bd28be2fb1937de34670ac9798bbb435db800c9a9116de41649b.sh'\n'/tmp/758458b8c664bd28be2fb1937de34670ac9798bbb435db800c9a9116de41649b.sh' ",
+                {
+                  "Ref": "GrafanaDashboardsecret9443CBC5"
+                },
+                " ",
+                {
+                  "Ref": "AWS::Region"
+                }
+              ]
+            ]
+          }
+        }
+      },
+      "DependsOn": [
+        "GrafanaDashboardgrafanaInstanceRoleDefaultPolicy29ADC93D",
+        "GrafanaDashboardgrafanaInstanceRoleF0CA5CF6"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/GrafanaDashboard/grafana/Resource"
+      }
+    },
+    "config37BD09B8": {
+      "Type": "AWS::Kinesis::Stream",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-config"
+            ]
+          ]
+        },
+        "RetentionPeriodHours": 24,
+        "ShardCount": 1,
+        "StreamEncryption": {
+          "EncryptionType": "KMS",
+          "KeyId": "alias/aws/kinesis"
+        },
+        "StreamModeDetails": {
+          "StreamMode": "PROVISIONED"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/config/Resource"
+      }
+    },
+    "DatagenPublishfnServiceRole5349A72C": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition"
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+              ]
+            ]
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPublish/fn/ServiceRole/Resource"
+      }
+    },
+    "DatagenPublishfnServiceRoleDefaultPolicyA6A29DD9": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "kinesis:PutRecord",
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:aws:kinesis:",
+                    {
+                      "Ref": "AWS::Region"
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId"
+                    },
+                    ":stream/",
+                    {
+                      "Ref": "AWS::StackName"
+                    },
+                    "-*"
+                  ]
+                ]
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "DatagenPublishfnServiceRoleDefaultPolicyA6A29DD9",
+        "Roles": [
+          {
+            "Ref": "DatagenPublishfnServiceRole5349A72C"
+          }
+        ]
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPublish/fn/ServiceRole/DefaultPolicy/Resource"
+      }
+    },
+    "DatagenPublishfnE0119163": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}"
+          },
+          "S3Key": "24a79afc91ce2d4f40506cb8174b82e23e5f0b7bf37d64edaed9aadd8f255cb4.zip"
+        },
+        "Handler": "app.lambda_handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "DatagenPublishfnServiceRole5349A72C",
+            "Arn"
+          ]
+        },
+        "Runtime": "python3.9"
+      },
+      "DependsOn": [
+        "DatagenPublishfnServiceRoleDefaultPolicyA6A29DD9",
+        "DatagenPublishfnServiceRole5349A72C"
+      ],
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/DatagenPublish/fn/Resource",
+        "aws:asset:path": "asset.24a79afc91ce2d4f40506cb8174b82e23e5f0b7bf37d64edaed9aadd8f255cb4",
+        "aws:asset:is-bundled": false,
+        "aws:asset:property": "Code"
+      }
+    },
+    "replay037A6F2D": {
+      "Type": "AWS::Kinesis::Stream",
+      "Properties": {
+        "Name": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "AWS::StackName"
+              },
+              "-replay"
+            ]
+          ]
+        },
+        "RetentionPeriodHours": 24,
+        "StreamEncryption": {
+          "EncryptionType": "KMS",
+          "KeyId": "alias/aws/kinesis"
+        },
+        "StreamModeDetails": {
+          "StreamMode": "ON_DEMAND"
+        }
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/replay/Resource"
+      }
+    },
+    "CDKMetadata": {
+      "Type": "AWS::CDK::Metadata",
+      "Properties": {
+        "Analytics": "v2:deflate64:H4sIAAAAAAAA/31SwW7bMAz9lt4VrXAP6zX1tiJAthrxkB0LWmZUNbJkiFQCw/C/D5JTp2uBnfj4SD2JfCrk/b28vYEzrVR7XFnTyLFmUEcBZ3oej8YhGUpcQOhEeXAzmoSFrmlBjj+iU2y8S7X3uMLQGaKUfT+h49rHoPAn9L1xOjV8ZidhoJPjzltMDTlW3ho1ZMEFbRwxOIVV8AdjcRKYpEiOu3g5GROrbURZHtw3YGiAUNDdMxAhk1ynIOhOPkR1RH5I1cus4MAObBSdinR43ffWKMhTWa9JjluvH4OPfbpowVuvrytakumT6AfJ0vrY/gFWL1uvtXH6qU/0vhCoCjnue5X09lUpqthYo+rYOORsw4J2PjL+hmYefeav3JrIKwNvruRC3v6mSuEX8CMwnmEQVTAnYLwKbxxjcLg0zC+5ZGtmUC8dOhY1qhgMD8tW/k9snA5IJN5cfO/oJAhVQKYOHGgMcqxzfhEJyJPosPNhaBs5LuMuF5U2EmOYJrFDyl9LZKtrBp2/XST23VJLC1nwP6Uq+JNpMaSWp8h9zE+oIECHPNOld61Je52E8y3KV/pyKgr5Vd7evJIxqxAdmw7lbo5/AaksteFqAwAA"
+      },
+      "Metadata": {
+        "aws:cdk:path": "GamingLeaderboardStack/CDKMetadata/Default"
+      },
+      "Condition": "CDKMetadataAvailable"
+    }
+  },
+  "Outputs": {
+    "playerdbMySQLHost08F6DBAC": {
+      "Description": "MySQL host address",
+      "Value": {
+        "Fn::GetAtt": [
+          "playerdbdockermysql77B2DEC92b06a1f6cd5fb022",
+          "PrivateDnsName"
+        ]
+      }
+    },
+    "playerdbMySQLCredentials391A0074": {
+      "Description": "MySQL credentials",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".console.aws.amazon.com/secretsmanager/secret?name=",
+            {
+              "Fn::Join": [
+                "-",
+                [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Fn::Select": [
+                              6,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Ref": "playerdbsecretFF6AFCB8"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Fn::Select": [
+                      1,
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Fn::Select": [
+                              6,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Ref": "playerdbsecretFF6AFCB8"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "MemorydbSyncRedisHost971B2A34": {
+      "Description": "Redis host address",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "redis://",
+            {
+              "Fn::GetAtt": [
+                "MemorydbSyncmemorydbE42658D6",
+                "ClusterEndpoint.Address"
+              ]
+            },
+            ":6379"
+          ]
+        ]
+      }
+    },
+    "GrafanaDashboardGrafanaURL57167D5C": {
+      "Description": "Grafana server link",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "GrafanaDashboardgrafana2CFE2AC9a023d6df1979f03e",
+                "PublicDnsName"
+              ]
+            },
+            ":3000"
+          ]
+        ]
+      }
+    },
+    "GrafanaDashboardGrafanaCredentialsFBCF6EBF": {
+      "Description": "Grafana login credentials",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".console.aws.amazon.com/secretsmanager/secret?name=",
+            {
+              "Fn::Join": [
+                "-",
+                [
+                  {
+                    "Fn::Select": [
+                      0,
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Fn::Select": [
+                              6,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Ref": "GrafanaDashboardsecret9443CBC5"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "Fn::Select": [
+                      1,
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Fn::Select": [
+                              6,
+                              {
+                                "Fn::Split": [
+                                  ":",
+                                  {
+                                    "Ref": "GrafanaDashboardsecret9443CBC5"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "DatagenPublishPublishFnUrl32AC9E0D": {
+      "Description": "Config publish lambda URL",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".console.aws.amazon.com/lambda/home?region=",
+            {
+              "Ref": "AWS::Region"
+            },
+            "#/functions/",
+            {
+              "Ref": "DatagenPublishfnE0119163"
+            },
+            "?tab=code"
+          ]
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amikernel510hvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+      "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2"
+    },
+    "BootstrapVersion": {
+      "Type": "AWS::SSM::Parameter::Value<String>",
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+    }
+  },
+  "Conditions": {
+    "CDKMetadataAvailable": {
+      "Fn::Or": [
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "af-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-northeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ap-southeast-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "ca-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "cn-northwest-1"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-central-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-north-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-2"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "eu-west-3"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "me-south-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "sa-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-east-2"
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Or": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-1"
+              ]
+            },
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "AWS::Region"
+                },
+                "us-west-2"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5"
+                  ],
+                  {
+                    "Ref": "BootstrapVersion"
+                  }
+                ]
+              }
+            ]
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+        }
+      ]
+    }
+  }
+}
