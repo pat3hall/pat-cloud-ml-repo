@@ -1,0 +1,133 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "StartTranscriptionJob",
+  "States": {
+    "StartTranscriptionJob": {
+      "Type": "Task",
+      "Parameters": {
+        "LanguageCode": "en-US",
+        "Media": {
+          "MediaFileUri": "s3://cfst-4234-8119d311182a00943842-stepfunctionsbucket-3spgmpuxapru/conversation.mp3"
+        },
+        "TranscriptionJobName.$": "$$.Execution.Name",
+        "OutputBucketName": "cfst-4234-8119d311182a00943842-stepfunctionsbucket-3spgmpuxapru"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:startTranscriptionJob",
+      "Next": "Wait 2 seconds"
+    },
+    "Wait 2 seconds": {
+      "Type": "Wait",
+      "Seconds": 2,
+      "Next": "Check Transcription Job"
+    },
+    "Check Transcription Job": {
+      "Type": "Task",
+      "Parameters": {
+        "TranscriptionJobName.$": "$$.Execution.Name"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:transcribe:getTranscriptionJob",
+      "Next": "Transcript Status"
+    },
+    "Transcript Status": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.TranscriptionJob.TranscriptionJobStatus",
+          "StringEquals": "COMPLETED",
+          "Comment": "Transcript Completed",
+          "Next": "Get Transcript File Content"
+        },
+        {
+          "Variable": "$.TranscriptionJob.TranscriptionJobStatus",
+          "StringEquals": "IN_PROGRESS",
+          "Next": "Wait 2 seconds",
+          "Comment": "Transcript Processing"
+        }
+      ],
+      "Default": "Fail"
+    },
+    "Get Transcript File Content": {
+      "Type": "Task",
+      "Parameters": {
+        "Bucket": "cfst-4234-8119d311182a00943842-stepfunctionsbucket-3spgmpuxapru",
+        "Key.$": "States.Format('{}.json', $.TranscriptionJob.TranscriptionJobName)"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:s3:getObject",
+      "Next": "Pass the JSON"
+    },
+    "Pass the JSON": {
+      "Type": "Pass",
+      "Next": "Detect Sentiment",
+      "Parameters": {
+        "Body.$": "States.StringToJson($.Body)"
+      }
+    },
+    "Detect Sentiment": {
+      "Type": "Task",
+      "Parameters": {
+        "LanguageCode": "en",
+        "Text.$": "$.Body.results.transcripts[0].transcript"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:comprehend:detectSentiment",
+      "Next": "Choice"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Sentiment",
+          "StringEquals": "NEGATIVE",
+          "Next": "Lambda Invoke"
+        },
+        {
+          "Variable": "$.Sentiment",
+          "StringEquals": "POSITIVE",
+          "Next": "SQS SendMessage"
+        }
+      ],
+      "Default": "Pass"
+    },
+    "Pass": {
+      "Type": "Pass",
+      "Next": "Success"
+    },
+    "SQS SendMessage": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sqs:sendMessage",
+      "Parameters": {
+        "MessageBody.$": "$",
+        "QueueUrl": "https://sqs.us-east-1.amazonaws.com/568669752312/cfst-4234-8119d311182a00943842307332c57cab-PositiveInteractionQueue-BALh4WvXbHd9"
+      },
+      "Next": "Success"
+    },
+    "Lambda Invoke": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:us-east-1:568669752312:function:NegativeInteraction:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Fail": {
+      "Type": "Fail"
+    }
+  }
+}
