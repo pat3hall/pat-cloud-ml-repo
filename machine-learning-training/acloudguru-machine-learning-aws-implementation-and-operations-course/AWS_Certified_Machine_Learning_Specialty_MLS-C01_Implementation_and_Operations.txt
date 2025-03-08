@@ -1,0 +1,3697 @@
+------------------------------------------------------
+
+AWS Certified Machine Learning - Specialty (MLS-C01): Machine Learning Implementation and Operations
+
+------------------------------------------------------
+
+Chapter 1 Overview
+
+------------------------------------------------------
+
+1.1 Overview
+
+  Prerequisities:
+     Basics of AWS
+     Python programming
+
+------------------------------------------------------
+
+Chapter 2 Build ML Solutions for Performance, Availability, Scalability, Resiliency, and Fault Tolerance
+
+------------------------------------------------------
+2.1 After Model Training What Comes Next?
+
+
+  After Model Training - What Comes Next?
+    - Deploy your machine learning solution into production.
+
+    - handle operational failures,
+    - monitoring and logging using CloudWatch and CloudTrail.
+
+  deploy your model using SageMaker.
+    SageMaker endpoint
+      - To do that, you'll create a SageMaker endpoint.
+      - It's an HTTPS endpoint, and it's this endpoint that will be used by client applications to call the model,
+        and they can call the model using the InvokeEndpoint SageMaker API call.
+      Hosted endpoints
+        - if you need a persistent endpoint that will always be available to make one prediction at a time,
+          then you can use a SageMaker hosted endpoint,
+        - it's using EC2 instances to host your endpoint and the deployed model.
+      Highly available endpoints
+         - you can create an endpoint that is backed by an auto scaling group of EC2 instances distributed
+           across multiple availability zones,
+         - SageMaker is using these EC2 instances to run containers, which host your deployed model,
+           and it's using Elastic Container Service to do that.
+
+   deploying a model in SageMaker using the console,
+     - it's deployed to a container,
+       - this is a Docker image that's stored in Elastic Container Registry,
+       - specify an S3 URL where any model artifacts are stored in S3.
+           - And it's gonna use this image and the model artifacts to deploy the model to a container hosted on EC2.
+
+  best practices,
+     create robust endpoints
+        - so you'll want your endpoints to be resilient to failure.
+     deploy multiple EC2 instances
+        - to host your endpoint across multiple availability zones.
+      SageMaker will use auto scaling
+        - to create new endpoint instances that are distributed across the remaining availability zones.
+      smaller instance types
+        - And for reliable performance, be sure to host your endpoints on a greater number of smaller
+          instance types, instead of fewer larger instance types.
+        - then, there's less of an impact if a single instance goes down.
+
+   Deplyaing a Model Using SageMaker Hosted Endpoint
+
+      Deploy the trained model, but calling the deploy method of the xgb_model estimater:
+         - xgboost
+
+          import sagemaker
+          from sagemaker.serializers import CSVSerializer
+          from sagemaker.deserializers import JSONDeserializer
+
+          xgb_predictor = xgb_model.deploy(
+              initial_instance_count=2,               # define the quantity and instance types to use for the endpoint
+              instance_type="ml.t2.medium",
+              serializer=CSVSerializer(),             # serialize input data to CSV formated string
+              deserializer=JSONDeserializer(),
+          )
+
+           xgb_predictor.endpont_name                 # retrieve the name of the endpoint so that you can use if for inference
+
+   SageMaker hosted Endpoint
+      - includes ARN and URL
+         - there's also a URL for our HTTPS endpoint.  So this is the URL or the endpoint that can be used by
+           client applications to interact with the deployed model,
+
+   SageMaker Serverless Inference
+     - a serverless option, so you can deploy and scale machine learning models using a serverless endpoint
+       without paying for any underlying infrastructure.
+     - pay per use.
+     - It uses Lambda under the hood, and serverless endpoints automatically launch compute resources, and scale
+       them in and out, depending on traffic.
+     - designed for workloads that have idle periods between requests, and can tolerate cold starts, because the
+       endpoint is not just sitting there ready and waiting for requests to come in.
+
+    Other deployment options
+      EC2
+        - deploying to EC2 instances that you manage
+        - be sure to select one of the deep learning AMIs that are designed for machine learning workloads.
+        - these come pre-configured with TensorFlow, and PyTorch, and other frameworks and utilities that are
+          needed for machine learning workflows.
+        - need to select an appropriate instance type.
+           - For example, the P5 instance type uses the latest GPUs, which deliver the highest performance for
+             machine learning workloads on EC2,
+      ECS
+        - can also create a Docker container with your own model, and deploy it using Elastic Container Service,
+          completely outside of SageMaker.
+
+
+  Exam Tips:
+    - after training your model, it's time to deploy it.
+    SageMaker Endpoint
+      - The easiest way is to use a SageMaker endpoint,
+    EC2 instance deployment option
+      - Alternatively, you could deploy to an EC2 instance,
+      - select one of the deep learning AMIs designed for machine learning workloads,
+    Custom Docker Container running on ECS
+      - or create a custom container to run on Elastic Container Service.
+
+------------------------------------------------------
+2.2 Applying Security Best Practices to Machine Learning Solutions
+
+
+  security best practices
+    - applying security to your ML systems and data is essential
+    - Security is built into all AWS services
+    - it's your responsibility to configure proper access control, to restrict access to only those who need it,
+      and properly securing your data that's stored in S3.
+
+  SageMaker built-in Security
+    - For example, let's say that SageMaker is accessing training data stored in S3 and it passes that data
+      to its training environment to train your model.
+    - SageMaker then saves the generated model in S3 in a different S3 bucket.
+    - these S3 buckets are of course in your AWS account, so you define the access control around your data
+      and your model.
+    S3 Bucket
+      - should be protected using encryption
+      - protected with properly configured bucket policies to control access.
+
+  SageMaker Execution Roles
+     - IAM role-based access
+       data scientist
+         - might need to access sensitive customer data in your raw data bucket,
+       DevOps engineer
+         - might only need to access the train model and not the data itself.
+     SageMaker performs operations on your behalf
+        - using other AWS services like S3.
+        - SageMaker needs to have permission to use the services it needs, and this is all done using execution roles.
+      Default Execution Role
+         - when you create a SageMaker execution role using the console, the IAM managed policy called
+           AmazonSageMakerFullAccess
+         - is automatically attached to the role, and this is what it looks like.
+
+         AmazonSageMakerFullAccess
+         https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonSageMakerFullAccess.html
+          includes the following S3 access:
+
+             {
+               "Sid" : "AllowS3ObjectActions",               # S3 Object Actions
+               "Effect" : "Allow",
+               "Action" : [                                  # Allowed actions
+                 "s3:GetObject",
+                 "s3:PutObject",
+                 "s3:DeleteObject",
+                 "s3:AbortMultipartUpload"
+               ],
+               "Resource" : [                                # Resources are S3 buckets that have SageMaker and aws-glue
+                 "arn:aws:s3:::*SageMaker*",                 #    in their bucket name
+                 "arn:aws:s3:::*Sagemaker*",
+                 "arn:aws:s3:::*sagemaker*",
+                 "arn:aws:s3:::*aws-glue*"
+               ]
+             },
+
+
+  IAM best practice
+    - only give people or entities access to perform the actions that they need to do their role and nothing more,
+    -  this is known as the principle of least privilege.
+    - example: data scientist needs to access sensitive customer data and they also need to create SageMaker notebooks
+      and run training jobs.
+      - use a notebook execution role for creating and deleting the notebooks,
+      - use a training job execution role to run the training jobs.
+    KMS encrypted S3 Buckers
+      - if you are configuring encryption on S3 buckets, for instance, using customer managed KMS keys instead
+        of the S3 default encryption,
+      - then you will need to enable access to encrypt and decrypt data for the roles that need it.
+      - any role that is gonna be used to access your S3 data has permissions to encrypt and decrypt the data
+        using the KMS key.
+
+  Exam Tips
+     - the principle of least privilege.
+       - this is all about giving people or entities only the access they need to perform the actions required to do their role.
+    SageMaker supports execution roles
+      - to enable only the access that's needed.
+      - protect your S3 data using encryption and properly configured bucket policies to control access.
+      - if using KMS encryption
+         - be sure to add encrypt and decrypt access for those that need it.
+
+------------------------------------------------------
+2.3 Deploy to Multiple AWS Regions and Availability Zones
+
+
+  designing for failure,
+     high availability
+       - the system continues to function if any single component fails.
+     fault tolerance.
+       - system continues to function, but without any degradation in performance, if any single component fails.
+
+     Achieving high availability and fault tolerance
+       - ensure that resilience and redundancy are built into every component of the system.
+
+   Designing for failure
+     Avoid single points of failure
+       - resilient to the failure of a single compute instance, storage volume, or database instance.
+     deploy to multiple locations.
+       - deploy to multiple AWS Regions and Availability Zones.
+     AWS Well-Architected Framework - Reliability Pillar
+        https://docs.aws.amazon.com/wellarchitected/latest/reliability-pillar/welcome.html
+
+     Avoid single points of failure
+       VPC
+         - configure your VPC with at least two subnets, each one in a different Availability Zone.
+       EC2
+         - creating EC2 instances, be sure to build in redundancy by configuring instances in each Availability Zone.
+       Elastic Load Balancer
+         - to load balance our traffic so that if one AZ fails, then your traffic is automatically routed
+           to the remaining healthy AZ.
+
+       Multi-region Architecture
+         - to protect against a Region failure, you'll want to build the same environment in a second AWS Region.
+         - if your primary Region fails, then you can still operate.
+
+  Exam Tips:
+    avoid single points of failure.
+      - deploy to multiple locations
+        - use multiple Availability Zones
+        - use multiple AWS Regions
+      - failure of any single component, Availability Zone, or AWS Region should not bring the system down.
+
+------------------------------------------------------
+2.4 VPC Endpoints
+
+
+
+  SageMaker Endpoints
+                                                                               Auto scaling group
+                                                                             |
+                                                                             |    us-west-1a
+                                                                             |
+      Client Application          SageMaker Endpoint        Deploy Model     |    us-west-1a
+                          ----->                      ---->               ---|
+        SageMaker API               HTTPS endpoint                           |    us-west-1a
+        InvokeEndpoint()                                                     |
+                                                                             |
+
+   VPC Endpoints
+      - VPC endpoints are used to enable secure communication between your VPC and AWS services (S3 or SageMaker)
+      - uses AWS PrivateLink for its connectivity instead of using the public internet.
+      - this means that the network traffic never leaves the AWS network.
+
+   VPC Endpoints and SageMaker
+     Interface Endpoint
+        - the VPC endpoint is associated with one or more private IP addresses in your VPC subnets.
+      Communication with SageMaker
+        - all communication between applications that are running in your VPC and SageMaker use the VPC endpoint.
+
+   VPC Endpoints Example Architecture
+
+               |--- SageMaker VPC ---|                  |--- Custom VPC ------|
+               |                     |                  |                     |
+               |                     |                  |         Application |
+               |  SageMaker Runtime  | AWS              |          Server     |
+               |         .     --------------------->  VPC ------>            |
+               |         .           | PrivateLink   endpoint                 |
+               |         .           |                  |                     |
+               |  SageMaker Endpoint |                  |                     |
+               |                     |                  |                     |
+               |---------------------|                  |---------------------|
+
+       - this means that when your applications communicate with SageMaker, the network traffic never leaves the AWS network.
+       - It never uses the public internet and no public subnets are needed.
+
+       - Your SageMaker endpoint exists inside the SageMaker managed VPC, and this is a VPC that is managed by
+         the Amazon SageMaker service,
+       - your application servers will be in a separate VPC in your account that is managed by you.
+       - A VPC endpoint enables your application servers to communicate with the SageMaker endpoint using the
+         AWS PrivateLink service,
+
+  VPC Endpoint Exam Tips
+     VPC endpoints
+       - enable private communication between your VPC and AWS services like SageMaker or S3.
+       - can be used by client applications to communicate with SageMaker endpoints.
+       - Public IP addresses or public subnets or internet gateways are NOT needed.
+       - Network traffic uses AWS PrivateLink
+       - if you are communicating with VPC endpoints, your data will never leave the Amazon network.
+
+------------------------------------------------------
+2.5 Deploying Multi-Model Endpoints
+
+  Deploying large numbers of models
+    Multi-model endpoints
+      - you can deploy multiple models in one container behind a single endpoint,
+      Scalable
+       - host a large number of models that use the same machine learning framework on a shared serving container.
+     cost effective
+       - reduces your hosting costs and improves endpoint utilization.
+       - is great if you've got a mix of frequently and infrequently accessed models.
+     major inference frameworks are supported,
+       - including PyTorch, MXNet, XGBoost, scikit-learn, RandomForest, and more.
+       - you can bring your own model as well.
+
+    Multi-model endpoints Example Architecture
+      Dedicated endpoint
+        - So imagine that you need to deploy 10 models.  If you were to use dedicated endpoints, you'd need
+          to configure and manage 10 separate endpoints on 10 different container instances.
+      multi-model endpoint
+        - all 10 models can be served by one endpoint and there's only one container instance to manage,
+      Creating SageMaker Multi-model Endpoint using the console,
+           select "Use multiple models" (instead of "use a single model)
+
+ Deploying Multi-Model Endpoints Exam Tips
+   Multi-Model Endpoints
+   - used for Hosting a large number of models in the same Container
+   - ideal for hosting a large number of models that use the same machine learning framework on a shared container
+   - cost effective because you get better utilization of your container instead of deploying a new container for
+     each model endpoint.
+   - reduces your administrative overhead because you've only got one endpoint to configure
+
+------------------------------------------------------
+2.6 DEMO: Running Real Time Predictions Using a SageMaker Hosted Model Endpoint
+
+
+  Git repository for all demos:
+  github.com/pluralsight-cloud/mls-c01-aws-certified-machine-learning-implementation-operations
+
+
+  Note: Missing Link in Resources for Github repository
+
+  running real-time predictions using a SageMaker hosted model endpoint.
+    - a model endpoint is used to interact with the model that's deployed in SageMaker.
+    - start off by creating a Jupyter notebook in SageMaker.
+    - train a model using some sample data
+    - deploy the model by configuring a real-time endpoint.
+    - invoke the endpoint to generate some predictions
+
+
+    -> SageMaker AI -> Applications and IDEs -> Studio -> [requires a domain to already exist] -> open studio
+       # Note: This demo is suppose to run on the Cloud playground where a domain may be already setup
+       # needed steps to create domain
+       -> Create a SageMaker domain -> select "Set up for single user (quick setup) -> setup
+
+
+        -> <left> -> JupyterLab -> <upper right> +Create JupyterLab Space ->
+         Name: MyJupyterLab, Sharing: Private -> create space
+         # defaults: instance: ml.t3.medium, Image: SageMaker Distribution 1.9 (used 1.9.1)
+         -> Run space # creates a Jupyter Notebook
+         -> Open JupterLab
+
+         # download git repo:
+         git -> git clone repo -> Git repo URL: https://github.com/pluralsight-cloud/mls-c01-aws-certified-machine-learning-implementation-operations.git ,  unselect "Open Readm files" -> clone
+
+          <under files> -> click on  sagemaker-hosted-model-endpoint-demo/sagemaker-hosted-model-endpoint-demo.ipynb
+
+
+       -> demo related files are provided under demos/2_6_sagemaker-hosted-model-endpoint-demo/ :
+          -> jupyter notebook:
+          sagemaker-hosted-model-endpoint-demo.ipynb
+          -> extracted python from jupyter notebook:
+          sagemaker-hosted-model-endpoint-demo.py
+          -> html view from completed jupyter notebook:
+          sagemaker-hosted-model-endpoint-demo.py
+
+   linear Learner Hyperparameters used in demo:
+     https://docs.aws.amazon.com/sagemaker/latest/dg/ll_hyperparameters.html
+
+      feature_dim=784
+        - The number of features in the input data.
+        - Optional;   Valid values: auto or positive integer;   Default values: auto
+
+      predictor_type="binary_classifier"
+        - Specifies the type of target variable as a binary classification, multiclass classification, or regression.
+        - Required
+        - Valid values: binary_classifier, multiclass_classifier, or regressor
+
+      mini_batch_size=200
+        - The number of observations per mini-batch for the data iterator.
+        - Optional;  Valid values: Positive integer;  Default value: 1000
+
+    ----------------
+    code: sagemaker-hosted-model-endpoint-demo
+
+
+      >>> # # Running Real-Time Predictions using a SageMaker Hosted Model Endpoint
+      >>> # Using Linear Learner with the MNIST dataset to predict whether a hand writen digit is a 0 or not.
+      >>> # Based on the following AWS sample: https://github.com/aws/amazon-sagemaker-examples/blob/main/introduction_to_amazon_algorithms/linear_learner_mnist/linear_learner_mnist.ipynb
+      >>> #
+
+      >>> # ## Introduction
+      >>> #
+      >>> # The [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset consists of images of handwritten digits,
+      >>> # from zero to nine.  The individual pixel values from each 28 x 28 grayscale image of the digit will be used
+      >>> # to predict a yes or no label of whether the digit is a 0 or some other digit (1, 2, 3, ... 9).
+      >>> #
+      >>> # Linear Learner will be used to perform a binary classification. The `predicted_label` will take a value of
+      >>> # either `0` or `1` where `1` denotes that we predict the image is a 0, while `0` denotes that we are predicting
+      >>> # the image is not of a 0.
+
+      >>> # ## Prequisites and Preprocessing
+      >>> #
+      >>> # The notebook works with SageMaker Studio Jupyter Lab.
+      >>> #
+      >>> # Specify:
+      >>> #
+      >>> # - The S3 bucket and prefix to use for training and model data.
+      >>> # - The IAM role arn used to give training and hosting access to your data
+
+      >>> import sagemaker
+
+      >>> bucket = sagemaker.Session().default_bucket()
+      >>> prefix = "sagemaker/DEMO-linear-mnist"
+
+      >>> # Define IAM role
+      >>> import boto3
+      >>> import re
+      >>> from sagemaker import get_execution_role
+
+      >>> role = get_execution_role()
+
+
+      >>> # ### Data ingestion
+      >>> #
+      >>> # Ingest the dataset from an online URL into memory, for preprocessing prior to training. As it's a small
+      >>> # data set, we can do this in memory.
+
+      >>> %%time
+      >>> import pickle, gzip, numpy, urllib.request, json
+
+      >>> fobj = (
+      >>>     boto3.client("s3")
+      >>>     .get_object(
+      >>>         Bucket=f"sagemaker-example-files-prod-{boto3.session.Session().region_name}",
+      >>>         Key="datasets/image/MNIST/mnist.pkl.gz",
+      >>>     )["Body"]
+      >>>     .read()
+      >>> )
+
+      >>> with open("mnist.pkl.gz", "wb") as f:
+      >>>     f.write(fobj)
+
+      >>> # Load the dataset
+      >>> with gzip.open("mnist.pkl.gz", "rb") as f:
+      >>>     train_set, valid_set, test_set = pickle.load(f, encoding="latin1")
+
+
+      >>> # ### Data inspection
+      >>> #
+      >>> # Once the dataset is imported we can inspect at one of the digits that is part of the dataset.
+
+      >>> get_ipython().run_line_magic('matplotlib', 'inline')
+      >>> import matplotlib.pyplot as plt
+
+      >>> plt.rcParams["figure.figsize"] = (2, 10)
+
+
+      >>> def show_digit(img, caption="", subplot=None):
+      >>>     if subplot == None:
+      >>>         _, (subplot) = plt.subplots(1, 1)
+      >>>     imgr = img.reshape((28, 28))
+      >>>     subplot.axis("off")
+      >>>     subplot.imshow(imgr, cmap="gray")
+      >>>     plt.title(caption)
+
+
+      >>> show_digit(train_set[0][30], "This is a {}".format(train_set[1][30]))
+
+
+      >>> # ### Convert the Data to recordIO-wrapped protobuf format
+      >>> #
+      >>> # Amazon SageMaker's version of Linear Learner takes recordIO-wrapped protobuf (or CSV) So we need to convert
+      >>> # the data to a suppported format so the algorithm can use it.
+      >>> #
+      >>> # The following code converts the np.array to recordIO-wrapped protobuf format.
+
+      >>> import io
+      >>> import numpy as np
+      >>> import sagemaker.amazon.common as smac
+
+      >>> vectors = np.array([t.tolist() for t in train_set[0]]).astype("float32")
+      >>> labels = np.where(np.array([t.tolist() for t in train_set[1]]) == 0, 1, 0).astype("float32")
+
+      >>> buf = io.BytesIO()
+      >>> smac.write_numpy_to_dense_tensor(buf, vectors, labels)
+      >>> buf.seek(0)
+
+
+      >>> # ## Upload training data
+      >>> # Now that we've created our recordIO-wrapped protobuf, we'll need to upload it to S3, so that Amazon
+      >>> # SageMaker training can use it.
+
+      >>> import boto3
+      >>> import os
+
+      >>> key = "recordio-pb-data"
+      >>> boto3.resource("s3").Bucket(bucket).Object(os.path.join(prefix, "train", key)).upload_fileobj(buf)
+      >>> s3_train_data = "s3://{}/{}/train/{}".format(bucket, prefix, key)
+      >>> print("uploaded training data location: {}".format(s3_train_data))
+
+
+      >>> # Setup an output S3 location for the model artifact that will be output as the result of training with the algorithm.
+
+      >>> output_location = "s3://{}/{}/output".format(bucket, prefix)
+      >>> print("training artifacts will be uploaded to: {}".format(output_location))
+
+      >>> ## Training the linear model
+
+      >>> Train the model, and monitor status until it is completed.  In this example that takes between 7 and 11 minutes.
+
+      >>> First, specify the container, we're using the linear learner framework.
+
+      >>> from sagemaker.image_uris import retrieve
+
+      >>> container = retrieve("linear-learner", boto3.Session().region_name)
+
+
+      >>> # Start the training job.
+      >>> # - `feature_dim` is 784, which is the number of pixels in each 28 x 28 image.
+      >>> # - `predictor_type` is 'binary_classifier' - we are trying to predict whether the image is or is not a 0.
+      >>> # - `mini_batch_size` is set to 200.
+
+
+      >>> import boto3
+
+      >>> sess = sagemaker.Session()
+
+      >>> linear = sagemaker.estimator.Estimator(
+      >>>     container,
+      >>>     role,
+      >>>     train_instance_count=1,
+      >>>     train_instance_type="ml.m5.large",
+      >>>     output_path=output_location,
+      >>>     sagemaker_session=sess,
+      >>> )
+      >>> linear.set_hyperparameters(feature_dim=784, predictor_type="binary_classifier", mini_batch_size=200)
+
+      >>> linear.fit({"train": s3_train_data})
+
+
+      >>> # ## Configure a Model Endpoint
+      >>> # After training is completed, we can deploy our model using a SageMaker real-time hosted endpoint.
+      >>> # This will allow us to make predictions (or inference) from the model dynamically.
+      >>> #
+      >>> # Note we are using the deploy API call, specifying the number of initial instances, and instance type, also
+      >>> # specify how to serialize requests and deserialize responses, so the input will be our data in recordIO-wrapped
+      >>> # protobuf format, output is going to be in JSON format.
+
+
+      >>> from sagemaker.serializers import CSVSerializer
+      >>> from sagemaker.deserializers import JSONDeserializer
+
+      >>> linear_predictor = linear.deploy(
+      >>>     initial_instance_count=1,
+      >>>     instance_type="ml.m5.large",
+      >>>     serializer=CSVSerializer(),
+      >>>     deserializer=JSONDeserializer(),
+      >>> )
+
+
+      >>> # ## Validate the model for use
+      >>> # Finally, we can now validate the model for use.  We can pass HTTP POST requests to the endpoint to get back
+      >>> # predictions.  To make this easier, we'll again use the Amazon SageMaker Python SDK and specify how to serialize
+      >>> # requests and deserialize responses that are specific to the algorithm.
+
+      >>> # Now let's try getting a prediction for a single record.
+
+
+      >>> result = linear_predictor.predict(train_set[0][30:31])
+      >>> print(result)
+
+
+      >>> # If everything works, the endpoint will return a prediction: `predicted_label` which will be either `0` or `1`.
+      >>> # `1` denotes that we predict the image is a 0, while `0` denotes that we are predicting the image is not of a 0.
+      >>> #
+      >>> # It also gives a `score` which is a single floating point number indicating how strongly the algorithm believes
+      >>> # it has predicted correctly.
+
+      >>> # ### Clean up - Delete the Endpoint
+      >>> #
+      >>> # The delete_endpoint line in the cell below will remove the hosted endpoint to avoid any unnecessary charges.
+      >>> # We should also delete the S3 buckets as well.
+
+
+      >>> sagemaker.Session().delete_endpoint(linear_predictor.endpoint)
+    ----------------
+
+
+------------------------------------------------------
+2.7 DEMO: Obtaining Inferences for an Entire Dataset Using SageMaker Batch Transform
+
+
+  obtaining inferences for an entire data set using SageMaker Batch Transform
+    - Batch Transform manages the processing of large data sets using one single operation,
+    - a way to run inferences when you don't need a persistent endpoint.
+    - split our data into training, validation, and batch inference.
+    - train an XG Boost model
+    - run a batch transform job
+
+
+    -> SageMaker AI -> Applications and IDEs -> Studio -> [requires a domain to already exist] -> open studio
+       # Note: This demo must be run on your own AWS account
+       # needed steps to create domain
+       -> Create a SageMaker domain -> select "Set up for single user (quick setup) -> setup
+
+
+        -> <left> -> JupyterLab -> <upper right> +Create JupyterLab Space ->
+         Name: MyJupyterLab, Sharing: Private -> create space
+         # defaults: instance: ml.t3.medium, Image: SageMaker Distribution 1.9 (used 1.9.1)
+         -> Run space # creates a Jupyter Notebook
+         -> Open JupterLab
+
+         # download git repo:
+         git -> git clone repo -> Git repo URL: https://github.com/pluralsight-cloud/mls-c01-aws-certified-machine-learning-implementation-operations.git ,  unselect "Open Readm files" -> clone
+
+          <under files> -> click on  sagemaker-batch-transform-demo/batch-transform-tumor-prediction.ipynb
+
+       -> demo related files are provided under demos/2_7_sagemaker-batch-transform-demo/ :
+          -> jupyter notebook:
+          batch-transform-tumor-prediction.ipynb
+          -> extracted python from jupyter notebook:
+          batch-transform-tumor-prediction.py
+          -> html view from completed jupyter notebook:
+          batch-transform-tumor-prediction.html
+
+
+    XGBoost hyperparameters used in demo:
+      https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost_hyperparameters.html
+
+      objective="binary:logistic"
+        - Specifies the learning task and the corresponding learning objective.
+        - Examples:
+            reg:logistic (logistic regression, output probability),
+            multi:softmax (multiclass classification using the softmax objective),
+            binary:logistic (logistic regression for binary classification, output probability)
+            reg:squarederror (regression with squared loss)
+        - For a full list of valid inputs, refer to XGBoost Learning Task Parameters
+          https://github.com/dmlc/xgboost/blob/master/doc/parameter.rst#learning-task-parameters
+        - Optional;  Valid values: String; Default value: "reg:squarederror"
+
+      max_depth=5
+       - Maximum depth of a tree.
+       - Increasing this value makes the model more complex and likely to be overfit.
+       - 0 indicates no limit. A limit is required when grow_policy=depth-wise.
+       - Optional;   Valid values: Integer. Range: [0,∞);  Default value: 6
+
+      eta=0.2
+       - Step size shrinkage used in updates to prevent overfitting.
+       - After each boosting step, you can directly get the weights of new features.
+       - The eta parameter actually shrinks the feature weights to make the boosting process more conservative.
+       - Optional;  Valid values: Float. Range: [0,1].;  Default value: 0.3
+
+      gamma=4,
+        - Minimum loss reduction required to make a further partition on a leaf node of the tree.
+        - The larger, the more conservative the algorithm is.
+        - Optional;   Valid values: Float. Range: [0,∞).;  Default value: 0
+
+      min_child_weight=6
+        - Minimum sum of instance weight (hessian) needed in a child.
+        - If the tree partition step results in a leaf node with the sum of instance weight less than min_child_weight,
+          the building process gives up further partitioning.
+        - In linear regression models, this simply corresponds to a minimum number of instances needed in each node.
+        - The larger the algorithm, the more conservative it is.
+        - Optional;  Valid values: Float. Range: [0,∞).;  Default value: 1
+
+      subsample=0.8
+        - Subsample ratio of the training instance.
+        - Setting it to 0.5 means that XGBoost randomly collects half of the data instances to grow trees.
+        - This prevents overfitting.
+        - Optional;  Valid values: Float. Range: [0,1].;  Default value: 1
+
+      verbosity=0
+        - Verbosity of printing messages.
+        - Valid values: 0 (silent), 1 (warning), 2 (info), 3 (debug).
+        - Optional;  Default value: 1;
+
+      num_round=100
+        - The number of rounds to run the training.
+        - Required;  Valid values: Integer.
+
+
+    Note: Hit default transform resource limit
+
+    ResourceLimitExceeded: An error occurred (ResourceLimitExceeded) when calling the CreateTransformJob operation: The
+    account-level service limit 'ml.m5.large for transform job usage' is 0 Instances, with current utilization of 0 Instances
+    and a request delta of 1 Instances. Please use AWS Service Quotas to request an increase for this quota. If AWS Service
+    Quotas is not sagemaker-hosted-model-endpoint-demoavailable, contact AWS support to request an increase for this quota.
+
+    -> Service Quotas -> Sagemaker -> ml.m5.large for transform job usage -> increase +1
+
+
+   -----
+   class sagemaker.inputs.TrainingInput(s3_data, distribution=None, compression=None, content_type=None,
+                 record_wrapping=None, s3_data_type='S3Prefix',...)
+
+      s3_data (str or PipelineVariable)
+        – Defines the location of S3 data to train on.
+
+      distribution (str or PipelineVariable)
+        – Valid values: 'FullyReplicated', 'ShardedByS3Key' (default: 'FullyReplicated').
+
+      compression (str or PipelineVariable)
+        – Valid values: 'Gzip', None (default: None). This is used only in Pipe input mode.
+
+      content_type (str or PipelineVariable)
+        – MIME type of the input data (default: None).
+
+      record_wrapping (str or PipelineVariable)
+        – Valid values: ‘RecordIO’ (default: None).
+
+      s3_data_type (str or PipelineVariable)
+        – Valid values: 'S3Prefix', 'ManifestFile', 'AugmentedManifestFile'.
+        - If 'S3Prefix', s3_data defines a prefix of s3 objects to train on. All objects with s3 keys beginning
+          with s3_data will be used to train.
+        - If 'ManifestFile' or 'AugmentedManifestFile', then s3_data defines a single S3 manifest file or augmented
+          manifest file respectively, listing the S3 data to train on. Both the ManifestFile and AugmentedManifestFile
+          formats are described at S3DataSource in the Amazon SageMaker API reference.
+   -----
+      >>> train_data = sagemaker.inputs.TrainingInput(
+      >>>     "s3://{}/{}/train".format(bucket, prefix),
+      >>>     distribution="FullyReplicated",
+      >>>     content_type="text/csv",
+      >>>     s3_data_type="S3Prefix",
+   -----
+
+    ----------------
+    Code: batch-transform-tumor-prediction
+
+
+      >>> # # Amazon SageMaker Batch Transform Demo
+
+      >>> # Use SageMaker's XGBoost to train a binary classification model and for a list of tumors in batch file,
+      >>> # predict if each is malignant
+      >>> #
+      >>> # Based on AWS sample located at:
+      >>> #  https://github.com/aws/amazon-sagemaker-examples/tree/main/sagemaker_batch_transform/batch_transform_associate_predictions_with_input
+      >>> # ## Setup
+      >>> #
+      >>> # After installing the SageMaker Python SDK
+      >>> # specify:
+      >>> #
+      >>> # * The SageMaker role arn which has the SageMakerFullAccess policy attached
+      >>> # * The S3 bucket to use for training and storing model objects.
+
+
+      >>> !pip3 install -U sagemaker
+
+      >>> import os
+      >>> import boto3
+      >>> import sagemaker
+
+      >>> role = sagemaker.get_execution_role()
+      >>> sess = sagemaker.Session()
+      >>> region = sess.boto_region_name
+
+      >>> bucket = sess.default_bucket()
+      >>> prefix = "DEMO-breast-cancer-prediction-xgboost-highlevel"
+
+
+      >>> # ---
+      >>> # ## Data sources
+      >>> #
+      >>> # > Dua, D. and Graff, C. (2019). UCI Machine Learning Repository [http://archive.ics.uci.edu/ml]. Irvine, CA:
+      >>> #  University of California, School of Information and Computer Science.
+      >>> #
+      >>> # ## Data preparation
+      >>> #
+      >>> # Download the data and save it in a local folder with the name data.csv
+
+
+      >>> import pandas as pd
+      >>> import numpy as np
+
+      >>> s3 = boto3.client("s3")
+
+      >>> filename = "wdbc.csv"
+      >>> s3.download_file(
+      >>>     f"sagemaker-example-files-prod-{region}", "datasets/tabular/breast_cancer/wdbc.csv", filename
+      >>> )
+      >>> data = pd.read_csv(filename, header=None)
+
+      >>> # specify columns extracted from wbdc.names
+      >>> data.columns = [
+      >>>     "id",
+      >>>     "diagnosis",
+      >>>     "radius_mean",
+      >>>     "texture_mean",
+      >>>     "perimeter_mean",
+      >>>     "area_mean",
+      >>>     "smoothness_mean",
+      >>>     "compactness_mean",
+      >>>     "concavity_mean",
+      >>>     "concave points_mean",
+      >>>     "symmetry_mean",
+      >>>     "fractal_dimension_mean",
+      >>>     "radius_se",
+      >>>     "texture_se",
+      >>>     "perimeter_se",
+      >>>     "area_se",
+      >>>     "smoothness_se",
+      >>>     "compactness_se",
+      >>>     "concavity_se",
+      >>>     "concave points_se",
+      >>>     "symmetry_se",
+      >>>     "fractal_dimension_se",
+      >>>     "radius_worst",
+      >>>     "texture_worst",
+      >>>     "perimeter_worst",
+      >>>     "area_worst",
+      >>>     "smoothness_worst",
+      >>>     "compactness_worst",
+      >>>     "concavity_worst",
+      >>>     "concave points_worst",
+      >>>     "symmetry_worst",
+      >>>     "fractal_dimension_worst",
+      >>> ]
+
+      >>> # save the data
+      >>> data.to_csv("data.csv", sep=",", index=False)
+
+      >>> data.sample(8)
+
+
+      >>> # #### Note:
+      >>> # * The first field is an 'id' attribute that we'll remove before batch inference since it is not useful for inference
+      >>> # * The second field, 'diagnosis', uses 'M' for Malignant and 'B'for Benign.
+      >>> # * There are 30 other numeric features that will be use for training and inferenc.
+
+      >>> # Replace the M/B diagnosis with a 1/0 boolean value.
+
+
+      >>> data["diagnosis"] = data["diagnosis"].apply(lambda x: ((x == "M")) + 0)
+      >>> data.sample(8)
+
+
+      >>> # Split the data as follows:
+      >>> # 80% for training
+      >>> # 10% for validation
+      >>> # 10% for batch inference job
+      >>> #
+      >>> # In addition, remove the 'id' field from the training set and validation set as 'id' is not a training feature.
+      >>> # Remove the diagnosis attribute for the batch set because this is what we want to predict.
+
+
+      >>> # data split in three sets, training, validation and batch inference
+      >>> rand_split = np.random.rand(len(data))
+      >>> train_list = rand_split < 0.8
+      >>> val_list = (rand_split >= 0.8) & (rand_split < 0.9)
+      >>> batch_list = rand_split >= 0.9
+
+      >>> data_train = data[train_list].drop(["id"], axis=1)
+      >>> data_val = data[val_list].drop(["id"], axis=1)
+      >>> data_batch = data[batch_list].drop(["diagnosis"], axis=1)
+      >>> data_batch_noID = data_batch.drop(["id"], axis=1)
+
+
+      >>> # Upload the data sets to S3
+
+
+      >>> train_file = "train_data.csv"
+      >>> data_train.to_csv(train_file, index=False, header=False)
+      >>> sess.upload_data(train_file, key_prefix="{}/train".format(prefix))
+
+      >>> validation_file = "validation_data.csv"
+      >>> data_val.to_csv(validation_file, index=False, header=False)
+      >>> sess.upload_data(validation_file, key_prefix="{}/validation".format(prefix))
+
+      >>> batch_file = "batch_data.csv"
+      >>> data_batch.to_csv(batch_file, index=False, header=False)
+      >>> sess.upload_data(batch_file, key_prefix="{}/batch".format(prefix))
+
+      >>> batch_file_noID = "batch_data_noID.csv"
+      >>> data_batch_noID.to_csv(batch_file_noID, index=False, header=False)
+      >>> sess.upload_data(batch_file_noID, key_prefix="{}/batch".format(prefix))
+
+
+      >>> # ---
+      >>> #
+      >>> # ## Training job and model creation
+
+      >>> # Start the training job using both training set and validation set.
+      >>> #
+      >>> # The model will output a probability between 0 and 1 which is predicting the probability of a tumor being malignant.
+
+
+      >>> %%time
+      >>> from time import gmtime, strftime
+
+      >>> job_name = "xgb-" + strftime("%Y-%m-%d-%H-%M-%S", gmtime())
+      >>> output_location = "s3://{}/{}/output/{}".format(bucket, prefix, job_name)
+      >>> image = sagemaker.image_uris.retrieve(
+      >>>     framework="xgboost", region=boto3.Session().region_name, version="1.7-1"
+      >>> )
+
+      >>> sm_estimator = sagemaker.estimator.Estimator(
+      >>>     image,
+      >>>     role,
+      >>>     instance_count=1,
+      >>>     instance_type="ml.m5.large",
+      >>>     volume_size=50,
+      >>>     input_mode="File",
+      >>>     output_path=output_location,
+      >>>     sagemaker_session=sess,
+      >>> )
+
+      >>> sm_estimator.set_hyperparameters(
+      >>>     objective="binary:logistic",
+      >>>     max_depth=5,
+      >>>     eta=0.2,
+      >>>     gamma=4,
+      >>>     min_child_weight=6,
+      >>>     subsample=0.8,
+      >>>     verbosity=0,
+      >>>     num_round=100,
+      >>> )
+
+      >>> train_data = sagemaker.inputs.TrainingInput(
+      >>>     "s3://{}/{}/train".format(bucket, prefix),
+      >>>     distribution="FullyReplicated",
+      >>>     content_type="text/csv",
+      >>>     s3_data_type="S3Prefix",
+      >>> )
+      >>> validation_data = sagemaker.inputs.TrainingInput(
+      >>>     "s3://{}/{}/validation".format(bucket, prefix),
+      >>>     distribution="FullyReplicated",
+      >>>     content_type="text/csv",
+      >>>     s3_data_type="S3Prefix",
+      >>> )
+      >>> data_channels = {"train": train_data, "validation": validation_data}
+
+      >>> # Start training by calling the fit method in the estimator
+      >>> sm_estimator.fit(inputs=data_channels, logs=True)
+
+      >>> # ---
+      >>> #
+      >>> # ## Batch Transform
+      >>> # Instead of deploying an endpoint and running real-time inference, we'll use SageMaker Batch Transform to run inference on an entire data set in one operation.
+      >>> #
+
+      >>> # #### 1. Create a transform job
+      >>> #
+
+
+      >>> %%time
+
+      >>> sm_transformer = sm_estimator.transformer(1, "ml.m5.large")
+
+      >>> # start a transform job
+      >>> input_location = "s3://{}/{}/batch/{}".format(
+      >>>     bucket, prefix, batch_file_noID
+      >>> )  # use input data without ID column
+      >>> sm_transformer.transform(input_location, content_type="text/csv", split_type="Line")
+      >>> sm_transformer.wait()
+
+
+      >>> # Check the output of the Batch Transform job. It should show the list of probabilities of tumors being malignant.
+
+      >>> import re
+
+      >>> def get_csv_output_from_s3(s3uri, batch_file):
+      >>>     file_name = "{}.out".format(batch_file)
+      >>>     match = re.match("s3://([^/]+)/(.*)", "{}/{}".format(s3uri, file_name))
+      >>>     output_bucket, output_prefix = match.group(1), match.group(2)
+      >>>     s3.download_file(output_bucket, output_prefix, file_name)
+      >>>     return pd.read_csv(file_name, sep=",", header=None)
+
+
+      >>> output_df = get_csv_output_from_s3(sm_transformer.output_path, batch_file_noID)
+      >>> output_df.head(8)
+
+
+      >>> # #### 2. Join the input and the prediction results
+      >>> #
+      >>> # We can use batch transform to perform a different transform job to join our original data,
+      >>> # with our results to get the ID field back.
+      >>> #
+      >>> # Associate the prediction results with their corresponding input records. We can  use the "input_filter" to exclude
+      >>> # the ID column easily and there's no need to have a separate file in S3.
+      >>> #
+      >>> #  * Set "input_filter" to "$[1:]": indicates that we are excluding column 0 (the 'ID') before processing the
+      >>> #   inferences and keeping everything from column 1 to the last column (all the features or predictors)
+      >>> #
+      >>> # * Set "join_source" to "Input": indicates our desire to join the input data with the inference results
+      >>> #
+      >>> # * Set "output_filter" to default "$[1:]", indicating that when presenting the output, we only want to keep
+      >>> #   column 0 (the 'ID') and the last column (the inference result)
+
+
+      >>> # content_type / accept and split_type / assemble_with are required to use IO joining feature
+      >>> sm_transformer.assemble_with = "Line"
+      >>> sm_transformer.accept = "text/csv"
+
+      >>> # start a transform job
+      >>> input_location = "s3://{}/{}/batch/{}".format(
+      >>>     bucket, prefix, batch_file
+      >>> )  # use input data with ID column cause InputFilter will filter it out
+      >>> sm_transformer.transform(
+      >>>     input_location,
+      >>>     split_type="Line",
+      >>>     content_type="text/csv",
+      >>>     input_filter="$[1:]",
+      >>>     join_source="Input",
+      >>>     output_filter="$[0,-1]",
+      >>> )
+      >>> sm_transformer.wait()
+
+      >>> # Check the output of the Batch Transform job in S3. It should show the list of probabilities along with the record ID.
+
+      >>> output_df = get_csv_output_from_s3(sm_transformer.output_path, batch_file)
+      >>> output_df.head(8)
+
+
+      >>> # ## Clean up
+      >>> # In the AWS console, we can see that a model has been created, S3 buckets, and batch transform jobs, however
+      >>> # no SageMaker endpoint has been created.
+      >>> #
+      >>> # To avoid unnecessary charges, be sure to delete:
+      >>> # - S3 buckets
+      >>> # - Model
+      >>> # - Jupter notebook
+
+    ----------------
+
+  Clean up;
+
+     Sagemaker -> models -> select <model> -> delete
+
+     S3 -> <bucket> -> empty -> delete
+
+
+     SageMaker -> Studio -> JupyterLab -> kernelks -> shut down all
+
+     SageMaker -> Studio -> JupyterLab -> running instances -> select "MyJupterLab" -> stop
+        -> click on "MyJupyterLab" instance -> <upper right - 3 dots> -> Delect Space
+
+
+------------------------------------------------------
+2.8 DEMO: Using Docker Containers with Amazon SageMaker
+
+
+
+
+  using Docker containers with Amazon SageMaker.
+    - SageMaker supports containerization for both training and inference.
+    - if there's no prebuilt container for your use case, create your own
+      - SageMaker enables you to package your own algorithms in a Docker container that can then be trained
+        and deployed in the SageMaker environment.
+   demo:
+     - in  an AI sandbox
+     - build a Docker container,
+     - use SageMaker to train, deploy, and evaluate the model.
+
+
+  ---------------
+  Demo
+
+    -> SageMaker AI -> Applications and IDEs -> Notebook -> Create Notebook ->
+      Notebook Instance Name: myNotebook , IAM Role: create role,
+      -> Create Notebook Instance
+
+      Note: Demo does not work in AWS sandbox -> can not create a SageMaker notebook
+
+      -> Start "my-notebook-inst" -> open jupyterLab notebook
+
+         # download git repo:
+         git -> clone a repo -> Git repo URL: https://github.com/pluralsight-cloud/mls-c01-aws-certified-machine-learning-implementation-operations.git ,  unselect "Open Readm files" -> clone
+
+          <under files> -> click on  using-docker-containers-with-sagemaker-demo/docker-containers-with-sagemaker.ipynb
+
+
+
+       -> demo related files are provided under demos/2_8_using-docker-containers-with-sagemaker-demo/ :
+          -> jupyter notebook:
+          docker-containers-with-sagemaker.ipynb
+          -> extracted python from jupyter notebook:
+          docker-containers-with-sagemaker.py
+          -> html view from completed jupyter notebook:
+          docker-containers-with-sagemaker.py
+
+
+  ---------------
+  Dockerfile:
+
+# Build an image that can do training and inference in SageMaker
+# This is a Python 3 image that uses the nginx, gunicorn, flask stack
+# for serving inferences in a stable way.
+
+FROM ubuntu:18.04
+
+MAINTAINER Amazon AI <sage-learner@amazon.com>
+
+
+RUN apt-get -y update && apt-get install -y --no-install-recommends \
+         wget \
+         python3-pip \
+         python3-setuptools \
+         nginx \
+         ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/python3 /usr/bin/python
+RUN ln -s /usr/bin/pip3 /usr/bin/pip
+
+# Here we get all python packages.
+# There's substantial overlap between scipy and numpy that we eliminate by
+# linking them together. Likewise, pip leaves the install caches populated which uses
+# a significant amount of space. These optimizations save a fair amount of space in the
+# image, which reduces start up time.
+RUN pip --no-cache-dir install numpy==1.16.2 scipy==1.2.1 scikit-learn==0.20.2 pandas flask gunicorn
+
+# Set some environment variables. PYTHONUNBUFFERED keeps Python from buffering our standard
+# output stream, which means that logs can be delivered to the user quickly. PYTHONDONTWRITEBYTECODE
+# keeps Python from writing the .pyc files which are unnecessary in this case. We also update
+# PATH so that the train and serve programs are found when the container is invoked.
+
+ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONDONTWRITEBYTECODE=TRUE
+ENV PATH="/opt/program:${PATH}"
+
+# Set up the program in the image
+COPY decision_trees /opt/program
+WORKDIR /opt/program
+
+  ---------------
+
+
+  Note: Git repo
+      using-docker-containers-with-sagemaker-demo\container directory is missing "build_and_push.sh" script
+
+  ---------------
+
+    code: docker-containers-with-sagemaker
+
+      >>> # # Using Docker Containers with Amazon SageMaker Demo
+
+      >>> # ---
+      >>> #
+      >>> # Use this notebook with a SageMaker notebook Jupyter Lab, not using SageMaker Studio.
+      >>> #
+      >>> # ---
+
+      >>> # SageMaker, enables you to package your own algorithms that can than be trained and deployed in the SageMaker environment.
+      >>> #
+      >>> # This demo that shows how to build a Docker container for SageMaker and use it for training and inference, if there is
+      >>> # no pre-built container matching your requirements that you can use.
+
+      >>> # ## Part 1: Packaging and Uploading your Algorithm for use with Amazon SageMaker
+
+      >>> # ### The parts of the sample container
+      >>> #
+      >>> # In the `container` directory are all the components you need to package the sample algorithm for SageMager:
+      >>> #
+      >>> #     .
+      >>> #     |-- Dockerfile
+      >>> #     |-- build_and_push.sh
+      >>> #     `-- decision_trees
+      >>> #         |-- nginx.conf
+      >>> #         |-- predictor.py
+      >>> #         |-- serve
+      >>> #         |-- train
+      >>> #         `-- wsgi.py
+      >>> #
+      >>> # * "Dockerfile" describes how to build your Docker container image. More details below.
+      >>> # * "build_and_push.sh" is a script that uses the Dockerfile to build your container images and then pushes it to ECR.
+      >>> # * "decision_trees" is the directory containing the files that will be installed in the container.
+      >>> # * "local_test" is a directory that shows how to test your new container on any computer that can run Docker.
+      >>> #
+      >>> # The files that we'll put in the container are:
+      >>> #
+      >>> # * "nginx.conf" is the configuration file for the nginx front-end. Generally, you should be able to take this file as-is.
+      >>> # * "predictor.py" is the program that actually implements the Flask web server and the decision tree predictions for
+      >>> #                  this app.
+      >>> # * "serve" is the program started when the container is started for hosting. It simply launches the gunicorn server which
+      >>> #           runs multiple instances of the Flask app defined in `predictor.py`.
+      >>> # * "train" is the program that is invoked when the container is run for training. You can modify this program to implement
+      >>> #           your training algorithm.
+      >>> # * "wsgi.py" is a small wrapper used to invoke the Flask app.
+
+      >>> # ### The Dockerfile
+      >>> #
+      >>> # Docker uses a simple file called a `Dockerfile` to specify how the image is assembled.
+      >>> #
+      >>> # SageMaker uses Docker to allow users to train and deploy models, inculding creating your own.
+      >>> #
+      >>> # The Dockerfile describes the image that we want to build. You can think of it as describing the complete operating
+      >>> # system installation of the system that you want to run. A Docker container running is quite a bit lighter than a full
+      >>> # operating system, however, because it takes advantage of Linux on the host machine for the basic operations.
+      >>> #
+      >>> # We'll use a standard Ubuntu installation and install the things needed by our model.
+      >>> # Then add the code that implements our specific algorithm to the container and set up the right environment to run under.
+      >>> #
+      >>> # Let's review the Dockerfile:
+
+      >>> !cat container/Dockerfile
+
+
+      >>> # ### Building and registering the container
+      >>> #
+      >>> # Build the container image using `docker build`.
+      >>> # Push the container image to ECR using `docker push`.
+      >>> #
+      >>> # This code looks for an ECR repository in your account. If the repository doesn't exist, the script will create it.
+
+      >>> %%sh
+
+      >>> # The name of our algorithm
+      >>> algorithm_name=sagemaker-decision-trees
+
+      >>> cd container
+
+      >>> chmod +x decision_trees/train
+      >>> chmod +x decision_trees/serve
+
+      >>> account=$(aws sts get-caller-identity --query Account --output text)
+
+      >>> # Get the region defined in the current configuration (default to us-east-1 if none defined)
+      >>> region=$(aws configure get region)
+      >>> region=${region:-us-east-1}
+
+      >>> fullname="${account}.dkr.ecr.${region}.amazonaws.com/${algorithm_name}:latest"
+
+      >>> # If the repository doesn't exist in ECR, create it.
+      >>> aws ecr describe-repositories --repository-names "${algorithm_name}" > /dev/null 2>&1
+
+      >>> if [ $? -ne 0 ]
+      >>> then
+      >>>     aws ecr create-repository --repository-name "${algorithm_name}" > /dev/null
+      >>> fi
+
+      >>> # Get the login command from ECR and execute it directly
+      >>> aws ecr get-login-password --region ${region}|docker login --username AWS --password-stdin ${fullname}
+
+      >>> # Build the docker image locally with the image name and then push it to ECR
+      >>> # with the full name.
+
+      >>> docker build -t ${algorithm_name} .
+      >>> docker tag ${algorithm_name} ${fullname}
+
+      >>> docker push ${fullname}
+
+
+      >>> # ## Part 2: Using your Algorithm in Amazon SageMaker
+      >>> #
+      >>> # Once you have your container packaged, you can use it to train models and use the model for hosting or batch transforms.
+      >>> # Let's do that with the algorithm we made above.
+      >>> #
+      >>> # ## Set up the environment
+      >>> #
+      >>> # Here we specify a bucket to use and the role that will be used for working with SageMaker.
+
+      >>> # S3 prefix
+      >>> prefix = "DEMO-scikit-byo-iris"
+
+      >>> # Define IAM role
+      >>> import boto3
+      >>> import re
+
+      >>> import os
+      >>> import numpy as np
+      >>> import pandas as pd
+      >>> from sagemaker import get_execution_role
+
+      >>> role = get_execution_role()
+
+
+      >>> # ## Create the session
+      >>> #
+      >>> # The session remembers our connection parameters to SageMaker. We'll use it to perform all of our SageMaker operations.
+
+      >>> import sagemaker as sage
+      >>> from time import gmtime, strftime
+
+      >>> sess = sage.Session()
+
+
+      >>> # ## Upload the data for training
+      >>> #
+      >>> # For the purposes of this example, we're using some the classic [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set), which is in the training folder.
+
+      >>> WORK_DIRECTORY = "data"
+
+      >>> data_location = sess.upload_data(WORK_DIRECTORY, key_prefix=prefix)
+
+
+      >>> # ## Train the Model
+      >>> #
+      >>> # In order to use SageMaker to train our algorithm, we'll create an `Estimator` that defines how to use the container
+      >>> # to train. This includes the configuration we need to invoke SageMaker training:
+      >>> #
+      >>> # * The "container name". This is defined above.
+      >>> # * The "role". As defined above.
+      >>> # * The "instance count" The number of EC2 instances to use for training.
+      >>> # * The "instance type" Type of EC2 instance to use for training.
+      >>> # * The "output path" Where the model artifact will be written.
+      >>> # * The "session" is the SageMaker session object defined above.
+      >>> #
+      >>> # Then we use fit() on the estimator to train against the data that we uploaded above.
+
+      >>> account = sess.boto_session.client("sts").get_caller_identity()["Account"]
+      >>> region = sess.boto_session.region_name
+      >>> image = "{}.dkr.ecr.{}.amazonaws.com/sagemaker-decision-trees:latest".format(account, region)
+
+      >>> tree = sage.estimator.Estimator(
+      >>>     image,
+      >>>     role,
+      >>>     1,
+      >>>     "ml.m5.large",
+      >>>     output_path="s3://{}/output".format(sess.default_bucket()),
+      >>>     sagemaker_session=sess,
+      >>> )
+
+      >>> tree.fit(data_location)
+
+
+      >>> # ## Deploying the model
+      >>> #
+      >>> # After training is complete, deploy the model using the `deploy` API call. Provide the instance count, instance type,
+      >>> # and optionally serializer and deserializer functions.
+
+      >>> from sagemaker.serializers import CSVSerializer
+
+      >>> predictor = tree.deploy(
+      >>>     initial_instance_count=1,
+      >>>     instance_type="ml.m5.large",
+      >>>     serializer=CSVSerializer()
+      >>> )
+
+
+      >>> # ### Choose some data and use it for a prediction
+      >>> #
+      >>> # Make sure the model deployed properly by running some predictions, we'll re-use some of the data we used for training,
+      >>> # for the purpose of checking that the model successfully deployed.
+      >>> #
+      >>> # Choose some data and use it for a prediction
+      >>> # In order to do some predictions, we'll extract some of the data we used for training and do predictions against it.
+      >>> # This is, of course, bad statistical practice, but a good way to see how the mechanism works.
+
+      >>> shape = pd.read_csv("data/iris.csv", header=None)
+      >>> shape.sample(3)
+
+
+      >>> # drop the label column in the training set
+      >>> shape.drop(shape.columns[[0]], axis=1, inplace=True)
+      >>> shape.sample(3)
+
+
+      >>> import itertools
+
+      >>> a = [50 * i for i in range(3)]
+      >>> b = [40 + i for i in range(10)]
+      >>> indices = [i + j for i, j in itertools.product(a, b)]
+
+      >>> test_data = shape.iloc[indices[:-1]]
+
+
+      >>> # Prediction is as easy as calling predict with the predictor we got back from deploy and the data we want to do
+      >>> # predictions with. The serializers take care of doing the data conversions for us.
+
+      >>> print(predictor.predict(test_data.values).decode("utf-8"))
+
+
+      >>> # ### Optional cleanup
+      >>> # When you're done with the endpoint, you'll want to clean it up.
+
+      >>> sage.Session().delete_endpoint(predictor.endpoint)
+
+
+  ---------------
+
+------------------------------------------------------
+2.9 DEMO: Automatically Scaling Model Endpoints
+
+  automatically scaling model endpoints.
+    - auto scaling is used by SageMaker to deliver high availability and fault tolerance for model endpoints.
+  demo:
+    - deploy a model using a Jupyter Notebook in SageMaker.
+    - deploy a pre-trained model using some sample data.
+    - configure auto scaling, and we'll stress test our model,
+    - check the status of the endpoint to observe the instance count changing.
+
+
+    -> SageMaker AI -> Applications and IDEs -> Studio -> [requires a domain to already exist] -> open studio
+
+        -> <left> -> JupyterLab -> <upper right> +Create JupyterLab Space ->
+         Name: MyJupyterLab, Sharing: Private -> create space
+         # defaults: instance: ml.t3.medium, Image: SageMaker Distribution 1.9 (used 2.2.1)
+         -> Run space # creates a Jupyter Notebook
+         -> Open JupterLab
+
+         # download git repo:
+         git -> git clone repo -> Git repo URL: https://github.com/pluralsight-cloud/mls-c01-aws-certified-machine-learning-implementation-operations.git ,  unselect "Open Readm files" -> clone
+
+          <under files> -> click on  auto-scaling-model-endpoints-demo/sagemaker_endpoint_demo.ipynb
+
+
+    -> demo related files are provided under demos/2_9_auto-scaling-model-endpoints-demo/ :
+          -> jupyter notebook:
+             sagemaker_endpoint_demo.ipynb
+          -> extracted python from jupyter notebook:
+             sagemaker_endpoint_demo.py
+          -> html view from completed jupyter notebook:
+             sagemaker_endpoint_demo.html
+
+
+     SageMaker / Client / create_endpoint_config
+     https://boto3.amazonaws.com/v1/documentation/api/1.35.9/reference/services/sagemaker/client/create_endpoint_config.html
+
+     ProductionVariant dict fields:
+       VariantName (string) – [REQUIRED]
+         - The name of the production variant.
+       ModelName (string) –
+         - The name of the model that you want to host. This is the name that you specified when creating the model.
+       InitialInstanceCount (integer) –
+         - Number of instances to launch initially.
+       InstanceType (string) –
+         - The ML compute instance type.
+       InitialVariantWeight (float) –
+         - Determines initial traffic distribution among all of the models that you specify in the endpoint configuration.
+         - The traffic to a production variant is determined by the ratio of the VariantWeight to the sum of all VariantWeight
+           values across all ProductionVariants.
+         - If unspecified, it defaults to 1.0.
+
+         - if two models, both have weight of 1.0, then 50% of the traffic will be sent to each of the 2 models
+
+
+  Set Auto Scaling Policies for Multi-Model Endpoint Deployments
+    https://docs.aws.amazon.com/sagemaker/latest/dg/multi-model-endpoints-autoscaling.html
+
+    Define a scaling policy
+      - To specify the metrics and target values for a scaling policy, you can configure a target-tracking scaling policy.
+      - You can use either a predefined metric or a custom metric.
+      - Scaling policy configuration is represented by a JSON block. You save your scaling policy configuration as a JSON block in a text file.
+
+    Use a predefined metric
+      - To quickly define a target-tracking scaling policy for a variant, use the 'SageMakerVariantInvocationsPerInstance' predefined metric.
+      - 'SageMakerVariantInvocationsPerInstance' is the average number of times per minute that each instance for a variant is invoked.
+
+     - To use a predefined metric in a scaling policy, create a target tracking configuration for your policy.
+     - In the target tracking configuration, include a PredefinedMetricSpecification for the predefined metric and a TargetValue for the target value of that metric.
+
+
+
+   ------------------
+
+    Code:  sagemaker_endpoint_demo
+
+      >>> # # SageMaker Auto Scaling Model Endpoints Demo
+      >>> #  ## Run this notebook using SageMaker Studio Jupyter Lab
+
+      >>> # First install the aiobotocore package which provides an interface to the AWS services that we'll be using
+
+      >>> %pip install --upgrade -q aiobotocore
+
+
+      >>> # We also need to install s3fs which enables Python to work with S3
+
+      >>> pip install s3fs
+
+
+      >>> # Import the libararies we need to build and deploy our model, and configure some parameters, including locations
+      >>> # for model artifacts in S3
+
+      >>> import pandas as pd
+      >>> import numpy as np
+      >>> import boto3
+      >>> import sagemaker
+      >>> import time
+      >>> import json
+      >>> import io
+      >>> from io import StringIO
+      >>> import base64
+      >>> import pprint
+      >>> import re
+      >>> import s3fs
+
+      >>> from sagemaker.image_uris import retrieve
+
+      >>> sess = sagemaker.Session()
+      >>> write_bucket = sess.default_bucket()
+      >>> write_prefix = "fraud-detect-demo"
+
+      >>> region = sess.boto_region_name
+      >>> s3_client = boto3.client("s3", region_name=region)
+      >>> sm_client = boto3.client("sagemaker", region_name=region)
+      >>> sm_runtime_client = boto3.client("sagemaker-runtime")
+      >>> sm_autoscaling_client = boto3.client("application-autoscaling")
+
+      >>> sagemaker_role = sagemaker.get_execution_role()
+
+
+      >>> # S3 locations used for parameterizing the notebook run
+      >>> read_bucket = "sagemaker-sample-files"
+      >>> read_prefix = "datasets/tabular/synthetic_automobile_claims"
+      >>> model_prefix = "models/xgb-fraud"
+
+      >>> data_capture_key = f"{write_prefix}/data-capture"
+
+      >>> # S3 location of trained model artifact
+      >>> model_uri = f"s3://{read_bucket}/{model_prefix}/fraud-det-xgb-model.tar.gz"
+
+      >>> # S3 path where data captured at endpoint will be stored
+      >>> data_capture_uri = f"s3://{write_bucket}/{data_capture_key}"
+
+      >>> # S3 location of test data
+      >>> test_data_uri = f"s3://{read_bucket}/{read_prefix}/test.csv"
+
+
+      >>> # We're using the SageMaker managed XGBoost image
+
+      >>> # Retrieve the SageMaker managed XGBoost image
+      >>> training_image = retrieve(framework="xgboost", region=region, version="1.3-1")
+
+      >>> # Specify a unique model name that does not exist
+      >>> model_name = "fraud-detect-xgb"
+      >>> primary_container = {
+      >>>                      "Image": training_image,
+      >>>                      "ModelDataUrl": model_uri
+      >>>                     }
+
+      >>> model_matches = sm_client.list_models(NameContains=model_name)["Models"]
+      >>> if not model_matches:
+      >>>     model = sm_client.create_model(ModelName=model_name,
+      >>>                                    PrimaryContainer=primary_container,
+      >>>                                    ExecutionRoleArn=sagemaker_role)
+      >>> else:
+      >>>     print(f"Model with name {model_name} already exists! Change model name to create new")
+
+
+      >>> # Here's our endpoint configuration, including instance count, and instance type
+
+      >>> # Endpoint Config name
+      >>> endpoint_config_name = f"{model_name}-endpoint-config"
+
+      >>> # Endpoint config parameters
+      >>> production_variant_dict = {
+      >>>                            "VariantName": "Alltraffic",
+      >>>                            "ModelName": model_name,
+      >>>                            "InitialInstanceCount": 1,
+      >>>                            "InstanceType": "ml.m5.large",
+      >>>                            "InitialVariantWeight": 1
+      >>>                           }
+
+      >>> # Data capture config parameters
+      >>> data_capture_config_dict = {
+      >>>                             "EnableCapture": True,
+      >>>                             "InitialSamplingPercentage": 100,
+      >>>                             "DestinationS3Uri": data_capture_uri,
+      >>>                             "CaptureOptions": [{"CaptureMode" : "Input"}, {"CaptureMode" : "Output"}]
+      >>>                            }
+
+
+      >>> # Create endpoint config if one with the same name does not exist
+      >>> endpoint_config_matches = sm_client.list_endpoint_configs(NameContains=endpoint_config_name)["EndpointConfigs"]
+      >>> if not endpoint_config_matches:
+      >>>     endpoint_config_response = sm_client.create_endpoint_config(
+      >>>                                                                 EndpointConfigName=endpoint_config_name,
+      >>>                                                                 ProductionVariants=[production_variant_dict],
+      >>>                                                                 DataCaptureConfig=data_capture_config_dict
+      >>>                                                                )
+      >>> else:
+      >>> 		print(f"Endpoint config with name {endpoint_config_name} already exists! Change endpoint config name to create new")
+
+
+      >>> # Next, we deploy the model by creating the endpoint using the endpoint configuration that we created, it takes
+      >>> # about 6 minutes to deploy.
+
+      >>> endpoint_name = f"{model_name}-endpoint"
+
+      >>> endpoint_matches = sm_client.list_endpoints(NameContains=endpoint_name)["Endpoints"]
+      >>> if not endpoint_matches:
+      >>>     endpoint_response = sm_client.create_endpoint(
+      >>>                                                   EndpointName=endpoint_name,
+      >>>                                                   EndpointConfigName=endpoint_config_name
+      >>>                                                  )
+      >>> else:
+      >>>     print(f"Endpoint with name {endpoint_name} already exists! Change endpoint name to create new")
+
+      >>> resp = sm_client.describe_endpoint(EndpointName=endpoint_name)
+      >>> status = resp["EndpointStatus"]
+      >>> while status == "Creating":
+      >>>     print(f"Endpoint Status: {status}...")
+      >>>     time.sleep(60)
+      >>>     resp = sm_client.describe_endpoint(EndpointName=endpoint_name)
+      >>>     status = resp["EndpointStatus"]
+      >>> print(f"Endpoint Status: {status}")
+
+
+      >>> # Invoke the endpoint by running some predictions using some sample data that is formatted using serialization
+      >>> # and deserialization.
+
+      >>> # Fetch test data to run predictions with the endpoint
+      >>> test_df = pd.read_csv(test_data_uri)
+
+      >>> # For content type text/csv, payload should be a string with commas separating the values for each feature
+      >>> # This is the inference request serialization step
+      >>> # CSV serialization
+      >>> csv_file = io.StringIO()
+      >>> test_sample = test_df.drop(["fraud"], axis=1).iloc[:5]
+      >>> test_sample.to_csv(csv_file, sep=",", header=False, index=False)
+      >>> payload = csv_file.getvalue()
+      >>> response = sm_runtime_client.invoke_endpoint(
+      >>>                                              EndpointName=endpoint_name,
+      >>>                                              Body=payload,
+      >>>                                              ContentType="text/csv",
+      >>>                                              Accept="text/csv"
+      >>>                                             )
+
+      >>> # This is the inference response deserialization step
+      >>> # This is a bytes object
+      >>> result = response["Body"].read()
+      >>> # Decoding bytes to a string
+      >>> result = result.decode("utf-8")
+      >>> # Converting to list of predictions
+      >>> result = re.split(",|\n",result)
+
+      >>> prediction_df = pd.DataFrame()
+      >>> prediction_df["Prediction"] = result[:5]
+      >>> prediction_df["Label"] = test_df["fraud"].iloc[:5].values
+      >>> prediction_df
+
+
+      >>> # Configure an auto scaling policy, minimum capacity is 1, maximum capacity is 2
+
+      >>> resp = sm_client.describe_endpoint(EndpointName=endpoint_name)
+
+      >>> # SageMaker expects resource id to be provided with the following structure
+      >>> resource_id = f"endpoint/{endpoint_name}/variant/{resp['ProductionVariants'][0]['VariantName']}"
+
+      >>> # Scaling configuration
+      >>> scaling_config_response = sm_autoscaling_client.register_scalable_target(
+      >>>                                                           ServiceNamespace="sagemaker",
+      >>>                                                           ResourceId=resource_id,
+      >>>                                                           ScalableDimension="sagemaker:variant:DesiredInstanceCount",
+      >>>                                                           MinCapacity=1,
+      >>>                                                           MaxCapacity=2
+      >>>                                                         )
+
+
+      >>> # Create the scaling policy. The scaling metric is SageMakerVariantInvocationsPerInstance (the average number
+      >>> # of invocations per minute per model instance). When this number exceeds 5, auto scaling will be triggered.
+
+      >>> # Create Scaling Policy
+      >>> policy_name = f"scaling-policy-{endpoint_name}"
+      >>> scaling_policy_response = sm_autoscaling_client.put_scaling_policy(
+      >>>                                                 PolicyName=policy_name,
+      >>>                                                 ServiceNamespace="sagemaker",
+      >>>                                                 ResourceId=resource_id,
+      >>>                                                 ScalableDimension="sagemaker:variant:DesiredInstanceCount",
+      >>>                                                 PolicyType="TargetTrackingScaling",
+      >>>                                                 TargetTrackingScalingPolicyConfiguration={
+      >>>                                                     "TargetValue": 5.0, # Target for avg invocations per minutes
+      >>>                                                     "PredefinedMetricSpecification": {
+      >>>                                                         "PredefinedMetricType": "SageMakerVariantInvocationsPerInstance",
+      >>>                                                     },
+      >>>                                                     "ScaleInCooldown": 600, # Duration in seconds until scale in
+      >>>                                                     "ScaleOutCooldown": 60 # Duration in seconds between scale out
+      >>>                                                 }
+      >>>                                             )
+
+
+      >>> # This code retrieves the scaling policy details
+
+      >>> response = sm_autoscaling_client.describe_scaling_policies(ServiceNamespace="sagemaker")
+
+      >>> pp = pprint.PrettyPrinter(indent=4, depth=4)
+      >>> for i in response["ScalingPolicies"]:
+      >>>     pp.pprint(i["PolicyName"])
+      >>>     print("")
+      >>>     if("TargetTrackingScalingPolicyConfiguration" in i):
+      >>>         pp.pprint(i["TargetTrackingScalingPolicyConfiguration"])
+
+
+      >>> # Stress test the endpoint to trigger auto scaling. This code runs for 250 seconds and repeatedly invokes the
+      >>> # endpoint using random  samples from the test dataset.
+      >>> #
+
+      >>> request_duration = 250
+      >>> end_time = time.time() + request_duration
+      >>> print(f"Endpoint will be tested for {request_duration} seconds")
+      >>> while time.time() < end_time:
+      >>>     csv_file = io.StringIO()
+      >>>     test_sample = test_df.drop(["fraud"], axis=1).iloc[[np.random.randint(0, test_df.shape[0])]]
+      >>>     test_sample.to_csv(csv_file, sep=",", header=False, index=False)
+      >>>     payload = csv_file.getvalue()
+      >>>     response = sm_runtime_client.invoke_endpoint(
+      >>>                                                  EndpointName=endpoint_name,
+      >>>                                                  Body=payload,
+      >>>                                                  ContentType="text/csv"
+      >>>                                                 )
+
+
+      >>> # Check the status of the endpoint
+
+      >>> # Check the instance counts after the endpoint gets more load
+      >>> response = sm_client.describe_endpoint(EndpointName=endpoint_name)
+      >>> endpoint_status = response["EndpointStatus"]
+      >>> request_duration = 250
+      >>> end_time = time.time() + request_duration
+      >>> print(f"Waiting for Instance count increase for a max of {request_duration} seconds. Please re run this cell in case the count does not change")
+      >>> while time.time() < end_time:
+      >>>     response = sm_client.describe_endpoint(EndpointName=endpoint_name)
+      >>>     endpoint_status = response["EndpointStatus"]
+      >>>     instance_count = response["ProductionVariants"][0]["CurrentInstanceCount"]
+      >>>     print(f"Status: {endpoint_status}")
+      >>>     print(f"Current Instance count: {instance_count}")
+      >>>     if (endpoint_status=="InService") and (instance_count>1):
+      >>>         break
+      >>>     else:
+      >>>         time.sleep(15)
+
+
+      >>> # Delete model
+      >>> sm_client.delete_model(ModelName=model_name)
+
+      >>> # Delete endpoint configuration
+      >>> sm_client.delete_endpoint_config(EndpointConfigName=endpoint_config_name)
+
+      >>> # Delete endpoint
+      >>> sm_client.delete_endpoint(EndpointName=endpoint_name)
+
+
+   ------------------
+
+------------------------------------------------------
+2.10 Creating AMIs and Golden
+
+
+  AMIs (also called: golden images)
+    - AMI is a pre-configured Amazon machine image.
+    - used as a reference for creating other EC2 instances that need the same configuration.
+    - typically includes: a base operating system, commonly used software packages, and any additional configuration
+      that is required on the instance (example: required scripts).
+
+  Why use AMIs:
+   - Using AMI lets you build EC2 instances in a consistent way.
+   - removes manual configuration steps,
+   - AMIs used with auto scaling to automatically provision a new infrastructure.
+
+  Creating an AMI
+    - You just select an instance that's already configured with all the required software and configuration settings
+      and the AMI is gonna be based on this instance.
+    - Select EC2 instance, under Actions, under Images and templates, you can select Create image,
+
+  Creating AMIs and Golden Exam Tips:
+     AMI (or Golden Images)
+       - pre-configured images that are based on an existing EC2 instance that you've configured with everything
+         needed to run your application.
+         - includes:  operating system, software packages, any configuration settings, or even scripts.
+       - avoid manual configuration steps.
+
+------------------------------------------------------
+2.11 Monitoring and Logging with CloudWatch
+
+
+  SageMaker integration with Amazon CloudWatch.
+    - sagemaker provides out of the box integration with CloudWatch
+    CloudWatch
+      - used to collect near-real-time utilization metrics for your training job instances.
+      - example: CPU utilization, memory utilization, and GPU utilization of your training job container.
+      - CloudWatch also integrates with SNS
+    Simple Notification Service (SNS)
+      - SNS can be configured to send you an email to notify you if a metric, like CPU utilization, reaches your
+        configured threshold.
+      - For example, if CPU utilization goes over 90% during a training job, then you might want to be notified.
+    CloudWatch
+      - used to monitor your AWS resources and your applications.
+      - includes CloudWatch logs,
+      CloudWatch Logs
+        - monitors and centrally store log files that are generated by applications running on EC2.
+        - this enables you to monitor and store and access your log files from your EC2 instances
+        - example: an error code appears in the log file multiple times, you might want to be notified.
+      CloudWatch events,
+        - near-real-time stream of system events which describe changes in AWS resources.
+        - For instance, think about a status change in a SageMaker training job or a change to hyperparameter tuning.
+        - these are changes that CloudWatch events can log and alert you about.
+        - same technology as Event Bridge.
+      CloudWatch alarms,
+        - used to create notifications based on thresholds that you configure.
+        - This allows you to watch CloudWatch metrics and logs and receive notifications when the metrics fall
+          outside of the thresholds that you configure.
+        - integrates with services including SNS (Simple Notification Service) and sES (Simple Email Service)
+          to automatically send you notifications so that you can take action.
+        - For example, to check a process if it's failed.
+
+  Monitoring and Logging with CloudWatch Exam Tips:
+      CloudWatch integration
+        - SageMaker provides out of the box integration CloudWatch
+        - used to collect near-real-time usage metrics for your training instances.
+          - metrics like CPU Memory and GPU utilization on your training job container.
+      CloudWatch Notifications
+        - CloudWatch can automatically notify you if something has gone wrong or a threshold has been exceeded.
+        - integrated with services like Simple Notification Service and Simple Email Service
+
+------------------------------------------------------
+2.12 Logging SageMaker API Calls with CloudTrail
+
+
+  SageMaker integrated with CloudTrail,
+    CloudTrail
+      - captures API calls in your AWS account.
+      - provides a record of actions taken by any user, role, or AWS service in your account.
+      - SageMaker API calls include: CreateTrainingJob, CreateModel, or CreateEndpoint.
+      Event History
+        - the most recent events from the last 90 days are available in the Event History in the CloudTrail console.
+        CloudTrail Trails
+          - if you want to store the CloudTrail data, you will need to create a trail.
+          - a trail will deliver the CloudTrail log files to an S3 bucket that you specify, allowing you to store
+            them indefinitely.
+      - using the information from CloudTrail, you can identify which users and accounts made a particular API call,
+        the source IP address from which the calls were made, and when the calls occurred.
+
+  Logging SageMaker API Calls with CloudTrail Exam Tips:
+    CloudWatch vs CloudTrail.
+      CloudWatch
+        - all about monitoring your systems and applications.
+        - get near realtime utilization metrics, like CPU utilization, for your training job containers.
+        - includes CloudWatch Logs , CloudWatch Events, and CloudWatch Alarms
+        CloudWatch Logs
+          - collects system and application logs.
+        CloudWatch Events
+          - uses the same technology as EventBridge
+          - used to notify you of status changes and events.
+        CloudWatch Alarms
+          - used to alert you, and send notifications based on the data that CloudWatch has collected.
+      CloudTrail
+        - provides an audit trail of actions in your AWS account,
+        - can be actions performed by a user, a role, or an AWS service like SageMaker.
+        - captures SageMaker API calls like CreateTrainingJob, CreateModel, or CreateEndpoint.
+        CloudTrail Trails
+          - to keep the CloudTrail logs long term, you need to create a trail, and then CloudTrail will store your logs
+            in S3.
+
+------------------------------------------------------
+2.13 Build ML Solutions for Performance, Availability, Scalability, Resiliency, and Fault Tolerance Review
+
+
+  After Model training - what comes next?
+    - deploy your Model.
+    SageMaker Endpoint model deployment
+      - The easiest way to deploy your model is to use a SageMaker endpoint,
+      - deploys your model to a container running on Elastic Container Service on EC2 or managed by SageMaker.
+    EC2 instance model deployment
+      - Alternatively, you could deploy to an EC2 instance,
+      - select one of the deep learning AMIs that are designed for machine learning workloads.
+      - select a deep learning instance type like a P5 instance.
+   custom Docker container running on ECS
+      - create a custom container and run it yourself in Elastic Container Service.
+
+  Applying Security Best Practices to ML Solution
+    remember the principle of least privilege.
+      - give people or entities only the access that they need to perform the actions required to do their role.
+      1. SageMaker supports execution roles to enable only the access that's needed.
+      2. protect any S3 data using encryption and properly configured bucket policies.
+      3. if you're using KMS encryption for your S3 buckets, be sure to add encrypt and decrypt access for those that need it.
+        - if you're configuring encryption on S3 using customer-managed KMS keys instead of the S3 default encryption, then
+          you will need to be sure that any role that is used to access your S3 data has permissions to encrypt and decrypt
+          data using the KMS key.
+
+  Deploy to Multiple AWS Regions and Multiple Availability Zones
+    - Avoid single points of failure,
+    - Deploy to multiple locations:
+       - use multiple availability zones
+       - use to multiple regions.
+       - failure of a single component, availability zone, or AWS region should not bring the system down.
+
+  VPC endpoints
+    - enable private communication between your VPC and AWS services.
+    - can be used by client applications hosted in your VPC to communicate with SageMaker endpoints
+    - public IP addresses, public subnets, or internet gateways are not needed.
+    - Network traffic between a VPC endpoint and supported AWS services, like SageMaker or S3, uses the AWS PrivateLink
+      service, which is a network internal to AWS.
+    - your data will never leave the Amazon network.
+
+  Deploying Multi-model endpoints
+    - Multi-model endpoints are ideal for hosting a large number of models that use the same machine learning framework
+      on the same shared container.
+    - cost-effective
+      - you get better utilization of your container instead of deploying a separate new container and endpoint for each
+        model you deploy.
+    - reduces your administrative overhead
+       - you only have one endpoint to configure instead of multiple endpoints and containers.
+
+  AMIs or Golden Images
+    - pre-configured images based on an existing EC2 instance that you've configured with everything needed to run
+      your application,
+    - including the operating system, any software packages, and configuration or scripts.
+    - avoids manual configuration steps, so you can be sure that everything is being configured in a consistent way.
+
+  Monitoring and Logging with CloudWatch
+    CloudWatch Integration
+      - SageMaker provides out-of-the-box integration with Amazon CloudWatch
+      - collects near real-time utilization metrics for your training job instance.
+      - For example, CPU, memory, and GPU utilization.
+    Notifications
+      - CloudWatch can also automatically notify you if something has gone wrong or if a threshold has been exceeded.
+    ClouldWatch Alarms
+      - CloudWatch Alarms integrates with services like Simple Notification Service and Simple Email Service to automatically
+       send you notifications.
+
+  CloudWatch vs CloudTrail.
+    CloudWatch
+      - about monitoring your systems and applications.
+      - get near realtime utilization metrics, like CPU utilization, for your training job containers.
+      - includes CloudWatch Logs , CloudWatch Events, and CloudWatch Alarms
+      CloudWatch Logs
+        - collects system and application logs.
+      CloudWatch Events
+        - uses the same technology as EventBridge
+        - used to notify you of status changes and events.
+      CloudWatch Alarms
+        - used to alert you, and send notifications based on the data that CloudWatch has collected.
+    CloudTrail
+      - provides an audit trail of actions in your AWS account,
+      - can be actions performed by a user, a role, or an AWS service like SageMaker.
+      - captures SageMaker API calls like CreateTrainingJob, CreateModel, or CreateEndpoint.
+      CloudTrail Trails
+        - to keep the CloudTrail logs long term, you need to create a trail, and then CloudTrail will store your logs
+          in S3.
+
+------------------------------------------------------
+
+Chapter 3 Recommend & Implement the Appropriate ML Services / Features for a Given Problem
+
+------------------------------------------------------
+3.1 Introduction to Available Services
+
+
+  Introduction to Available Services
+    Data ingestion and transformation,
+      Kinesis
+        - collect and process streaming data in real-time
+      AWS Glue
+        - an ETL (extract, transform, and load service) that lets you discover, prepare, and integrate data from
+          multiple different sources like S3, Redshift, RDS or DynamoDB databases,
+      Elastic MapReduce (EMR)
+        - used to process and analyze big data Using frameworks like Apache Hadoop, Spark, Hive, and Presto.
+
+  Amazon SageMaker
+    - provides a one-stop shop or suite of services that enables you to build, train, evaluate, and deploy machine
+      learning models into a production-ready hosted environment.
+
+  The Machine Learning Stack
+    infrastructure services
+      - support machine learning frameworks, services like EC2 instance types with specialist CPUs or GPUs,
+        ECS (Elastic Container Service) as well as pre-built deep learning AMIs, and docker images
+
+    Amazon SageMaker
+      - designed to remove the heavy lifting involved in building and training models, deploying to production, and
+        running models at scale.
+
+    Augumented with AI/ML services
+      - services that are augmented with AI and machine learning
+      - services like Textract, Transcribe and Translate, Lex, Polly, Rekognition and Comprehend.
+      - these are services that have very specific prebuilt functionalities that could be integrated into your applications.
+
+
+------------------------------------------------------
+3.2 Understanding AWS Service Quotas
+
+
+  what are service quotas?
+    - formally known as service limits,
+    - every AWS account has service limits or quotas by default.
+    - AWS limits the number of services that you're able to provision on a per account basis.
+    - For example, you can only provision so many EC2 instances, depending on instance type or region.
+    Centrally Managed
+      - Service quotas can be centrally managed across multiple services within AWS
+    Quota Increase
+      - for many services, you can request quota increases directly from within the AWS console.
+
+  Quotas in the AWS Console
+    - service quotas for recently used services, pending, and recently resolved quota increases.
+    - review a detailed list of all the service quotas within any AWS service
+    - view the status of any increase requests for the past 90 days.
+
+    Example:
+       For SageMaker batch transform jobs, the default for xlarge+ instance types is 0
+       - if I really need to use one of these instance types for my project, I can select transform instance type from the list
+         and then "request an increase at the acoount level" from within the console.
+       - quota increase requests only work if I have permission to request a quota increase.
+       Trusted Advisor
+         - can use Trusted Advisor to run service limit checks.
+         - In this account, We can see that there are no service limit issues.
+         - For example here, it's checking for limits associated with the number of auto scaling groups that can be configured
+           by default.  So we can see at a glance if we're approaching the limit for any of the quotas that exist in our account.
+         - if we've crossed the threshold of 80% of the limit, we can use Trusted Advisor to quickly check and identify
+           any services that are approaching their limit
+
+  Understanding AWS Service Quotas Exam Tips
+    - formerly known as service limits
+    - request a quota increase directly from within the AWS console,
+    - check your service limits (e.g. see if your account is over 80% of current service limits) by using Trusted Advisor.
+
+------------------------------------------------------
+3.3 Amazon SageMaker Built-In Algorithms
+
+
+  Built-in algorithms for supervised learning.
+
+    Use Case                            Problem Type                       Built-in Algorithm
+    ---------------------------         ----------------------------       --------------------------------
+    Spam or Not Spam?                   Binary Classification              Linear Learner, KNN, XGBoost,
+                                        Multi-class classification           Factorization Machines
+
+    Predict a Number value, like        regression                         Linear Learner, KNN, XGBoost,
+      house prices                                                           Factorization Machines
+
+    Predict sales of a new Product      Time Series Forecasting            SageMaker DeepAR forecasting
+      based on historical data
+
+
+  Built-in algorithms for Unsupervised learning.
+
+    Use Case                            Problem Type                       Built-in Algorithm
+    ---------------------------         ----------------------------       --------------------------------
+    Detect abnormal behaviouer          Anomaly Detection                  Random Cut Forest
+    e.g. abnormal sensor readings
+    from IoT devices
+
+    Group Similar objects, e.g.         Clustering / Grouping              K-Means
+    categorizing different types
+    of customers
+
+    Discover and identify the topics    Topic Modeling                     Latent Dirichlet Allocation (LDA),
+    in a a set of documents, e.g.                                          Neural Topic Modeling (NTM)
+    categorize a set of documents
+    based on their content
+
+
+  Built-in algorithms for Text Analysis
+
+    Use Case                            Problem Type                       Built-in Algorithm
+    ---------------------------         ----------------------------       --------------------------------
+    Group documents into pre-defined    Text Classification                Blazing Text,
+    Categories                                                             Text Classification Tensorflow
+
+    Convert text to a different         Translation                        Sequence-2-Sequence (Seq-2-Seq)
+    language
+
+    Summarize a document                Text Summarization                 Seq-2-Seq
+
+    Convert an audio file to text       Speech to Text                     Seq-2-Seq
+
+
+  Built-in algorithms for Image Processing
+
+    Use Case                            Problem Type                       Built-in Algorithm
+    ---------------------------         ----------------------------       --------------------------------
+    Label images based on content       Image /                            MXNet
+                                        Multi-label classification
+
+    Detect objects and people in        Object detection and               MXNet, TensorFlow
+    an image                            Classification
+
+    Categorize and tag every pixel      Computer Vision                    Semantic Segmentation
+    in an image, e.g. self driving
+    car that needs to detect
+    objects in its path
+
+
+
+  Custom Frameworks
+   - custom packages, code, or frameworks that are not available as a prebuilt option,
+     then you will need to build your own Docker image.
+   Create Image
+     - to do that, configure the image with the required packages and software, create your Docker file, and gather
+       your required packages, then when your image is ready,
+   ECS
+     - when image is ready, push it to Elastic Container Registry so that it can be deployed in SageMaker.
+
+
+  Amazon SageMaker Built-In Algorithms  Exam Tips:
+    Know the SageMaker built-in algorithms for:
+
+      Built-in supervised learning Algorithms
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        linear Learner, K-NN, XGBoost                 Binary Classification and Multi-class Classification
+          Factorization Machines
+
+        linear Learner, K-NN, XGBoost                 Regression
+          Factorization Machines
+
+        SageMaker DeepAR Forecasting                  Time Series Forecasting
+
+
+      Built-in Unsupervised learning Algorithms
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        Random Cut Forest                             Anomaly Detection
+
+        K-Means                                       Clustering / Grouping
+
+        Latent Dirichlet Allocation (LDA),            Topic Modeling
+        Neural Topic Modeling (NTM)
+
+      Built-in Text Analysis Algorithms
+
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        Blazing Text                                  Text Classification
+        Text Classificaiton TensorFlow
+
+        Seq-2-Seq                                     Translation
+
+        Seq-2-Seq                                     Text Summarization
+
+        Seq-2-Seq                                     Speech to Text
+
+
+      Built-in image processing Algorithms
+
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        MXNet                                         Image / Multi-label Classification
+
+        MXNet, Tensorflow                             object detection and Classification
+
+        Semantic Segmentation                         Computer Vision
+
+
+    Bring your own Docker Image
+      custom packages
+        - if code, or frameworks that are not available as a pre-built option
+      Create Docker Image
+        - then you'll need to build your own Docker image,
+      ECS
+       - when image is ready, add it to the Elastic Container Registry in order to run your model in SageMaker.
+
+
+   custom packages
+     - if code, or frameworks that are not available as a pre-built option,
+    Create Docker Image
+      - then you'll need to build your own Docker image,
+    ECS
+     - when image is ready, add it to the Elastic Container Registry in order to run your model in SageMaker.
+
+------------------------------------------------------
+3.4 Converting Speech to Text Using Amazon Transcribe
+
+
+  what is Transcribe?
+     - it's a fully managed speech-to-text service
+     - takes input speech and transcribes it to text.
+     input
+       - either stored audio files or streamed audio data,
+     use cases
+       - include creating subtitles or captions for a video or meeting notes.
+    under the hood
+      - using deep learning neural networs
+
+  Using transcribe
+    - example: transcribe some audio to create some text that can be used in a blog post.
+    steps:
+      Create
+        - create and run a transcription job.
+        - Transcribe will listen to what's being said and create a text file,
+     Review
+       - after the transcription is complete, you can review it to make sure it's correct.
+     Download
+       - resulting text file can be saved to S3 or downloaded.
+
+  Converting Speech to Text Using Amazon Transcribe Exam Tips
+     Transcribe
+       - a speech-to-text service,
+       - it takes speech as input and transcribes it to text.
+       - speech can be provided as either audio files or streamed data,
+       - resulting transcription can be reviewed and saved to S3 or downloaded.
+
+------------------------------------------------------
+3.5 Processing Natural Language Using Amazon Comprehend
+
+  what is Comprehend?
+     - Natural Language Processing (NLP) and machine learning to process text service
+     Natural Language Processing
+       - a way for computers to analyze, understand, and derive meaning from text.
+
+  Comprehend
+    - used to discover insights, and connections, and meaning that is hidden within text data.
+    - Examples include finding meaning and sentiment in documents, customer interactions, reviews, emails,
+      support messages, and social media feeds.
+    - uses deep learning technology to perform complex tasks like understanding human language.
+
+  what can Comprehend help us discover?
+   - to perform sentiment analysis on social media feeds or customer support interactions,
+   - identify the language of the provided text,
+   - analyze a set of documents to discover the primary topics included.
+   Note:
+     - even though it can help you identify primary topics, it's not gonna summarize your documents
+
+    Comprehend
+      common use cases
+        Voice of customer analytics
+          - gauge whether customer sentiment is positive, neutral, negative, or mixed based on the feedback that
+            you receive from support calls, emails, social media, and other online interactions.
+        Improved search
+          - Enable search engine to index key phrases, sentiment, and entities, providing context to searches
+          - This enables you to focus the search on the intent and the context of the articles instead of just
+            basic keywords.
+        Knowledge management and discovery
+          - analyze and organize a collection of documents by topic, and you can then use these topics to serve
+            more relevant conten to customers
+
+  Amazon Comprehend Exam Tips
+    Comprehend
+      - uses Natural Language Processing (NLP) to process text
+      - it's about reading and understanding text data.
+      - allows you to
+         - perform sentiment analysis,
+         - discover key phrases, topics, and languages,
+         - deliver intelligent search,
+            - allowing you to focus the search on the intent and the context of articles instead of just basic keywords.
+      - works with unstructured data like documents, customer interactions, reviews, emails, support messages, and
+        social media feeds.
+    Comprehend use cases
+      - performing sentiment analysis
+      - identifying topics in customer interactions.
+
+------------------------------------------------------
+3.6 Translating Language using Amazon Translate
+
+  what is Translate?
+    - neural machine translation service,
+    Language translation
+     - uses neural nets to deliver accurate and natural sounding language translation,
+    Large Scale Translations
+      - enables you to perform language translation at scale.
+      - quickly translate large volumes of HTML or text content using a single API call.
+    Supported Languages
+      - supports over 70+ different languages,
+      - can customize with your own brand names or product names or company terminology.
+
+  Translate Use cases
+    Product/support documentation
+      - translating product documentation or support documentation to multiple languages,
+    Real-time translation
+     - real-time translation for text-based content
+
+  Translating Language using Amazon Translate Exam Tips
+    Translate
+      - accurate, natural sounding language translation service
+      - a service used to quickly translate large volumes of HTML or text content using a single API call,
+      - allows you to add accurate and natural sounding translation to your applications.
+      large scale
+      - delivers language translation at scale
+      - in real-time using a wide range of languages
+      70+ languages
+      add your own terminology.
+
+------------------------------------------------------
+3.7 Building Chatbots using Amazon Lex
+
+
+  Amazon Lex
+    - allows you to build conversational interfaces into your applications using natural language models.
+    - when you are talking to an automated bot online, you may be interacting with the Lex service in the backend
+   Natural Language Understanding (NLU)
+     - Lex uses natural language understanding and advanced deep learning functionality to recognize and understand
+       user intent, to deliver a natural conversational experience.
+   Easy Integration
+     - seamlessly integrates with AWS Lambda for executing logic and taking action based on the content of the conversation.
+     - For instance, you might want to issue a customer with a refund or reschedule a delivery based on what was said in
+       the conversation.
+   Multi-platform compatibility
+     - works mobile devices, web applications, and chat services like Facebook Messenger.
+   Speech or text input
+     - automatic speech recognition, supporting both voice and text conversation.
+
+  Lex use cases
+    Virtual Agents and Voice Assistants
+      - build virtual agents and voice assistants, so creating virtual agents
+      - examples: arrange flight changes and handle password reset requests and more.
+    Automated responses
+      - automate frequently asked questions on your website so that users can ask questions and get a response at any time
+    Improving productivity with application bots.
+      - create chatbots that are able to interact with your customers out of ours and improve the productivity of your
+        customer support teams,
+      - automate your existing contact center scripts as chatbots.
+      - example: automated service from your dentist that contacts you to tell you it is time for a checkup,
+        then tells you what appointments are available and books you in.
+
+  Amazon Lex used in real world scenarios including:
+    e-commerce websites
+    healthcare applications
+    banking
+    hospitality industry as well.
+
+  Amazon Lex Exam Tips:
+    Lex
+      Natual Language Understand (NLU)
+      - uses natural language understanding to build conversational chatbots to deliver a natural conversational experience.
+    Lex use cases
+      - virtual agents and voice assistants
+      - automated responses
+      - application bots.
+
+------------------------------------------------------
+3.8 DEMO: Analyzing Pictures and Videos using Amazon Rekognition
+
+  Amazon Rekognition.
+    - a service that uses facial analysis technology to identify celebrities, determine liveness, and analyze human faces.
+
+   Demo:
+     - upload an image.
+     - use Amazon Rekognition to analyze the image
+     - use Rekognition to identify activities, objects, and people in a video.
+
+   Rekognition provided [image] Demos in console
+      AWS Console -> Rekognition -> <left side> -> Demos ->
+        Label detection
+          - label people, cars, etc in image
+        Image properties
+          - colors in images, brightness, sharpness, and contrast
+        Image moderation
+          - blur / unblur images
+        Facial analysis
+          - label faces along with sex, age range, smiling, appears to be happy, wearing glasses
+        Face comparison
+          - compares faces in 2 images
+        Face liveness
+          - verify real user in present in camera
+        Celebrity recognition
+        Text in image
+        PPE detection
+          - personal protective equiment detection (e.g. helmet, mask, globes)
+
+   Rekognition provided Video Demos in console
+      AWS Console -> Rekognition -> <left side> -> Video Demos ->
+        Stored Video Analysis
+          - identifies celebrities in video alongs objects and activities
+          - can download response as JSON file
+        Streaming Video Events
+          - sends notification when desired object (person, pet, ...) or activity (e.g. package delivery) is detected
+
+
+   Demo:
+     AWS console  -> Rekognition -> <left side> Demos -> Celebrity recognition
+         -> Google search, find image of celebrity (in JPEG or PNG format)
+         -> "upload or drag and drop" celebrity image
+
+   Example
+     British TV channels created an app that viewers could use to help them identify the celebrities
+       as they arrived at the wedding in near real time.
+
+  Rekognition exam Tips:
+    Rekognition
+      - image visual analysis service
+      - used to perform image and video analysis, detecting people, objects, and text in videos and images.
+      use cases:
+        - content moderation to identify harmful or offensive images
+        - identfy verification e.g. celebrities or for identification purposes
+        - identifying objects and text in images [or videos]
+
+------------------------------------------------------
+3.9 Extracting Text Using Amazon Textract
+
+
+
+  Amazon Textract.
+    - a service that extracts text and data from documents.
+    - read and process any kind of document.
+    - identify, understand, and extract specific data from scanned documents like PDFs, images, tables,
+      and forms
+    - supports handwritten text through optical character recognition (OCR)
+
+  Textract Use cases
+    automated ID processing.
+      - example: reviews driver's licenses and passports for customers applying for a loan.
+    Analyzing invoices
+      - example: system that reviews receipts for an intelligent expenses system that lets you upload your invoices
+        and receipts and reads and extract information
+      - allows you to upload PDFs, email invoices, images, or handwritten receipts.
+
+  Textract exam Tips
+    AWS have created a group of services that all use machine learning and deep learning technology to process text
+      Textract
+        - used to extract information from documents
+        example use case
+          automated ID processing application
+           - example: reviews driver's licenses and passports,
+      Transcribe
+        - speech-to-text service.
+        example use case:
+           - application that records meeting minutes.
+      Translate
+        - language translation service.
+        example use case
+          - restaurant in Italy that needs to translate their online menu from Italian to English.
+
+------------------------------------------------------
+3.10 Converting Text to Speech Using Amazon Polly
+
+  what is Polly?
+   - generate realistic, natural sounding speech from text that you provide
+   - can provide the text in a variety of different languages.
+   - You can select a voice that you like.
+   - After the speech is generated, the resulting audio can be streamed, saved to S3, or downloaded.
+   - designed to add natural sounding speech to your applications.
+
+  Polly Use cases
+    read a Blog post
+      - have Polly read out a blog post,
+    read a short story
+    read the contents of a website
+      - to help people who are visually impaired.
+
+
+  Polly exam tips
+    Deep Learning
+      - add realistic, natural sounding speech to your applications.
+    Provide the text
+      - You  provide the text, select a voice that you like, and Polly will generate speech that can be streamed,
+        downloaded, or saved to S3.
+    Languages
+      - supports a variety of different languages and voices.
+
+------------------------------------------------------
+3.11 Delivering Forecasts Using Amazon Forecast
+
+
+  Amazon Forecast.
+   - perform forecasting based on data that you provide.
+   - forecasting based on time-series data,
+      - historical data like sales data, prices, weather, and economic conditions.
+   - accurate demand forecasting
+     - uses this data to perform accurate demand forecasting.
+     - this is all about estimating how much demand there will be for a product in the future.
+
+  Amazon Forecasting - So, how does it work?
+    time-series data,
+      - could be your historical sales figures, web traffic, inventory, etc
+    Related Data
+      - optionally, you can also input what's known as related data,
+      - this could be data about holiday periods, product descriptions, promotions, etc
+      - this data is not part of the time-series data set, but it's related data that could help inform predictions.
+    Forecast
+      - the time-series data and optional related data gets uploaded to Forecast
+      select best forecast algorithm for the provided data
+        - Forecast then inspects it to understand the key attributes, and then it will identify the best algorithm to use
+          for forecasting.
+      Create Custom model
+        - It then trains and optimizes the selected model to create a custom model that's been customized for your data
+          and your use case.
+      Demand Forecast
+        - it's this custom model that delivers a demand forecast
+        - demand forecast can be viewed either in the AWS console, downloaded as a CSV file, or accessed using
+          the Amazon Forecast API for integration with your applications.
+
+  Amazon Forecasting Use cases
+    retail and inventory forecasting,
+      - helping retailers to reduce waste and maintain the right levels of stock by accurately forecasting product demand
+        and informing decisions about how much stock to order, how many products to manufacture, and how many items to
+        send to each retail location.
+    Staffing forecasting
+      - can also help with staffing and workforce planning to optimize for periods of high demand, ensuring that you've
+        got enough delivery drivers, warehouse personnel, customer support assistance, and call center staff to deal
+        with sales inquiries.
+    travel demand forecasting.
+      - forecasting foot traffic and visitor counts to help manage the operational costs of a business.
+    Amazon.com
+      - same technology that they use at Amazon.com for predicting demand for millions and millions of products.
+
+  Amazon Forecasting
+    - a fully managed service.
+    - no machine learning experience needed
+    - supports six different built-in forecasting algorithms.
+    - you can use it with virtually any time-series data.
+       - time series data like prices, promotions, economic performance metrics, store traffic, weather, or industry trends.
+       - basically any time-series data that's going to help you to produce accurate demand forecasts.
+
+   Amazon Forecasting - Companies that get forecasting right
+     - able to use the forecasting data to
+        - optimize workflows,
+        - increase productivity
+           - by having the right staff in place at the right time,
+        - reduce cost and reduce waste in their business
+           - because they're able to avoid over-ordering of stock and tying up their cash in excess inventory.
+
+  Amazon Forecasging Exam Tips:
+    Amazon Forecast
+      - used for demand forecasting (forecasting future demand for a particular product)
+      - a machine learning powered service that requires no machine learning expertise.
+      - automatically selects the best algorithm based on the attributes of your data.
+      - uses time-series data like historical sales data, prices, and data about economic conditions
+      - forecast customer demand to optimize supply decisions.
+      - the data that you need to provide is time-series data relating to stock inventory, workforce, travel, manufacturing,
+        and sales.
+
+------------------------------------------------------
+3.12 Detecting Fraud Using Amazon Fraud Detector
+
+
+  Amazon Fraud Detector.
+   - a fully managed service designed to identify fraudulent activities
+      - catch and prevent online fraud.
+   - build, deploy, and manage fraud detection models
+     - using a model that is customized using your historical data.
+     - no machine learning experience is required
+  - customize model with that you would like to use.
+
+  how To use Fraud Detector
+    S3 data
+      - upload your own historical fraud data to S3
+    Fraud detection model type
+      - select a fraud detection model type
+      - each model type is optimized to detect a specific type of fraud.
+      - For example: identity fraud or account takeover fraud.
+   Customized model
+     - Fraud Detector automatically inspects your data, performs feature analysis, trains, tests, and then deploys a
+       custom fraud detection model that is based on your data and requirements.
+   Real-time Fraud predictions
+     - For real-time fraud detection, there is a prediction API that can be used to receive fraud predictions for real-time
+       events, like new account creation or a transaction being attempted.
+     - fraud predictions are provided within milliseconds.
+   Fraud evaluation
+     - The model's output is a score ranging from zero to 1,000, which predicts the likelihood of fraud risk.
+     - you can then set up decision logic to interpret the fraud evaluation score and then take some action.
+       - for example: if high score, passing the transaction to a human investigator for review.
+   Integrate the Amazon Fraud Detector API
+     - integrate Fraud detector API into your website so that it becomes integrated,
+     - for example, with the account sign-up or order checkout workflow.
+
+  Types of online fraud,
+    - new account or account sign-up
+    - identity fraud
+    - account takeover,
+    - loyalty account fraud,
+    - guest checkout fraud,
+    - payment fraud,
+    - seller fraud
+
+  Amazon Fraud Detector Exam Tips:
+    Fraud Detector
+      - provides low latency online fraud protection for a variety of different types of online fraud related to buying
+        and selling online
+      - no machine learning expertise required.
+      Customized
+        - You provide your own data by uploading historical fraud data to S3.
+      Automated
+        - Fraud Detector automatically inspects your data, performs feature analysis, then trains, tests, and deploys
+          a custom fraud detection model.
+      prediction API
+        - you can integrate the Fraud Detector API into your website so that it becomes integrated with your application workflow,
+        - for example, integrated with the account sign-up or order checkout workflow.
+
+------------------------------------------------------
+3.13 Recommend & Implement the Appropriate ML Services / Features for a Given Problem Review
+
+
+  The Machine Learning Stack
+    infrastructure services
+      - support machine learning frameworks, services like EC2 instance types with specialist CPUs or GPUs,
+        ECS (Elastic Container Service) as well as pre-built deep learning AMIs, and docker images
+
+    Amazon SageMaker
+      - designed to remove the heavy lifting involved in building and training models, deploying to production, and
+        running models at scale.
+
+    Augumented with AI/ML services
+      - services that are augmented with AI and machine learning
+      - services like Textract, Transcribe and Translate, Lex, Polly, Rekognition and Comprehend.
+      - these are services that have very specific prebuilt functionalities that could be integrated into your applications.
+
+
+  Understanding AWS Service Quotas Exam Tips
+    - formerly known as service limits
+    - request a quota increase directly from within the AWS console,
+    - check your service limits (e.g. see if your account is over 80% of current service limits) by using Trusted Advisor.
+
+
+  Amazon SageMaker Built-In Algorithms  Exam Tips:
+    Know the SageMaker built-in algorithms for:
+
+      Built-in supervised learning Algorithms
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        linear Learner, K-NN, XGBoost                 Binary Classification and Multi-class Classification
+          Factorization Machines
+
+        linear Learner, K-NN, XGBoost                 Regression
+          Factorization Machines
+
+        SageMaker DeepAR Forecasting                  Time Series Forecasting
+
+
+      Built-in Unsupervised learning Algorithms
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        Random Cut Forest                             Anomaly Detection
+
+        K-Means                                       Clustering / Grouping
+
+        Latent Dirichlet Allocation (LDA),            Topic Modeling
+        Neural Topic Modeling (NTM)
+
+      Built-in Text Analysis Algorithms
+
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        Blazing Text                                  Text Classification
+        Text Classificaiton TensorFlow
+
+        Seq-2-Seq                                     Translation
+
+        Seq-2-Seq                                     Text Summarization
+
+        Seq-2-Seq                                     Speech to Text
+
+
+      Built-in image processing Algorithms
+
+        Built-in Algorithm                            problem Type
+        -----------------------------------           -----------------------------------------
+        MXNet                                         Image / Multi-label Classification
+
+        MXNet, Tensorflow                             object detection and Classification
+
+        Semantic Segmentation                         Computer Vision
+
+  Bring your own Docker Image
+    custom packages
+      - if code, or frameworks that are not available as a pre-built option
+    Create Docker Image
+      - then you'll need to build your own Docker image,
+    ECS
+     - when image is ready, add it to the Elastic Container Registry in order to run your model in SageMaker.
+
+
+  Textract, Transcribe, & Translate exam Tips
+    AWS have created a group of services that all use machine learning and deep learning technology to process text
+      Textract
+        - used to extract information from documents
+        example use case
+          automated ID processing application
+            - example: reviews driver's licenses and passports,
+          analysis invoices
+            - review receipts for an intelligent expense system
+      Transcribe
+        - speech-to-text service.
+        - speech can be provided as either audio files or streamed data
+        - output can be reviewed and downloaded
+        example use case:
+           - application that records meeting minutes.
+      Translate
+        - language translation service.
+        Language translation
+         - accurate and natural sounding language translation
+        Large Scale Translations
+          - enables you to perform language translation at scale.
+          - quickly translate large volumes of HTML or text content using a single API call.
+        Supported Languages
+          - supports over 70+ different languages,
+        customizable
+          - can customize with your own brand names or product names or company terminology.
+        example use case
+          - restaurant in Italy that needs to translate their online menu from Italian to English.
+
+
+  Amazon Comprehend Exam Tips
+    Comprehend
+      - uses Natural Language Processing (NLP) to process text
+      - it's about reading and understanding text data.
+      - allows you to
+         - perform sentiment analysis,
+         - discover key phrases, topics, and languages,
+         - deliver intelligent search,
+            - allowing you to focus the search on the intent and the context of articles instead of just basic keywords.
+      - works with unstructured data like documents, customer interactions, reviews, emails, support messages, and
+        social media feeds.
+    Comprehend use cases
+      - performing sentiment analysis
+      - identifying topics in customer interactions.
+
+  Amazon Lex Exam Tips:
+    Lex
+      Natual Language Understand (NLU)
+      - uses natural language understanding to build conversational chatbots to deliver a natural conversational experience.
+    Lex use cases
+      - virtual agents and voice assistants
+      - automated responses
+      - application bots.
+
+  Polly exam tips
+    Deep Learning
+      - add realistic, natural sounding speech to your applications.
+    Provide the text
+      - You  provide the text, select a voice that you like, and Polly will generate speech that can be streamed,
+        downloaded, or saved to S3.
+    Languages
+      - supports a variety of different languages and voices.
+
+
+
+  Amazon Forecasging Exam Tips:
+    Amazon Forecast
+      - used for demand forecasting (forecasting future demand for a particular product)
+      - a machine learning powered service that requires no machine learning expertise.
+      - automatically selects the best algorithm based on the attributes of your data.
+      - uses time-series data like historical sales data, prices, and data about economic conditions
+      - forecast customer demand to optimize supply decisions.
+      - the data that you need to provide is time-series data relating to stock inventory, workforce, travel, manufacturing,
+        and sales.
+
+  Rekognition exam Tips:
+    Rekognition
+      - image visual analysis service
+      - used to perform image and video analysis, detecting people, objects, and text in videos and images.
+      use cases:
+        - content moderation to identify harmful or offensive images
+        - identfy verification e.g. celebrities or for identification purposes
+        - identifying objects and text in images [or videos]
+
+
+
+  Amazon Fraud Detector Exam Tips:
+    Fraud Detector
+      - provides low latency online fraud protection for a variety of different types of online fraud related to buying
+        and selling online
+      - no machine learning expertise required.
+      Customized
+        - You provide your own data by uploading historical fraud data to S3.
+      Automated
+        - Fraud Detector automatically inspects your data, performs feature analysis, then trains, tests, and deploys
+          a custom fraud detection model.
+      prediction API
+        - you can integrate the Fraud Detector API into your website so that it becomes integrated with your application workflow,
+        - for example, integrated with the account sign-up or order checkout workflow.
+
+------------------------------------------------------
+
+Chapter 4 Apply Basic AWS Security Practices to ML Solutions
+
+------------------------------------------------------
+4.1 Available Services
+
+  Introduction to Available Services
+    IAM  (identity and Access Management)
+    S3 Bucket Policies
+    Security Groups
+    VPC (Virtual Private Cloud)
+    Encryption
+      - default encryption and KMS
+
+------------------------------------------------------
+4.2 AWS Identity and Access Management (IAM)
+
+
+  Identity and Access Management (IAM)
+    - manage users and their level of access to AWS services.
+    - it's important to understand IAM and how it works both for the exam and for using AWS in real life.
+
+  IAM Basics:
+   - centralized control of your AWS account,
+   - allowing you to configure granular permissions for access to AWS services.
+   - integrated with many different AWS services, including SageMaker,
+   - supports security compliance frameworks like:
+       PCI DSS: Payment Card Industry Data Security Standard
+       FedRAMP: Federal Risk and Authorization Management Program.
+         - a US government-wide initiative that helps the federal government adopt secure cloud services
+       SOC: Systems (or Service) Organization Control (SOC) 2 compliance
+         - is a cybersecurity framework that evaluates an organization's practices for managing customer data and systems.
+         - designed for service organizations that provide web-based services, such as cloud providers and software as a
+           service (SaaS) vendors
+      ISO: International Organization for Standardization
+
+  IAM users, Groups, and Roles
+    Users:
+      - end users needing to access AWS services,
+    groups:
+      - collections of users, under one set of permissions
+    roles
+      - can be assigned to users, applications and services to give access to AWS resources
+      - AWS Resources role example: a role can even be assigned to an EC2 instance.
+
+  IAM policy
+    - a document that defines one or more permissions
+    - can be attached to a user, group or role.
+    - Within a policy, we can also add a condition to limit access to certain actions and resources.
+       - For example: you could write a condition to specify that all requests must be sent using SSL
+
+   Example IAM Policy:
+     - in this top section, the policy is allowing access to create training jobs and create hyper parameter tuning
+       jobs within SageMaker.
+     - in next section, there's a condition and this is restricting to read only access for a specific elastic file
+       system directory.
+     - 3rd and 4th sections repeat the top 2 sections, except for read-only access in EFS to validation directory
+
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Sid": "AccessToElasticFileSystem",
+                  "Effect": "Allow",
+                  "Action": [
+                      "sagemaker:CreateTrainingJob",
+                      "sagemaker:CreateHyperParameterTuningJob"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                      "StringEquals": {
+                          "sagemaker:FileSystemId": "fs-12345678",
+                          "sagemaker:FileSystemAccessMode": "ro",
+                          "sagemaker:FileSystemType": "EFS",
+                          "sagemaker:FileSystemDirectoryPath": "/sagemaker/xgboost-dm/train"
+                      }
+                  }
+              },
+              {
+                  "Sid": "AccessToElasticFileSystemValidation",
+                  "Effect": "Allow",
+                  "Action": [
+                      "sagemaker:CreateTrainingJob",
+                      "sagemaker:CreateHyperParameterTuningJob"
+                  ],
+                  "Resource": "*",
+                  "Condition": {
+                      "StringEquals": {
+                          "sagemaker:FileSystemId": "fs-12345678",
+                          "sagemaker:FileSystemAccessMode": "ro",
+                          "sagemaker:FileSystemType": "EFS",
+                          "sagemaker:FileSystemDirectoryPath": "/sagemaker/xgboost-dm/validation"
+                      }
+                  }
+              }
+          ]
+      }
+
+
+  IAM Exam Tips:
+
+    IAM users, Groups, Roles, and Policies
+      Users:
+        - end users needing to access AWS services
+      groups:
+        - collections of users, under one set of permissions
+      roles
+        - can be assigned to users, applications and services to give access to AWS resources
+        - AWS Resources role example: a role can even be assigned to an EC2 instance.
+     Policies
+       - documents defining one or more permissions.
+       - can be attached to a user, group or role
+       - can include conditions to limit access to certain actions and resources.
+
+------------------------------------------------------
+4.3 S3 Bucket Policies
+
+
+  S3 is very secure by default
+    - All newly created buckets are private,
+    - only the bucket owner can upload, read or delete files
+    - default there is no public access.
+
+  S3 Bucket Policy
+    - JSON document attached to bucket defining the access to the bucket using a set of key value pairs
+    - access to the files in our S3 buckets is controlled using bucket policies,
+
+  Access Control to S3 Using Bucket Policy
+    - applied at a bucket level, the permissions granted by the policy apply to all objects within the bucket.
+    - grant access to a group of files which need to be accessed by the same people.
+    - bucket policies can also be used to deny access as well.
+
+  Example S3 Bucket Policy to allow access:
+    - this policy allows the named SageMaker execution role to perform certain S3 requests for the named S3 bucket.
+    - the specified actions that are allowed are GetObject, GetBucketLocation, and ListBucket,
+    - the specified resource are the specified bucket name and anything within that bucket as well
+
+      {
+          "Version": "2012-10-17",
+          "Statement": [
+
+              {
+                  "Effect": "Allow",
+                  "Principal":[
+                      "AWS"::"arn:aws:iam::012345678912:role/service-role/MyAmazonSagemaker-ExecutionRole",
+              },
+              {
+                  "Effect": "Allow",
+                  "Action": [
+                      "s3:GetObject",
+                      "s3:GetBucketLocation",
+                      "s3:ListBucket"
+                  ],
+                  "Resource": [
+                      "arn:aws:s3:::MyPrivateData",
+                      "arn:aws:s3:::MyPrivateData/*"
+                  ]
+              }
+          ]
+      }
+
+  Example S3 Bucket Policy to deny access:
+    - this policy denies any S3 requests that do not use HTTPS.
+    - the statement applies to specified bucket and the objects within it
+    - it has a condition that if AWS secure transport is false (if HTTPS is not used) then this statement will apply
+      and the action will be denied.
+
+      {
+          "Version": "2012-10-17",
+          "Id":"Enforce HTTPS",
+          "Statement": [
+
+              {
+                  "Effect": "Deny",
+                  "Principal":"*",
+                  "Action":"s3:*"
+                  "Resource": "arn:aws:s3:::sagemaker-us-east-1-012345678901",
+                  "Resource": "arn:aws:s3:::sagemaker-us-east-1-012345678901/*",
+                  "Condition":{
+                    "Bool":{
+                      "aws:SecureTransport":"false"
+
+                    }
+                 }
+              }
+          ]
+      }
+
+  S3 Bucket Policy Exam Tips
+    - by default, all newly created buckets are private.
+    - use bucket policies to allow and deny access,
+      - for example, allowing access to a specific IAM role, so think of the SageMaker execution role,
+      - use conditions in our policies to deny access if certain conditions are not met, like the use of HTTPS.
+
+------------------------------------------------------
+4.4 The Basics of VPCs
+
+
+  Virtual Private Cloud (VPC)
+    - virtual data center in the cloud.
+      - logically isolated part of the AWS Cloud where you can define your own network
+      - complete control over the virtual network, your own IP address range, subnets, route tables, and network gateways
+
+  Fully Customizable Network
+    - enables multi-layered security using network access control lists (ACLs) and security groups to control access to
+      the EC2 instances in your subnets.
+
+    Example 3-tier architecture
+      - best practice to configure these three distinct functions (Web, Application, & DB) in their own separate subnets.
+      - enable public access only to our web servers by configuring them in a public subnet
+      - keep our application servers and database servers in their own private subnets.
+      - the application servers can communicate with the web servers to receive requests and the database servers to
+        query and update data,
+      - the database servers, which contain our valuable data, can only communicate with the application layer and there's
+        no access to the data directly from the public internet.
+
+
+                -------------------        ----------------------         ---------------------
+                | Web Server      |        | Application server |         |  Database Server  |
+                |                 |        |                    |         |                   |
+                | public subnet   |        |   Private Subnet   |         |  Private Subnet   |
+                |                 |        |                    |         |                   |
+                |                 |        |   can only access  |         |  Can only access  |
+                |                 |        |    the web tier    |         |   App Tier        |
+    User <--------->         <-------------->   and DB tier   <-------------->                |
+                |                 |        |                    |         |                   |
+                ------------------          --------------------          --------------------
+
+
+
+   Example VPC with Public and Private Subnets
+     - example VPC with public and private subnets.
+     -  IP address range is 10.0.0.0/16.
+
+         VPC 10.0.0.0/16
+         |--------------------------------------------------------|
+         | |-----------------------|                              |
+         | |Public        Security |<--- Network <--- Route <--- IGW -
+         | |Subnet          Group  |       ACL        Table       |
+         | |10.0.1.0/24            |                              |
+         | |                       |                              |
+         | |  EC2                  |                              |
+         | |-----------------------|                              |
+         |                                                        |
+         | |-----------------------|                              |
+         | |Private       Security |<--- Network <--- Route <--- NAT -
+         | |Subnet          Group  |       ACL        Table     Gateway
+         | |10.0.2.0/24            |                              |
+         | |                       |                              |
+         | |  EC2                  |                              |
+         | |-----------------------|                              |
+         |--------------------------------------------------------|
+
+
+     Internet Gate
+       - need an internet gateway for our public subnet
+     Route Table
+       - a route table needs to be configured with a route to the internet gateway so that all internet traffic
+         goes via the internet gateway.
+     Network access control lists (ACLs)
+       - used to control the traffic that's allowed to pass through your network
+       - can be used to explicitly deny access to certain IP addresses or network addresses.
+     security groups,
+       - can be used to deny all traffic by default
+       - allow access to certain IP addresses, ports, and protocols,
+          - For instance, to allow access for web servers in the public subnet to communicate with our application servers
+            in the private subnet.
+     Subnets
+       - the public and private subnets are gonna have different controls allowing different access.
+       Private subnets
+         - a private subnet does not allow incoming traffic from the internet,
+         - only replies to outbound requests that have been initiated from within the private network,
+     Nat Gateway
+       - used to enable outbound internet access,
+       - A route table needs to be configured with a route to the NAT gateway so that all outbound internet traffic and
+         replies go through the NAT gateway,
+
+  what can we do with a VPC?
+    - launch instances into a subnet of our choosing,
+    - assign custom IP address ranges in each subnet,
+    - configure route tables between subnets,
+    - create an internet gateway and attach it to our VPC,
+    - control which networks can access our AWS resources,
+    - he security mechanisms: Network ACLs, Security Groups
+
+
+  VPC exam tips
+    - VPC is a logical data center in AWS.
+    Customizable
+      - configure them exactly how you want them.
+    Components
+      - include: subnets, route tables, network access control lists (NACLs), security groups, and internet gateways.
+    Subnets
+     - can either be public (allow public access from the internet through an internet gateway) or private (no internet
+       gateway but they may have outbound internet access through a NAT gateway)
+
+------------------------------------------------------
+4.5 Security Groups
+
+  security groups
+    - controls the traffic that is allowed to reach and leave the resources that it is associated with.
+    - virtual firewall.
+    - when you create a new security group, everything's denied by default, So all access will be denied by default.
+    - You only define the allowed traffic.
+    - All security group rules get evaluated before the logic is applied, so the most restrictive of the rules that
+      matches is going to win.
+    - security groups are stateful
+       - means that if an incoming request is allowed, then the outgoing response is automatically allowed.
+       - if an outgoing request is allowed, then the incoming response is automatically allowed as well
+
+  Security Group Components
+    Protocol
+      - when configuring a security group rule, you will need to know the protocol, so which protocol you're allowing,
+      - for instance, TCP, UDP, or ICMP,
+    Port Range
+      - which ports you're allowing,
+      - for instance, port 22 for SSH, 443 for HTTPS, or allowing a range of ports 1024 - 6535.
+    source or destination
+      -  which source or destination IP address ranges are you allowing in or out.
+
+   Security Group example
+     - with two rules, allowing inbound access to PostgreSQL, so the rule type is PostgreSQL.
+     - The protocol is TCP.
+     - the ports are both 5432
+     - the sources are:
+          - the first rule allows traffic coming from another security group,
+          - the second rule allows traffic coming from the 10.0.1.0/24 subnet.
+
+    Inbound Rule
+
+      Security group rule id         Type             Protocol        Port Range      Source
+
+      sgr-0feb033a6030e0b3         PostgreSQL         TCP             5432            Custom     sg-0fa29a03a5ed9c865
+
+      sgr-06692a8251ee6d1b         PostgreSQL         TCP             5432            Custom     10.0.1.0/24
+
+
+  Security Group exam Tips
+    - be aware that you can reference other security groups' IDs within your security group rules.
+
+   security groups Architecuture Diagram
+
+
+                              ----------------------------------------------------------
+                              |VPC 10.1.0.0/16                                         |
+                              | -----------------------------------------------------  |
+                              | | NACL                                              |  |
+                              | | ------------------------------------------------  |  |
+                              | | |Public 1c                                     |  |  |
+          source port 45535   | | |                                              |  |  |
+          Destination port 80 | | |   |---------------------------------------   |  |  |
+                              | | |   | Security Group                       |   |  |  |
+              ----------------------->|                                      |   |  |  |
+       internet               | | |   |     Web Server                       |   |  |  |
+              <-----------------------|                                      |   |  |  |
+                              | | |   |                                      |   |  |  |
+                              | | |   |----------O----------------------------   |  |  |
+                              | | |             /                                |  |  |
+                              | | -------------/----------------------------------  |  |
+                              | |             /                                     |  |
+                              | -------------/---------------------------------------  |
+                              --------------/-------------------------------------------
+                                           /
+                              inbound rule allowing port 80 from 0.0.0.0/0
+
+
+   security groups work within the context of a VPC?
+     - think of a web server in your VPC in a public subnet.
+     Network ACLs
+        - the first line of defense in the outer layer of the network.
+     Security Group
+       - after NACL, then security group rules are gonna be applied.
+       - if our security group includes an inbound rule allowing incoming requests on port 80 from 0.0.0.0/0, which is
+         the notation to cover all IP addresses on the public internet, then a request from the internet on port 80 is
+         going to be allowed.
+       - However, the reply from our web server is going to come back using a different port, which will usually be a
+         random port from the ephemeral port range.
+       - But with security groups, we don't need to worry about which port our systems are gonna reply back on, because
+        if the initial request was allowed, then the reply will also be allowed, because security groups are stateful.
+
+  Security Group exam tip
+    - a stateful virtual firewall controlling inbound and outbound access to EC2 instances in your VPC.
+    - deny all traffic by default, you need to specify the access that is allowed
+    - Each rule consists of a protocol, port range, and source or destination.
+    - source or destination can be an IP address, a network address, or another security group ID.
+
+------------------------------------------------------
+4.6 Encryption and Anonymization Best Practices
+
+
+  Encryption at rest
+    - a security best practice.
+    - helps you protect your data against unauthorized access.
+    - Your data is an asset, it's a valuable commodity,
+    - AWS services that store data persistently support encryption at rest:  EC2, SageMaker, S3, and Elastic File System (EFS), etc
+
+  S3 encryption options
+    Encryption in transit
+      - supports encryption in transit using SSL or TLS, which is transport layer security used for HTTPS connections.
+        -  Transport Layer Security (TLS) is the upgraded version of SSL
+    Encryption at rest
+      SSE-S3
+          - By default, new objects uploaded to S3 are encrypted using SSE-S3, using encryption keys that are managed by S3.
+      SSE-KMS
+         - uses encryption keys that you create and manage using the AWS KMS service.
+      SSE-C [customer provided key]
+        - lets you use KMS, but with your own customer provided encryption keys that you manage outside of the KMS service.
+      client-side encryption.
+        - you encrypt the data before uploading it to S3, and you manage the encryption and decryption process yourself.
+
+    Sensitive Data
+       - Use KMS to protect highly sensitive data
+
+  Key Management Service (KMS)
+    - a managed service that makes it easy for you to create and control cryptographic keys used to encrypt your data.
+    -  sensitive data that you really need to keep secret, like customer data, financial, sales, employee or health data.
+    - seamlessly integrated with many AWS services including:
+       - SageMaker, S3, Elastic File System, Athena, FSX, CloudWatch Logs, Kinesis, Elastic Block Store (EBS),
+         Elastic Container Registry (ECR), Elastic Kubernetes Service (EKS), Elastic MapReduce, RedShift, OpenSearch,
+         RDS, DynamoDB and CloudTrail, etc
+    - KMS is a great option to adhere to regulatory requirements about being in control of their cryptographic keys
+    - you control who has access to your KMS keys to encrypt and decrypt data,
+       - you can even follow who used the keys in CloudTrail.
+
+  customer master key (CMK)
+     - used to encrypt or decrypt data up to 4KB
+     - CMK used to generate, encrypt, and decrypt a data key.
+     - the data key that's used to encrypt and decrypt your data.
+     envelope encryption.
+       - two rounds of encryption,
+          - round 1: CMK  used to generate, encrypt, and decrypt a data key.
+          - round 2:  the data key that's used to encrypt and decrypt your data.
+
+   configuring a CMK (customer master key)
+     Create the CMK ---> Create Alias --> Description ---> Key Material
+       - create the CMK,
+       - create an alias, which is used to refer to the CMK,  create a description.
+       - decide where the key material is coming from.
+          - could be customer-provided or AWS-provided.
+          - key material is used to perform cryptographic functions like encrypting and decrypting your data.
+     Configure the key admin ---> Users --> Roles ---> Admin Permissions
+       - configure the key administrator.
+       - configure the users and the roles that are allowed to administer the key, but they are not allowed to use the key.
+     Enable Access ---> Users --> Roles ---> Usage Permissions
+       - Next, you enable access to the users and roles that are allowed to use the key to perform encryption and
+         decryption on your data,
+       - only those users and roles who have permission to use the key are going to be able to use it for cryptographic
+         functions, like encrypting and decrypting data.
+
+  Anonymization Best Practices.
+    PII
+      - Data sets that contain Personally Identifiable Information (PII) are often anonymized.
+    personal information
+      - A common example would be tables or columns in your data containing personal information about an individual,
+        like their first name and last name,
+    trace back to an individual
+      - tables with columns that, if joined with another table, can trace records in the data back to an individual.
+    Anonymize your data
+      - best practice to anonymize this kind of data, for instance, by replacing identifiable information with random
+        or non-identifying values.
+
+  Anonymize Data Using Athena.
+    S3 bucket 1    --- raw data ---->   Athena  --->  SHA-256 hash  ---- anonymized data ----> S3 bucket 2
+
+    S3
+      - e.g. sales data contains personally identifiable information (PII) like customer's names
+   Athena
+      - use Athena to analyze the data in S3.
+      - Athena is an interactive query service that lets you analyze and interact with data in S3 using standard SQL.
+      - Athena can be used to read the raw data containing the PII info that we want to anonymize, perform anonymization,
+        and write the anonymized data to another S3 bucket to be used by the machine learning algorithm.
+      - use Athena to run an SQL query that applies a hash function, like an SHA-256 bit hash, to convert the
+        customer's first and last name using the SHA-256 algorithm.
+      - instead of showing the names, it's anonymized the data, and instead, it's showing the result of the hash function.
+
+   Encryption Best Practices Exam Tips
+     Encryption
+       - helps to protect your data against unauthorized access,
+     KMS encryption
+       - gives you added protection with envelope encryption where you get a customer master key used to encrypt your data key,
+         which is then used to encrypt your data.
+     Key policies
+       - used to allow users and roles to use the keys to perform encryption and decryption operations.
+
+   Anonymization Best Practices Exam Tips
+     Data sets that contain sensitive data
+       - like personally identifiable information (PII) if you can't remove the sensitive fields, you can anonymize them instead
+     Anonymize the Sensitive fields
+       - for example, replace PII field with an SHA-256 bit hash of the original values.
+     Athena to Anonymize PII
+       - one way to do that is to use Athena to perform an SQL query to convert the sensitive data so that it can no
+         longer be recognized,
+       - you could create a hash of the original values to disguise them.
+
+------------------------------------------------------
+4.7 Apply Basic AWS Security Practices to ML Solutions Review
+
+
+  IAM Exam Tips:
+
+    IAM users, Groups, Roles, and Policies
+      Users:
+        - end users needing to access AWS services
+      groups:
+        - collections of users, under one set of permissions
+      roles
+        - can be assigned to users, applications and services to give access to AWS resources
+        - AWS Resources role example: a role can even be assigned to an EC2 instance.
+     Policies
+       - documents defining one or more permissions.
+       - can be attached to a user, group or role
+       - can include conditions to limit access to certain actions and resources.
+
+
+  S3 Bucket Policy Exam Tips
+    - by default, all newly created buckets are private.
+    - use bucket policies to allow and deny access,
+      - for example, allowing access to a specific IAM role, so think of the SageMaker execution role,
+      - use conditions in our policies to deny access if certain conditions are not met, like the use of HTTPS.
+
+
+  VPC exam tips
+    - VPC is a logical data center in AWS.
+    Customizable
+      - configure them exactly how you want them.
+    Components
+      - include: subnets, route tables, network access control lists (NACLs), security groups, and internet gateways.
+    Subnets
+     - can either be public (allow public access from the internet through an internet gateway) or private (no internet
+       gateway but they may have outbound internet access through a NAT gateway)
+
+
+  Security Group exam tip
+    - a stateful virtual firewall controlling inbound and outbound access to EC2 instances in your VPC
+    - deny all traffic by default, you need to specify the access that is allowed
+    - Each rule consists of a protocol, port range, and source or destination.
+    - source or destination can be an IP address, a network address, or another security group ID.
+
+
+  Encryption Best Practices Exam Tips
+    Encryption
+      - helps to protect your data against unauthorized access,
+    KMS encryption
+      - gives you added protection with envelope encryption where you get a customer master key used to encrypt your data key,
+        which is then used to encrypt your data.
+    Key policies
+      - used to allow users and roles to use the keys to perform encryption and decryption operations.
+
+  Anonymization Best Practices Exam Tips
+    Data sets that contain sensitive data
+      - like personally identifiable information (PII) if you can't remove the sensitive fields, you can anonymize them instead
+    Anonymize the Sensitive fields
+      - for example, replace PII field with an SHA-256 bit hash of the original values.
+    Athena to Anonymize PII
+      - one way to do that is to use Athena to perform an SQL query to convert the sensitive data so that it can no
+        longer be recognized,
+      - you could create a hash of the original values to disguise them.
+
+------------------------------------------------------
+
+Chapter 5 Deploy and Operationalize ML Solutions
+
+------------------------------------------------------
+5.1 Introduction to Available Services
+
+  Introduction to Available Services
+    testing models in production,
+      - using SageMaker Production Variants.
+    Managing model endpoints
+      - for instance, if you have different variants of the same model, maybe a production version and a new version
+        that you're testing.
+      - can handle that using an endpoint configuration.
+    Model retraining pipelines
+     - can be managed using step functions,
+    Monitoring model performance
+     - detect, and troubleshoot model performance issues.
+     - can be done using SageMaker Model Monitor.
+
+------------------------------------------------------
+5.2 Testing Models in Production
+
+
+  Perform A/B testing in Production
+    - with A/B testing, you can test different versions or variants of your models and compare how each variant performs.
+    - You can then select the best performing model to replace the previous one.
+   Production Variants,
+    - using Production Variants, you can test different model variants behind the same SageMaker endpoint.
+    - variants
+        - could be trained using different data sets, different algorithms, or diffent ML frameworks
+        - could be deployed to different EC2 instance types.
+    sagemaker endpoint
+      - production variants can all behind the same endpoint
+        - this means that nothing in your downstream application code really needs to change
+      endpoint load balancer
+        - the load balancer associated with the SageMaker endpoint distributes the invocation requests between
+          the different production variants.
+     using Weights to distribute variant requests
+       - You specify the traffic distribution for each variant using weights.
+       - If the weight of 0.8 for variant1 in the endpoint configuration and 0.2 for variant2, then 80% of incoming requests
+         are sent to variant1 and 20% to variant2.
+     Specifying target variant in HTTP request
+       - Alternatively, you can invoke a specific variant directly within each request by specifying the variant that you
+         want to use within the HTTP request.
+       - if we specify the target variant as variant2 in our HTTP request, it's going to send our request to variant2.
+
+  Testing models in Production Exam Tips:
+    - perform A/B testing in production by controlling the distribution of traffic to multiple variants.
+    variant weights
+      - specify the traffic distribution by specifying the weight for each production variant in the endpoint configuration.
+    traffic distribution
+      - SageMaker performs traffic distribution between the production variants based on the respective weights that we provide.
+      - For example, 0.2 and 0.8 for 20% and 80% distribution respectively.
+    specify target variant
+      - invoke a specific variant directly by specifying in the HTTP request the variant that you want to use.
+
+------------------------------------------------------
+5.3 Exposing and Interacting with Model Endpoints
+
+
+  Testing models with production variants
+    https://docs.aws.amazon.com/sagemaker/latest/dg/model-ab-testing.html
+    -> example SageMaker Python SDK used in this lesson is from this doc
+
+  Create Model Definition (using SageMaker Python SDK)
+
+    - using the SageMaker Python SDK, we can first create model definitions.
+    - we're defining the model names and the URI for our model images.
+    - Next, create two model objects using create_model from the SageMaker Python SDK.
+       - for model_1, specifying the container image to use and a URL specifying the model data.
+       - for model_2, specifying the container image to use and a URL specifying the model data.
+
+    #---------------------------------------------------
+      from sagemaker.amazon.amazon_estimator import get_image_uri
+
+      model_1 = f"xgb-fraud-pred1-{datetime.now():%Y-%m-%d-%H-%M-%S}"
+      model_2 = f"xgb-fraud-pred2-{datetime.now():%Y-%m-%d-%H-%M-%S}"
+      image_uri1 = get_image_uri(boto3.Session().region_name, 'xgboost', '0.90-1')
+      image_uri2 = get_image_uri(boto3.Session().region_name, 'xgboost', '0.90-2')
+
+      sm_session.create_model(
+          name=model_1, role=role, container_defs={ 'Image': image_uri1, 'ModelDataUrl': model_url1 }
+      )
+
+      sm_session.create_model(
+          name=model_2, role=role, container_defs={ 'Image': image_uri2, 'ModelDataUrl': model_url2 }
+      )
+    #---------------------------------------------------
+
+
+  Create a Production Variants for Each Model
+
+    - create production variance for each model, each with its own different model and resource requirements.
+      - this is where to specify the instance type, and the number of instances.
+        - this allows you to test your models on different instance types.
+    - If we set an initial weight of '1' for both our variants, this means that SageMaker's load balancer will send
+      50% of our requests to variant1 and 50% to variant2.
+    - if you create an endpoint using the AWS console or the SageMaker API and you don't specify an initial weight,
+      it's going to be set to one by default.
+
+    #---------------------------------------------------
+      from sagemaker.session import production_variant
+
+      variant1 = production_variant(
+                     model_name=model_1,
+                     instance_type="ml.m5.xlarge",
+                     initial_instance_count=1,
+                     variant_name='Variant1',
+                     initial_weight=1,
+                 )
+
+      variant2 = production_variant(
+                     model_name=model_2,
+                     instance_type="ml.m5.xlarge",
+                     initial_instance_count=1,
+                     variant_name='Variant2',
+                     initial_weight=1,
+                 )
+    #---------------------------------------------------
+
+
+  Deploy the two Variants to a Single SageMaker Endpoint
+
+    - Next, deploy our two variants to a SageMaker endpoint.
+    - define the endpoint name,
+    - deploy the endpoint, using 'endpoint_from_production_variants' to create the endpoint.
+      - during endpoint creation, SageMaker provisions the hosting instances that we specified in the endpoint
+        configuration settings.
+      - downloads the models that we specified and the container images for each production variant to deploy
+        on the new hosting instances.
+
+    #---------------------------------------------------
+      endpoint_name = f"DEMO-xgb-churn-pred-{datetime.now():%Y-%m-%d-%H-%M-%S}"
+      print(f"EndpointName={endpoint_name}")
+
+      sm_session.endpoint_from_production_variants(
+          name=endpoint_name,
+          production_variants=[variant1, variant2]
+      )
+    #---------------------------------------------------
+
+
+  Invoke the deployed models
+
+   - you can now send data to this endpoint to get inferences in real time.
+   - this step invokes the endpoint with included sample data, calling the endpoint and providing the data as a payload.
+   - the invocations will be split across each variant according to the weights that we set in the endpoint configuration.
+     (via production_variant() )
+
+    #---------------------------------------------------
+      # provide a subset of test data for a quick test
+      !tail -120 test_data/test-dataset-input-cols.csv > test_data/test_sample_tail_input_cols.csv
+      print(f"Sending test traffic to the endpoint {endpoint_name}. \nPlease wait...")
+
+      with open('test_data/test_sample_tail_input_cols.csv', 'r') as f:
+          for row in f:
+              print(".", end="", flush=True)
+              payload = row.rstrip('\n')
+              # invoke endpont with sample data
+              sm_runtime.invoke_endpoint(
+                  EndpointName=endpoint_name,
+                  ContentType="text/csv",
+                  Body=payload
+              )
+              time.sleep(0.5)
+
+      print("Done!")
+    #---------------------------------------------------
+
+  Invoke a Specific Production variant ("Variant1)
+
+     - if you need to invoke a specific production variant or a specific version of the model.
+        - specify TargetVariant in the call to invoke endpoint.
+        - First invoking 'variant1", followed by invoking 'variant2'
+
+    #---------------------------------------------------
+        response = sm_runtime.invoke_endpoint(
+            EndpointName=endpoint_name,
+            ContentType="text/csv",
+            Body=payload,
+            TargetVariant="Variant1"
+        )
+
+        response = sm_runtime.invoke_endpoint(
+            EndpointName=endpoint_name,
+            ContentType="text/csv",
+            Body=payload,
+            TargetVariant="Variant2"
+        )
+
+    #---------------------------------------------------
+
+
+  Updating Endpoint Weights
+
+    - After testing, we can update our endpoint weights, for instance, to shift 75% of the traffic to variant2
+      by assigning new weights to each variant using 'update_endpoint_weights_and_capabilities'
+    - this can easily be done in the console as well.
+    - We can then continue monitoring our model's performance, and when we're satisfied with the new variant,
+      we can update the weights to send 100% of the traffic to the new variant.
+       - to do that, set the new weight for variant1 to 0 and the weight for variant2 becomes 1.
+       - then all requests are going to be routed to variant2.
+
+    #---------------------------------------------------
+      sm.update_endpoint_weights_and_capacities(
+          EndpointName=endpoint_name,
+          DesiredWeightsAndCapacities=[
+              {
+                  "DesiredWeight": 25,
+                  "VariantName": variant1["VariantName"]
+              },
+              {
+                  "DesiredWeight": 75,
+                  "VariantName": variant2["VariantName"]
+              }
+          ]
+      )
+    #---------------------------------------------------
+
+
+  Exposing and Interacting with Model Endpoints Exam Tips
+
+    - we can deploy "multiple variants" to the same SageMaker endpoint.
+    - When we invoke the endpoint, SageMaker routes the incoming requests based on the "variant weight".
+      - For example, 0.2 and 0.8 results in a 20%/80% split.
+         -> note: weight may need to be an integer: e.g. 2  and 8
+    - can update the endpoint weights in the "endpoint configuration", so the application code does not need to be changed.
+    - to invoke a specific version of the model, specify the "TargetVariant" variable in our API call to invoke the endpoint.
+
+------------------------------------------------------
+5.4 Scheduling Retraining Pipelines with AWS Step Functions
+
+  Step functions
+    - serverless orchestration tool that lets you manage the logic of your workflow as a sequence of steps,
+    - automatically trigger and track each step and also log the state of each step,
+    - the output of one step is often the input to the next.
+
+  Step function orchestrating AWS workflows
+   - often used when orchestrating serverless workflows such as with Lambda functions
+   - they work with SageMaker for orchestrating steps in the machine learning lifecycle
+
+  AWS Step Functions
+    - create and visualize machine learning workflows or pipelines that pre-processed data, and then train and publish
+      machine learning models using SageMaker.
+    - automate the retraining of a machine learning model so that the retraining job starts when new training data
+      is made available.
+
+  Visualize SageMaker Workflow
+
+     Lamba: Invoke     ---> SageMaker: CreateTrainingJob  ---> SageMaker: CreateModel  --->  SageMaker: CreateTransforJob ---> end
+     Generate dataset       Train model (XGBoost)              Save Model                    Batch tranform
+
+
+    In this example of step functions workflow:
+      1. a Lambda function is used to generate the data set
+      2. create a training job
+      3. after training job is complete, create the model
+      4. perform a batch transform job to validate the model
+
+  Scheduling Retraining Pipelines with AWS Step
+    - step functions provide templates like above example that you can use as a starting point
+    - visualize the workflow as it executes.
+    - view errors that we can drill down and investigate and easily view the output of each step.
+
+    - in this example shown in slide, there's an error happening at the batch transform step,
+        - if we select the step, we get more information and we can see that there's an error relating to service limits or quotas.
+
+  Step Functions Exam Tips:
+    - step functions allow you to visualize your machine learning pipeline,
+    - automatically trigger and track each step in the workflow,
+      - the output of one step is often the input to the next,
+    - log the state of each step
+      - if something goes wrong, you can easily track what went wrong and where.
+
+------------------------------------------------------
+5.5 Monitoring Model Performance
+
+
+  CloudWatch
+    - monitor and view performance metrics for your SageMaker endpoints
+    - emits performance metrics that are relating underlying infrastructure serving the model
+       - e.g. latency and invocations for each model variant
+       - do not tell about model effectiveness
+
+  SageMaker Model Monitor
+   - monitor the quality of machine learning models in production.
+    1. continuous monitoring of real-time endpoints and batch transform jobs.
+    2. analyze model predictions to determine model performance and quality.
+    3. compare predictions with known ground truth data to evaluate the effectiveness of the model
+
+  SageMaker Model Monitor
+    Model performance can degrade over time because:
+      real-world data
+        - always changing.
+     changes
+       - in customer purchase patterns or changing economic conditions.
+     training data
+       - no longer be representative of real-world data
+
+  SageMaker Model Monitor
+    - able to monitor for a number of key issues.
+    detect drift in data quality
+      - for instance, if the production data distribution becomes very different to the data that was used in training.
+    Detect drift in model quality metrics
+      - like accuracy, precision, or root mean square error.
+    Monitor for bias in your model's predictions,
+      - could be introduced when there's a change in the production data.
+    Monitor from model explainability and feature attribution drift
+      - happens when there's a change in the relative importance of feature attributes in your data.
+    Set alerts to notify you
+      - so you can take action to maintain and improve model quality.
+      - For instance, retraining your model, checking the data that's coming in, or fixing model quality or data quality issues.
+
+  SageMaker Model Monitor - how does it work?
+
+         ----------------------------------
+         |    Monitoring Schedule         |
+         ----------------------------------
+
+         Baseline          SageMaker
+         recall: 0.539     Model Monitor     -----> Model   ----->  Predictions
+         Precision: 1.0        |
+                               |
+                               ----> Cloud Watch
+
+    - after you deploy your model, you can use SageMaker Model Monitor to continuously monitor the quality of
+       your machine learning model in real time.
+       1. create a baseline
+         - using the data that your model was trained with,
+         - the baseline is used to compute metrics and thresholds for model performance.
+         - for example, that the recall score for the model shouldn't drop below 0.539 or the precision shouldn't fall below 1.
+         - this baseline is used to compare with real-time predictions
+         - any violations of the baseline constraints are reported so you can take actions
+      2. set up a monitoring schedule
+         - to monitor the predictions made on the endpoint and this monitors the quality of the model against the baseline
+      3. integrates with CloudWatch
+         - to create alerts and send you notifications.
+
+  Monitor Model Performance exam Tips:
+    SageMaker Model Monitor
+      - used to monitoring the performance and effectiveness of the model itself
+      Monitor Data Quality
+        - used to detect drift in data quality.
+        - For instance, if the production data distribution becomes very different to the data used in training.
+      Monitor quality metrics
+        - for example, accuracy, precision or RMSE
+      Monitor for bias
+        - could be introduced if there's a change in the production data.
+      Monitor for model explainability and feature attribution drift
+        - happens when there's a change in the relative importance of feature attributes in your data.
+
+
+------------------------------------------------------
+5.6 Deploy and Operationalize ML Solutions Review
+
+
+
+  Testing models in Production Exam Tips:
+    - perform A/B testing in production by controlling the distribution of traffic to multiple variants.
+    variant weights
+      - specify the traffic distribution by specifying the weight for each production variant in the endpoint configuration.
+    traffic distribution
+      - SageMaker performs traffic distribution between the production variants based on the respective weights that we provide.
+      - For example, 0.2 and 0.8 for 20% and 80% distribution respectively.
+    specify target variant
+      - invoke a specific variant directly by specifying in the HTTP request the variant that you want to use.
+
+
+  Exposing and Interacting with Model Endpoints Exam Tips
+
+    - we can deploy "multiple variants" to the same SageMaker endpoint.
+    - When we invoke the endpoint, SageMaker routes the incoming requests based on the "variant weight".
+      - For example, 0.2 and 0.8 results in a 20%/80% split.
+         -> note: weight may need to be an integer: e.g. 2  and 8
+    - can update the endpoint weights in the "endpoint configuration", so the application code does not need to be changed.
+    - to invoke a specific version of the model, specify the "TargetVariant" variable in our API call to invoke the endpoint.
+
+
+  Step Functions Exam Tips:
+    - step functions allow you to visualize your machine learning pipeline,
+    - automatically trigger and track each step in the workflow,
+      - the output of one step is often the input to the next,
+    - log the state of each step
+      - if something goes wrong, you can easily track what went wrong and where.
+
+
+
+  Monitor Model Performance exam Tips:
+    SageMaker Model Monitor
+      - used to monitoring the performance and effectiveness of the model itself
+      Monitor Data Quality
+        - used to detect drift in data quality.
+        - For instance, if the production data distribution becomes very different to the data used in training.
+      Monitor quality metrics
+        - for example, accuracy, precision or RMSE
+      Monitor for bias
+        - could be introduced if there's a change in the production data.
+      Monitor for model explainability and feature attribution drift
+        - happens when there's a change in the relative importance of feature attributes in your data.
+
+------------------------------------------------------
+
