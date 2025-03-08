@@ -1,0 +1,1 @@
+{"name":"DrinkTypes","identifier":"HK9AMOG8ZH","description":null,"slotTypeValues":[{"synonyms":null,"sampleValue":{"value":"Soda"}},{"synonyms":null,"sampleValue":{"value":"Beer"}},{"synonyms":null,"sampleValue":{"value":"Wine"}}],"parentSlotTypeSignature":null,"valueSelectionSetting":{"resolutionStrategy":"ORIGINAL_VALUE","regexFilter":null}}
