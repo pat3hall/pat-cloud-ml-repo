@@ -1,0 +1,3460 @@
+------------------------------------------------------
+
+A Cloud Guru:
+Machine Learning on AWS Deep Dive
+
+------------------------------------------------------
+Chapter 1 Introduction
+------------------------------------------------------
+1.1 Course Introduction
+
+  Course Outline
+    Introduction
+    ML on AWS: Tools and Services
+    Preparing Data with SageMaker Data and Wrangler and Feature Store
+    Building and Training Models with SageMaker Studio
+    Deployment and Inference with SageMaker Studio
+    Security Best Practices for Machine Learning on AWS
+    Conclusion
+
+
+   Prerequisties
+    - Introductory knowledge of machine learning concepts
+    - Familiarity with Core AWS services and SageMaker Studio
+    - Nice to have: Python and Jupyter Notebooks
+
+------------------------------------------------------
+1.2 How to follow Along with Demos in this Course
+
+  Github Repo for course files
+    https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive
+
+  Create an AWS Account
+    -> Walks through creating a free account
+
+
+  Create A SageMaker Domain
+     SageMaker Domain:
+       - A domain includes an associated EFS volume; a list of authorized users; and a variety of security,
+         application, policy, and VPC configurations.
+       - Each user in a domain receives a personal and private home directory within the EFS for notebooks,
+         Git repositories, and data files.
+
+     -> AWS -> SageMaker -> Domains ->  Create Domain -> select "Quick Setup" -> Setup ->
+        Users: pat -> Add user profile ->  User Profile: Name: aws-ml-deep-dive-ag-pat,
+        Execution Role: <default: AmazonSageMaker-ExecutionRole-*> -> Next ->
+        Juptyer Lab Version: <default: Juptyer lab 3.0 -> Next -> Next -> Submit
+
+
+
+  Requesting Instance Quota Increases
+     Instance types Used in demos:
+            ml.m4.xlarge  for transform job usage
+            ml.m5.xlarge  for processing job usage
+            ml.m5.4xlarge for processing job usage
+
+    -> AWS -> Service Quotas -> AWS Services: select "SageMaker" ->
+      ->  click on "ml.m4.xlarge for transform job usage" -> request an increase at account level: Increase quota value: 1 -> request
+          case id: 13984272471: Limit name: ml.m4.xlarge for transform job usage
+      ->  click on "ml.m5.xlarge for processing job usage" -> request an increase at account level: Increase quota value: 1 -> request
+          -> approved
+      ->  click on "ml.m5.4xlarge for transform job usage" -> request an increase at account level: Increase quota value: 1 -> request
+           Case ID 13984416901: Limit name: ml.m5.4xlarge for processing job usage
+
+
+  Setting Up an AWS Budget
+     -> need to be logged in as root account
+     -> AWS -> Budgets -> Create Budget -> Budget Setup: Use a template (simplified); Templates: Monthly cost budget;
+       Budget Name: "Monthly Training Budget $20", Budget Amount: 20, email recipients: jsmith@gmail.com -> Create Budget
+
+     -> AWS -> Budgets -> Create Budget -> Budget Setup: Use a template (simplified); Templates: Monthly cost budget;
+       Budget Name: "Monthly Training Budget $50", Budget Amount: 50, email recipients: jsmith@gmail.com,jonsmith@gmail.com -> Create Budget
+
+
+  Downloading the Course Files from GitHub
+    option 1: Install GitHub Desktop
+       https://docs.github.com/en/desktop/installing-and-authenticating-to-github-desktop/installing-github-desktop
+       -> install desktop:
+       -> desktop -> login -> Clone a Repo ->
+          repo path:  https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive
+          local path: C:\Users\pat\Documents\AWS training\Machine Learning on AWS Deep Dive\Machine-Learning-on-AWS-Deep-Dive-GitHub
+          -> clone
+
+     Web Browser:
+        https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive
+        Code -> Download zip
+
+------------------------------------------------------
+
+Chapter 2 Machine Learning on AWS: Tools and Services
+
+------------------------------------------------------
+2.1 Section Introduction
+
+  SageMaker
+    - a cloud-based platform to build, train, and deploy ML models
+
+  The SageMaker Suite
+    StageMaker Studio Lab
+      - Free and easy to set up
+      - For ML learning and experimenting
+    StageMaker Canvas
+      - No-code solution
+      - for business and data analysis
+      - for users that have ML problems to solve, but not deep ML expertise)
+    StageMaker Studio
+      - The real deal
+      - For engineers and scientists
+      - for users that have ML expertise
+
+  AWS Artificial Intelligences and Machine Learning Services
+    AI Services
+      Vision:
+        Recognition Image
+          - facial recognition
+          - Image search
+          - Sentiment Analysis
+          - Image Moderation
+          - Face-based verification
+        Recognition Video
+          - Video Search
+          - Video moderation
+        Textract
+          - Document import and processing
+          - Text extraction for natural language processing (NLP)
+      Speech:
+        Polly
+         - text to speech service
+         - use cases
+           - ebooks and training material for the visually impaired
+           - Announcement Systems
+        Transcribe
+          - speech to text
+          - use cases
+            - closed captioning and subtitles
+            - transcribing customer service calls
+      Language:
+        Translate
+          - Natural-sounding Language translation (e.g. input english and output french)
+          - Localization of applications [for a global audience]
+          - Multilingual sentiment analysis
+        Comprehend and Comprehend Medical
+          - Natural Language Process (NLP) of txt
+          - Make sense of unstructured data such as emails, social media, reviews, and support tickets
+      Chatbots:
+        Lex
+          - Conversational interface that uses the same technology as Amazon Alexa
+          - use cases:
+            - Call center bots
+            - information bots (e.g. weather forecast)
+            - productivity bots (e.g. scheduling meetings, booking travel, etc)
+      Forecasting:
+        Forecast
+          - Time-series forecasting that takes in historical and related data
+          - Use cases:
+            - Sales Forecasting
+            - financial planning
+            - resource planning
+      Recommendations:
+        Personalize
+          - real-time personalization and recommendations
+            - use cases:
+              - similar item recommendations
+              - content recommendations
+              - personalized rankings
+
+
+    ML Services
+      Sagemaker
+        Capabilities:
+          - Goverance
+          - Ground Truth
+            - about labeling your data (e.g. label dog breeds in pics)
+          - Notebooks
+          - Processing
+          - Training
+          - Inference
+          - Edge Manager
+            - manage models for edge devices (e.g. IoT devices)
+          - Augmented AI
+            - augument AI workflows with human reviews (e.g. content moderation, text extraction and comprehension )
+          - Marketplace
+            - where you can purchase pre-built models and datasets
+
+    ML Frameworks + Infrastructure
+      ML Frameworks
+        Tensorflow
+          - Created by Google
+          - supports Python, C++, and R
+        Mxnet
+          - Created by Apache
+          - supports Python, C++, R, Julia, Perl, and more
+        Pytorch
+          - Created by Facebook
+          - a Python library
+          - favored for its flexibility and speed
+      ML Interfaces
+        - create for more non-developer types
+        - are an API to the framework
+        Gluon
+          - Joint venture between AWS and Microsoft
+          - Works with MxNet
+        Keras
+          - Created by Francois Chollet (currently with Google)
+          - works with TensorFlow
+      Infrasturucture
+        - fully managed and mostly abstracted with SageMaker [with options to directly manage infrastructure resources]
+        - many ML-optimized ec2 instances available (e.g. inferencia chip)
+        - Containers used for training and inference (ECS & EKS)
+        ec2
+        infrenentia (inf1)
+          - AWS Inferentia is a custom machine learning chip designed by AWS that you can use for high-performance inference predictions.
+          - upto 2.3x throughput and 70% lower cost compared to GPU based chips
+          - to use the chip, set up an EC2 instance and use the AWS Neuron software development kit (SDK) to invoke the Inferentia chi
+        ECS
+        EKS
+        DL Containers & AMIs
+        Elastic Inference
+          - lower costs with Elastic Inference by attaching a CPU powered exceleration to your instance
+        Greengrass
+          - Greengrass used for IoT ML - allows devices to act locally [e.g. if not always connected to the internet]
+
+  Summary
+    SageMaker
+      - allows a collaborative approach to building, training, and deploying ML models
+    AL services
+      - Numberous real-world applications - from Image Recognition to voice and a lot more
+    ML Services
+      - Wrapped up in SageMaker Capability (e.g. notebook, data processing, model training, & more)
+    Frameworks and Infrastructure
+      - provide more control and customization for ML Practioners
+
+------------------------------------------------------
+2.2 SageMaker Canvas Overview
+
+  SageMaker Canvas Costs
+  https://docs.aws.amazon.com/sagemaker/latest/dg/canvas-manage-cost.html
+
+  Use Cases
+
+    StageMaker Canvas
+      - No-code solution
+      - for business and data analysis
+      - for users that have ML problems to solve, but not deep ML expertise)
+
+    Business Analyst or Data Analyst
+      they want to:
+        - analyze and process data using an intuitive interface
+      they don't want to:
+        - depend on data science and data engineering teams
+        - learn how to code
+        - learn the details of how machine learning works
+
+    Example Use Case 1:
+      - Analyst is working with an inventory manager wants to predict whether a product will ship on time
+      - have datasets for:
+        - product catalog
+        - shipping history
+
+    Example Use Case 2:
+      - Analyst is working with an sales manager wants to reduce customer churn
+      - have datasets for:
+        - customer service call history
+        - whether customers left
+  Cost
+    Session Charges
+      Time that your are using or are logged into SageMaker Canvas
+        - charged for just being logged in!
+        - explicitly log out of Canvas
+      Training model Charges
+        - charge for training models based on the size of the dataset
+
+  Summary:
+
+    SageMaker Canvas
+      - used by Business analysts and data analysts
+      - provides a no-code, friendly interface to analyze and process data
+
+    Costs
+      Session Charges
+        - Time logged in or using Canvas
+          - Remember to log out!
+       Training Charges
+         - based on the size of your dataset
+
+------------------------------------------------------
+2.3 Setting Up SageMaker Canvas
+
+  Overviewing the Dataset
+    Customer Churn scenario
+      Cell Phone Company
+        - Wants to predict whether customers will leave
+        - has data on customer plans, usage, and support calls
+
+    The Basic Machine Learning Flow
+      Training data:
+        - phone plan, day minutes, evening minutes, International charges
+      Algorithm identifies patterns
+      Trained Model - predicts if customer is going to leave
+
+    Demo Dataset: demos/S02/start/churn-All.csv (~3300 rows)
+         features (columns): State,Account Length,Area Code,Phone,Int'l Plan,VMail Plan,VMail Message,Day Mins,
+                             Day Calls,Day Charge,Eve Mins,Eve Calls,Eve Charge,Night Mins,Night Calls,Night Charge,
+                             Intl Mins,Intl Calls,Intl Charge,CustServ Calls,Churn?
+
+  Launching the SageMaker Canvas App
+     - SageMaker Canvas provides a 2-month free tier
+     - Ouside the free tier, the ~cost for this lesson $0.50
+
+
+    To launch:
+      -> AWS -> SageMaker -> Canvas -> Select user profile -> Open Canvas
+      OR
+      -> AWS -> SageMaker -> Domains -> Select [click in to] domain  ->  right click on "Launch" for selected user profile -> Canvas
+
+    to logout
+       -> click on "logout" (top right)
+
+
+------------------------------------------------------
+2.4 Running Predictions in SageMaker Canvas
+
+  SageMaker Canvas Pricing Page
+    https://aws.amazon.com/sagemaker/canvas/pricing/
+  cost - ~$30
+
+  session charge: 1.90 /hr
+
+  Training charge
+      Number of cells	Price
+    First 10M cells	$30 per million cells
+    Next 90M cells	$15 per million cells
+    Over 100M cells	$7 per million cells
+
+  Splitting the Dataset and Upload It to S3
+     - split data to training (70%) [churn-TRAINING.csv] and test (30%) [churn-TESTING.csv] sets
+
+  Create the Model in Canvas [for this dataset]
+  -> AWS -> S3 -> Create Bucket -> Name: sagemaker-canvas-ml-deep-pat -> create bucket
+
+    -> select "sagemaker-canvas-ml-deep-pat" bucket -> upload -> select "churn-TRAINING.csv" & "churn-TESTING.csv" -> upload
+
+  Performing a Quick Build [and output a model]
+    - Creating a new model in Canvas
+    - Importing the dataset from S3
+
+  Running Predictions
+
+  Deleting Resources and Logging Out of Canvas
+
+    Launch Canvas:
+      -> AWS -> SageMaker -> Domains -> Select [click in to] domain  ->  right click on "Launch" for selected user profile -> Canvas
+
+      -> Models <left tab> -> New Model -> Customer-Churn -> Create Dataset -> Tabular -> name: churn-TRAINING -> Import -> S3 -> "sagemaker-canvas-ml-deep-pat" -> "churn-TRAINING.csv" -> create dataset
+         -> select dataset
+
+  Note: Now you need to upload dataset before creating model so you can assign dataset to model when creating the model!!!
+
+   -> select "Customer-Churn" model ->
+       select predict column: Churn?
+
+   Performing a build
+     - Standard build takes 2 - 4 hours
+     - Quick build takes 2 - 15 minutes, but models can't be shared
+        -> <top-right> Quick Build -> Quick Build
+
+   Running Predictions
+     - Importing the test dataset
+     - reviewing the prediction results
+       -> Predict -> Select -> Manual -> select "churn-TESTING" -> Generate Predictions -> View
+
+  Delete Resources and logout of Canvas
+    -> deleting the model and datasets in canvas
+    -> logout of Canvas
+    -> Empty bucket and delete bucker
+
+  Summary
+    Preparing the Data
+      - split the churn dataset 70/30 into training and test sets
+      - created an S3 bucket and uploaded the CSV files
+   Creating the Model
+     - imported th training data from S3
+     - Used quick build to create the model
+   Running Predictions
+     - Used the test data to get predictions on whether customers will churn
+   Deleting Resources and Logging Out
+
+------------------------------------------------------
+2.5 SageMaker Studio Lab Overview
+
+  Sign-up Page for SageMaker Studio Lab
+  https://studiolab.sagemaker.aws/
+
+  StageMaker Studio Lab
+    - Free and easy to set up
+    - For ML learning and experimenting
+
+  StageMaker Studio Lab Use Case
+     - Want to
+       - Learn and experiment with ML
+     - Don't Want to
+       - Create and AWS account
+       - Set up infrastructure and security roles
+       - provide credit card info
+       - pay ofr an account or resources
+
+   Studio Labs Example Use Cases
+     Student:         wants a free and easy ML env where they can learn and practice their new skill
+     ML practitioner: wants a frugal way to prove out models and experiments before moving them to SageMaker Studio
+
+   Studio Labs Costs
+     - Free (just a valid email address)
+     - Compute: 12-hour CPU session OR 4 hour GPU session - no limit to number of sessions   -> now 8-hours CPU session
+     - Storage: 15 GB of free long-term storage
+     - Memory:  16 GB RAM
+
+   Summary:
+      SageMaker Studio Lab
+        - provides a free, easy ML environment to learn and experiment
+      Studio Labs Costs
+        - Free (just a valid email address)
+        - Compute: 08-hour CPU session OR 4 hour GPU session - no limit to number of sessions
+        - Storage: 15 GB of free long-term storage
+        - Memory:  16 GB RAM
+
+------------------------------------------------------
+2.6 Setting Up a SageMaker Studio Lab Account
+
+  Create an Account
+
+     https://studiolab.sagemaker.aws/ -> Request Account -> enter info (Name, email, why) -> request account -> check email
+
+     -> Wait for approval FAQ says 1 to 5 days
+     -> Create account: jsmith
+
+
+  Overviewing the UI and Environment
+    -> after approved -> sign-in
+
+    Starting a project
+      -> select compute type (CPU or GPU) -> start with CPU
+         -> after runtime is up, restart runtime (all files from previous project will be saved)
+           -> Start Runtime (takes a few min to spin up)
+           -> Open Project
+
+    Selecting a Compute options (CPU or GPU)
+    - Getting stated with a Jupyter Notebook
+
+  Summary
+    Creating an Account
+      - request a free account puts you on a waitlist
+      - can take 1-5 days to get account approved
+    Creating a  Project:
+      - compute options are CPU (12 hours [now 8 hours]) or GPU (4 hours)
+      - It's quick and easy to start working with Jupyter Notebooks in Studio Labs
+
+------------------------------------------------------
+2.7 Exploring the SageMaker Studio Lab Examples
+
+  Exploring the SageMaker Studio Lab Example Notebooks
+    - Cloning the studio lab example notebooks
+         -> after runtime is up, restart runtime (all files from previous project will be saved)
+           -> Start Runtime (takes a few min to spin up)
+           -> Open Project ->
+              "Clone Sagemaker Studio Lab Example Notebook" -> accept defaults:
+              URL: https://github.com/aws/studio-lab-examples.git
+              Project: sagemaker-studiolab-notebooks
+              deselect "... Build Conda Environment"
+              -> clone
+              -> Under "examples" -> select "geospatial-data-science" -> CA_data
+
+  Creating a Conda Environment
+      - before running, you must build an environment [e.g. Conda] [yml file]
+         - environment contains the python packages and dependencies required for your env to run
+      - Building the environment .yml file
+        -> in "CA_data" -> click on " Y: environment.yml" -> right click -> "Build Conda Environment" -> Confirm -> click "OK"
+      - Activating the environment
+         -> after build env completes -> enter "conda activate geo-data"
+            -> select "geospatial_analysis.ipynb -> select "default:python" -> Select
+            -> open tab icon -> shutdown: Kernel "Getting Started.ipynb" (and tab), and terminal 1
+
++++++++++
+environment.yml:
+++++++++++++++
+name: geo-data
+dependencies:
+  - python=3.9
+  - pip
+  - pip:
+      - sentinelhub==3.4.1
+  - conda
+  - conda:
+    - ipykernel
+    - pandas==1.2.4
+    - numpy==1.20.1
+    - matplotlib==3.3.4
+    - geopandas==0.10.2
+    - shapely==1.8.0
+    - plotly_express==0.4.1
+    - rasterio==1.2.10
+    - earthpy==0.9.4
+++++++++++++++
+
+  Running a Sample Notebook for Geospatial Data
+    - Importing and installing packages
+    - running code blocks in the notebook
+      -> since build did not complete, need to install packages (select block, remove #, then click on run icon <at top>
+               add %pin install folium" to install package list
+               -> restart kernel (restart icon at top)
+               -> import packages
+               -> download data
+               -> on Stagemaker Studio Lab -> "stop runtime"
+
+  Shutdown Kernel and Close tabs
+  -> shudown kernels
+  -> Close All [tabls]
+
+
+  Summary
+
+    Sample Notebooks
+      - there are several notebooks avaiable to clone from GitHub
+      - Build an environment to pull in all the necessary packages and dependencies
+      - Follow along with the instructions and run the code blocks
+
+------------------------------------------------------
+2.8 SageMaker Studio Overview
+
+  Use Cases
+
+    StageMaker Studio
+      - The real deal
+      - For engineers and scientists
+      - for users that have ML expertise
+
+    Want to:
+      - Perform all steps in the ML lifecycle from a single interface
+      - work with a powerful, comprehensive ML toolset
+
+    Example Use Case
+      - a ML team needs a way to colloborate across the lifecycle of a project - from data preparation all
+        the way to prediction
+         - different roles of team:
+            Data Analyst:   prepare and clean data
+            Developers:     working on the algorithm
+            Data Scientist: working experimental prediction
+
+  How SageMaker Studio Support the Machine Learning Lifecycle
+     For data Prep (fetch, clean, prepare):                  SageMaker Data Wrangler and Feature Store
+     For Train Model and Evaluate Model:                     SageMaker Studio Notebooks, Clarify, and Experiments
+     For Deployment and Monitoring/Collect data / Evaluate:  Sagemaker Endpoints, Batch, Transform, Pipelines, Model Monitor
+
+     -> will use StageMaker for the rest of the demos
+
+  Costs
+    Free Tier: Available for the 1st two months
+    On-Demand and Saving Plans: Cost vary based on workloads
+      https://aws.amazon.com/sagemaker/pricing/
+
+  Summary:
+    StageMaker Studio
+      - A powerful, comprehensive toolset for machine learning engineers and scientist
+      - supports the end-to-end ML lifecycle
+      - the solution used for demos in the rest of the course
+    Costs:
+      Free tier for the 1st 2 months
+      - After the 1st 2 months, costs will vary
+
+
+------------------------------------------------------
+2.9 Setting Up SageMaker Studio for Course Demos
+
+   Lesson StageMaker Cost: ~$0.05
+
+   Launching the SageMaker Studio App
+
+     -> AWS -> SageMaker -> Domains -> Select [click in to] domain  ->  right click on "Launch" for selected user profile -> Studio
+
+   Overviewing the UI
+     - Launcher
+        - where you can create new notebooks, open code consoles
+           -> click on "Open Launcher" ->
+     - Left sidebar
+         -> Home <tab> -> Data <expand> -> includes: Data Wranglar, Feature Store, Clusters
+         -> Folder <tab> -> shows your files/folders
+         -> GitHub <tab>
+         -> Running <tab> -> show running instances, etc
+
+
+   Cloning the Repo for Course Demos
+      -> folder tab -> new folder: name: ml-deep-dive
+      -> Git <tab> -> Clone a Repository ->
+         URL: https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive.git
+         Project: ml-deep-dive
+         -> Clone
+
+   Using the StageMaker Python SDK
+
+     Two ways [SDKs] to communicate with SageMaker
+       SageMaker Python SDK
+         - a high-level API for SageMaker
+         - most data scientist use
+       AWS SDK for Python SDK (boto3)
+         - low-level access to SageMaker and other AWS services
+         - provides low-level SageMaker access such as to the SageMaker runtime
+
+
+     SageMaker Python SDK commands:
+        # import SageMaker Python SDK into the runtime
+        import sagemaker
+        # the session use to interacte with the SageMaker API and other AWS services
+        session = sagemaker.Session()
+        # get the execution role assigned to your user profile
+        # this role should have S3 buckets and SageMaker-related permissions
+        role = sagemaker.get_execution_role()
+
+   Using the SageMaker Pythone SDK
+    note: ipynb -> stands for Interactive Python NoteBook (Jupyter Notebook file format)
+     - Create a new notebook
+        -> folder -> demos -> S02 -> end -> hello-world-sagemaker.ipynb -> right click "New notebook"
+
+           default: Image: Data Science, Kernel: Python 3, Instance Type: ml.t3.medium -> Select
+     - Writing Python code for "hello world"
+       -> after notebook is opened:
+          -> select code -> run icon
+     - running the code
+
+++++++++
+import sagemaker
+
+session = sagemaker.Session()
+role = sagemaker.get_execution_role()
+
+region = session.boto_region_name
+bucket = session.default_bucket()
+
+print('Hello world!  Region and bucket are ' + region + ' ' + bucket)
+++++++++++++++++
+
+     - deleting all resources
+        -> shutdown kernel
+        -> close terminals
+        -> close out of launcher
+           -> file -> Shutdown all
+
+  Summary:
+
+    SageMaker Studio UI
+      - the getting started and Launcher windows provide many resources for getting started
+      - Use the left sidebar to manage resources an toggle between SageMaker features
+    SageMaker Python SDK
+      - use to programmatically work with the SageMaker APIs
+      - can also be used in conjunction with the AWS Python SDK (boto3)
+
+------------------------------------------------------
+2.10 Section Summary - Machine Learning on AWS: Tools and Services
+
+   Summarizing the Important Takeways
+     - AWS offers a wide range of productions and services for AI and ML
+     SageMaker Canvas
+       - No-code solution for business and data analysts
+     SageMaker Studio Lab
+       - Free and easy to set up
+       - Perfect for learning and experimenting
+     SageMaker Studio
+       - the most comprehensive toolset for production-level work aimed at engineers and scientists
+       - includes features for different parts of the ML lifecycle (Data Wrangler, Feature Store, etc)
+
+   Deleting Resources
+     - SageMaker Canvas
+       - deleting the model and datasets in Canvas
+       - logged out of Canvas
+       S3 Bucket
+          - deleting the S3 bucket and the CSV files
+     - SageMaker Studio
+       - stopping instances and kernels in SageMaker studio
+
+   Up Next
+     Preparing Data with SageMaker Data Wrangler and Feature store
+
+------------------------------------------------------
+2.11 Quiz: Machine Learning on AWS: Tools and Services
+------------------------------------------------------
+
+Chapter 3 Preparing Data with SageMaker Data Wrangler and Feature Store
+
+------------------------------------------------------
+3.1 Section Introduction
+  Preparing Data With SageMaker Data Wrangler and Feature Store
+
+  The Machine Learning Process
+    For data Prep (fetch, clean, prepare):                  SageMaker Data Wrangler and Feature Store
+      -> Most time consuming part of the process
+      -> very iterative process
+    For Train Model and Evalate Model:                      SageMaker Studio Notebooks, Clarify, and Experiments
+    For Deployment adn Monitoring/Collect data / Evaluate:  Sagemaker Endpoints, Batch, Transform, Pipelines, Model Monitor
+
+  Why SageMaker Data Wrangler
+    Data is Messy
+      - example: Inconsistent columns, Punctuation in Names, inconsistent naming and abbreviations, blank values, nulls, and dashes
+    Understand Data and Relationships
+       - visualize data
+       - rows, columns,
+       - Mean, median, min, and max
+       - standard deviation
+       - count, most/least frequent
+       - patterns
+       - outliers
+
+  The SageMaker Data Wrangler Workflow
+     Data Flow
+        -> Import Data (e.g. S3, Athena, redshift, snowflake, EMR, Databricks, Salesforce Data Cloud, etc)
+        -> Analyze (scatter plots, histograms, summary tables, ...)
+        -> Transform (dropping missing values, encoding, replacing values, selecting data to keep, ...)
+        -> Export (to ML flow)
+
+  Overviewing and Downloading the Hotel Booking Dataset
+    Hotel Booking Dataset:
+      - includes info like length of stay, lead time, room rate, whether the guest cancelled before
+      - predict whether a hotel guest cancel their hotel reservation
+
+    Download the Dataset
+      demos/S03/start/hotel_bookings.csv
+
+  Summary
+
+    SageMaker Data Wrangler
+      - helps clean up the data
+      - Allows us to analyze data to find relationships, patterns, and outliers, and then transform it to be what
+        we need
+
+    Download the Dataset
+      demos/S03/start/hotel_bookings.csv
+------------------------------------------------------
+3.2 Importing Data in the Data
+
+  Cost: ~$1 USD
+
+  Importing from S3
+    - Create a new S3 bucket and upload data to S3
+
+        -> AWS -> S3 -> Create Bucket -> Name: datawrangler-hotelbooking-ml-deep-pat -> create bucket
+                     -> upload -> select demos/S03/start/hotel_bookings.csv -> upload
+
+            - Create a new Data Wrangler Flow
+               -> AWS -> SageMaker -> Domains -> Select [click in to] domain  ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Data -> Data Wrangler
+
+            - Import the S3 Data into Data Wrangler
+
+                 -> File -> New -> Data Wrangler Flow
+                    Note: spun up ml.m5.4xlarge
+                    -> rename Wrangler tab -> right-click -> rename -> New Name: HotelBookingFlow1.flow
+                    -> Import data -> S3 -> bucket: datawrangler-hotelbooking-ml-deep-pat -> hotel_bookings.csv -> Import
+
+          Importing from Athena
+             - creating a database table in Athena using an AWS Glue crawler
+                # create bucket to save Athen queries (if 1st time)
+                -> AWS -> S3 -> Create Bucket -> Name: athena-queries-pat -> create bucket
+                -> Athena -> Query editor -> Edit Setting -> Query location: s3://athena-queries-pat/hotel-booking-queries
+                # create a new table using Glue Crawler
+                -> Athena -> Query Editor ->  Create -> AWS Glue Crawler
+                    <Glue Crawler> Name: HotelBookingS3Crawler -> Next -> Add a data source
+                        -> Data Source: S3 , Bucket: datawrangler-hotelbooking-ml-deep-pat -> add data source -> Next ->
+                         -> Create New IAM  Name: AWSGlueServiceRole-HotelBookings -> Create
+                         # create a database called "default"
+                         -> Target Database: default -> Next -> Create Crawler
+                         -> Run Crawler
+                         # when complete
+                         -> Athena -> Query Editor  -> table: datawrangler_hotelboking_ml_deep_pat -> click on: <...> -> preview table
+
+             - importing the Athena data into data wrangler
+                -> Data Wrangler -> Import -> Athena -> Name: AthenaHotelBookings -> Connect
+                   uncheck 'save connection' -> query: SELECT * FROM "default"."datawrangler_hotelbooking_ml_deep_pat" where arrival_date_year = 2015;
+                   -> import -> dataset Name: AthenaBookings2015 -> add
+                   -> Run
+
+          Editing Data Types
+             -> select data flow -> edit ->
+                -> change "is_repeated_guest" from "long" to "boolean"
+                -> preview (required)
+          Joining Tables
+            -> + -> join
+
+  Deleting Resources
+    - Deleting the Athena Data Source (table) and AWS Glue Crawler
+
+    - Terminating instances and kernels for Data Wrangler
+
+  Summary
+
+     - A Data Wrangler flow can import data from a variety of sources
+        -  used S3 and Athena but you can also pull from EMR, databrick, redshift, & snowflake
+     - Once data is imported, it's possible to edit data types and join tables
+
+------------------------------------------------------
+3.3 Analyzing and Visualing Data in Data Wrangler
+
+  Cost: ~$1 USD
+
+  Data Quality and Insights Report
+       -> AWS -> SageMaker -> Domains -> Select [click in to] domain  ->  right click on "Launch" for selected user profile -> Studio
+         -> Home <left tab> -> Data -> Data Wrangler -> HotelBookingFlow1.flow
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Data Quality and Insights Report, Target Column: is_cancelled,
+               Problem Type: Classification, Name: HotelBookingIsCancelledInsightReport -> Create
+
+               Duplicate Rows
+               -> reports 28.1% of data is duplicated
+
+               Target Leakage:
+                  due to "is_cancelled" column '1' value always matches "reservation_status" column "Cancelled" value
+
+               Anomalous Samples:
+                  -> outlier data, example: adr (average daily rate) is 0
+
+          -> File -> Save Data Wrangler Flow
+          -> go back : at top click on "Data Flow"
+
+  Histogram
+    - Creating a Histogram of Data in Data Wrangler
+        - cancelled by arrival date
+        - cancelled by market segment
+
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Histogram,
+               X Axis: arrival_date_month, Colored by: is_cancelled, Name: HistorgramCancelledByArrivalMonth -> Run
+               -> shows August has high cancellation
+
+              -> File -> Save Data Wrangler Flow
+
+               # 2nd histogram
+               X Axis: market_segment, Colored by: is_cancelled, Name: HistorgramCancelledByMarketSegment -> Run
+               -> shows: online_TA (travel agent) has largest cancellations, but
+                         groop bookings have highest percentage cancelalation
+
+               -> File -> Save Data Wrangler Flow
+
+          -> go back : at top click on "Data Flow"
+
+  Scatter Plot
+     - Creating a Scatter Plot of Data in Data Wrangler
+       - Total special requests and lead time
+       - Booking changes and lead time
+
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Scatter Plot,
+               X Axis: total_of_special_requests, Y axis: lead_time, Colored by: is_cancelled, Name: ScatterPlotSpecialLeadTime -> Run
+
+               -> File -> Save Data Wrangler Flow
+
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Scatter Plot,
+               X Axis: booking_changes, Y axis: lead_time, Colored by: is_cancelled, Name: ScatterPlotBookingLeadTime
+                 Facet By: arrival_date_year -> Run
+
+               -> File -> Save Data Wrangler Flow
+
+  Delete Resources
+    - terminate instances and kernels for Data Wrangler
+      <running app icon>  -> shutdown apps
+                             shutdown kernel
+
+  Summary:
+
+     Analysis and visualization makes it easier to understand our data
+       - data Quality and Insights Report
+       - Histograms
+       - Scatter Plot
+
+------------------------------------------------------
+3.4 Transforming Data in Data Wrangler
+
+   Cost ~$1 USD
+
+   Drop Columns
+     - create leakage analysis
+     - create feature correlation analysis
+     - determine columns to drop
+     - Add a transform to drop the columns
+
+         -> Home <left tab> -> Data -> Data Wrangler -> HotelBookingFlow1.flow
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Target Leakage,
+               Analysis Name: TargetLeakage,  Max Features: 32, Problem Type: Classification, Target: is_cancelled -> Run
+               -> Possible redundant: total_of_special_requests, hotel, arrival_date_month, meal, and previous_cancellations
+
+               -> File -> Save Data Wrangler Flow
+
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Feature Correlation,
+               Analysis Name: FeatureCorrelation,  Correlation Type: Linear -> Run
+               Notes:
+                    - You want features to be highly correlated with a target, is_canceled in our case, but not correlated
+                      amongst themselves.
+                    - anything above 0.9 is too highly correlated and should be removed including:
+                       reservation_status, arrival_date_month, arrival_date_week_number, arrival_date_year, and reservation_status_date.
+
+
+               -> File -> Save Data Wrangler Flow
+
+
+
+      Columns to drop:
+         Target leakage / possibly redundant (less than 0.5 correlation or predictive ability)
+           - babies
+           - hotel
+           - arrival_date_day_of_month
+           - meal
+           - previous_cancellations
+           - arrival_date_month
+         Low Prediction Power
+           - days_in_waiting_list
+         Highly Correlated
+           - arrival_date_week_number
+           - arrival_date_year
+
+            -> Data Types -> click "+" -> Add Transform -> Add Step -> Add Transform: Manage Columns ->
+               -> Preview -> Add
+               -> File -> Save Data Wrangler Flow
+
+   Drop Duplicate Rows
+     - using a managed transform to drop rows
+     - Using a custom transform and pandas to view our new DataFrame
+     - have 28.1% dumplicate rows
+
+       # drop duplicate rows
+       -> Add step -> Add Transform: Manage Rows -> transform: Drop Duplicates -> Preview -> Add
+
+       # drop duplicate rows
+       -> Add step -> Add Transform: Custom Transform -> Name: DataFrameInfo, Python(Pandas) -> code: df.info()  -> Preview
+          -> shows: down to 15697 rows
+
+   Handle Missing Values
+     - Finding the missing values
+     - determine what values to fill with
+     - filling in the missing values
+
+            # re-create insight report
+            -> Data Types -> click "+" -> Add Data Analysis -> Analysis Type: Data Quality and Insights Report, Target Column: is_cancelled,
+               Problem Type: Classification, Name: HotelBookingIsCancelledInsightReport -> Create
+
+               -> in Feature summary: shows "agent" missing data 20.1%
+               -> In "agent" table: shows 1 agent used in 63 % and prediction power was 0.433 (now just 0.152)
+
+               -> <after previous transform> -> click "+" -> add transform  -> transform: Handle Missing -> add step
+                  -> transform: Impute ,  Column Type: Numeric, Input Column: agent, Imputing Strategy: Approximate Median -> Preview -> Add
+                    -> agent colunm should be filled in
+
+          Note: Impute means:
+              fill in the missing values with an estimated value based on our other data; so kind of taking a best guess
+
+
+   Encode Categorical Data
+     - some algorithms work better on encode values (1, 2, 3, ...) instead names
+       example:
+             Encoding   Market Segment    Market_Segment_Direct        Market_Segment_Corporate        Market_Segment_Aviation
+               1            Direct               1                              0                              0
+               2            Corporate            0                              1                              0
+               3            Aviation             0                              0                              1
+               4            Corporate            0                              1                              0
+
+
+     - One-hot encoding categorical data
+         - market_segment
+         - assigned_room_type
+         - deposit_type
+         - customer_type
+         - is_repeated_guest
+
+          -> Add step -> Encode Categorical , transform: one-hot encoded,
+            input columns: market_segment assigned_room_type deposit_type customer_type is_repeated_guest,
+            output type: columns -> Preview -> Insert
+
+            Note: is_repeat_guest caused an error, so I removed it
+
+            -> rename new columns with spaces " " instead of "_"
+            -> Add step -> manage columns ->  tranform: rename, input column: market_segment_Online TA,
+               output Column: market_segment_Online_TA -> Preview -> add
+               # repeat for market_segment_Online TA/TO, deposit_type_No Deposit, deposit_type_Non Refund
+
+   Handle Outliers
+     - finding features with outliers
+     - handling the outliers
+
+     Insight report shows: Children has 4.77% outliers
+        -> Add Step -> Handle Outliers -> transform: Standard Deviation numeric outliers, input colunm: children,
+           fix method: remove, Standard Deviation: 4 -> Preview -> Add
+               -> File -> Save Data Wrangler Flow
+
+   Delete Resources
+    - terminate instances and kernels for Data Wrangler
+      <running app icon>  -> shutdown apps
+                             shutdown kernel
+
+   Summary:
+
+      Data Wrangler offers several types of transformst to clean up your data
+        - drop columns
+        - drop duplicate rows
+        - handle missing values
+        - encode categorical data
+        - handle outliers
+
+------------------------------------------------------
+3.5 Exporting Data for Training
+
+  Cost: $4 USD
+
+  Four Options for Exporting
+    Export to SageMaker Pipeline
+      - for large-scale ML workflows
+    Export to S3
+      - for small datasets or processing jobs
+    Export to Python Code
+      - to manually integrate into a workflow
+    Export to SageMaker Feature Store
+      - for storing and sharing features centrally
+
+   Export or Add Destination
+       Export to:
+          - Requires you to generate and run a Jupyter Notebook
+          S3 (via Jupyter Notebook)
+          SageMaker Pipelines (via Jupyter Notebook)
+          Python Code
+          SageMaker Feature Store (via Jupyter Notebook)
+       Add destination:
+         - after adding the destination, export the data flow in a few clicks (no Jupyter Notebook required)
+          S3
+          SageMaker Feature Store
+
+  Exporting to SageMaker Pipeline (from Data Wrangler)
+    - Viewing the Jupyter Notebook that gets generated
+
+         -> Home <left tab> -> Data -> Data Wrangler -> HotelBookingFlow1.flow
+             # must run data validation before exporting data
+             -> "run validation"a <top right> -> Done
+
+            -> <after last transform, click "+" -> Export -> SageMaker Pipelines (via Jupyter Notebook) -> Select (defaults)
+              # creates a jupyter notebook
+              -> not actually going to use Notebook, so close tab -> Save Notebook first
+
+
+               -> File -> Save Data Wrangler Flow
+  Export to S3
+    - Using a destination node
+
+            -> <after last transform, click "+" -> Add Destination -> Amazon S3 ->
+              Destination Name: TransformedHotelData, bucket: s3://datawrangler-hotelbooking-ml-deep-pat/ -> Add destination
+                 # create processing job
+                 -> Create Job <top right> -> Next 2: Configure job -> Instance Type: ml.m5.4xlarge, Instance Count: 1 -> Create
+
+                  # click on "process job name" link for job details
+                  # wait for Status: Completed
+                  -> check S3 bucket, will create CSV file in a new folder
+
+    - Using export to
+            -> <after last transform, click "+" -> Export to -> Amazon S3 (via Jupyter Notebook) -> Select (defaults)
+              # creates a jupyter notebook
+              -> Follow steps in Notebook, then process data will be placed in S3
+              -> not actually going to use Notebook, so close tab
+
+    - using export data
+            -> <click last transform> -> Export Data <upper right> -> bucket: s3://datawrangler-hotelbooking-ml-deep-pat/
+                -> export data
+                # create a new folder with CSV data
+                -> split to 4 CSV (?)
+
+  Export to Python Code
+    - viewing the generate code
+    - useful when you have larger code base, and want to incorporate code
+
+            -> <after last transform, click "+" -> Export to -> Python Code -> shows Python code with all the transforms
+
+              -> right click -> select all -> copy ->
+
+  Export to SageMaker Feature Store
+    -> Viewing the Jupyter Notebook that gets generated
+
+            -> <after last transform, click "+" -> Export to -> SageMaker Feature Store -> (defaults) -> Select
+
+            Note: Create Feature Group
+                alert: Record identifier and Exvent time feature name are required
+                -> need these features to 1st be added to dataset
+
+               -> File -> Save Data Wrangler Flow
+
+   Delete Resources
+    - terminate instances and kernels for Data Wrangler
+      <running app icon>  -> shutdown apps
+                             shutdown kernel
+  Summary
+    After transforming your data, Data Wrangler offers four options for exporting it
+      - Export to SageMaker Pipeline
+      - Export to S3
+      - Export to Python Code
+      - Export to SageMaker Feature Store
+
+    Add destination:
+         - after adding the destination, export the data flow in a few clicks (no Jupyter Notebook required)
+         - use "add destination" to create a processing job instead of Jupyter Notebook
+          Destinations:
+           - S3
+           - SageMaker Feature Store
+
+------------------------------------------------------
+3.6 Working with the SageMaker Feature Store
+
+   Why SageMaker Feature Store
+     - a fully managed, purposed-built repository to store, share, and manage features for machine learning (ML) models
+     - a central place to store and update features
+     - organized by feature groups
+        - (analogous to database table schema with rows and columns)
+
+   Online vs Offline Stores
+     Online store
+       - online always and responds immediately
+       - used for real-time inference (predictions) using the latest data
+     Offline store
+       - keeps records for use over time
+       - slower and less expensive (uses S3, AWS Glue, and Athena)
+       - use cases: train ML models, re-create historical models
+       - automatically sync online store to offline store
+
+   How SageMaker Feature Store works
+      Online Store:                ---- read ----  Inference with SageMaker SDK
+
+      Offline Store:               ---- Query using AWS Glue and Athena ----  Training and Buildin with SageMaker SDK
+
+  Summary:
+    SageMaker Feature Store
+     - A central place to store and update features
+     - solves the problem of multiple teams duplicating efforts
+
+     Types of Stores
+       - Online: always on with immediate access
+       - Offline: stores records for use over time, slower and less expensive
+
+
+------------------------------------------------------
+3.7 Ingesting and Accessing Features in SageMaker Feature Store
+
+  Cost: ~$1 USD
+
+  Generate Features required by Feature Store
+
+    - In Data Wrangler, add custom transform to insert features for record_id and event_time
+    - Export Flow to SageMaker Feature Store
+    - View the Jupyter Notebook that was generated
+
+
+       -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+         ->  right click on "Launch" for selected user profile -> Studio
+         -> Home <left tab> -> Data -> Data Wrangler -> HotelBookingFlow1.flow ->
+
+            -> Run validation
+            -> <after last transform, click "+" -> Export to -> SageMaker Feature Store -> (defaults) -> Select
+
+            Note: Create Feature Group
+                Alert: Record identifier and Event time feature name are required
+                -> need these features to 1st be added to dataset, both are set to "None"
+
+                record_identifier_feature_name = None
+                  -  the record identifier is just the unique ID for each record,
+                event_time_feature_name = None
+                  - event_time is a timestamp that allows you to perform time travel basically and versioning of the feature
+
+
+            -> <after last transform, click "+" -> Add Transform -> Add step -> custom transform ->
+               # create a new record_id column incrementing id by 1 for each row
+               # code is at:  demos/S03/end/InsertRecordID.py
+               Name: InsertRecordID
+               Optional: Python (Pandas)
+               code: df.insert(0,'record_id',range(1, 1 + len(df)))
+
+               # create a new event_time column with time set to now
+            -> Add step -> custom transform ->
+              Name: InsertEventTime
+              Optional: Python (Pandas)
+                      code:
+++++++++++++
+import pandas as pd
+import datetime
+
+timestamp = pd.to_datetime("now").timestamp()
+
+df.insert(1,'event_time', timestamp)
+++++++++++++
+
+        # create a new Jupyter Notebook
+        -> close tab for previous Jupyter Notebook
+
+        -> back to "data flow"
+        -> <after last transform, click "+" -> Export to -> SageMaker Feature Store -> (defaults) -> Select
+
+
+    - Update the record_id and event_time features
+    - create a feature group through the SageMaker UI
+    - Run the code in the Jupyter Notebook to create feature group
+
+     # under Feature group's code, set record id and event time feature names:
+        record_identifier_feature_name = "record_id"
+
+        event_time_feature_name = "event_time"
+
+     -> run blocks of code in "define feature group", "feature definitions",
+
+  Create a Feature Group
+
+     -> Configure Feature group from UI
+        -> Home <tab> -> Data -> Feature Store ->  Create Feature Group -> Feature Group Name: my-demo-feature-group
+           Storage Configuration: Online storage (other defaults) -> Continue ->
+           Table: feature name     Feature type
+                  customer_name     string
+                  age               integral
+                  event_time        string
+                  -> Continue
+                  Required Features:   Record Identifier Feature Name: customer_name, Event Time Feature Name: event_time
+                  -> Continue -> Create Feature Group
+                  -> View Feature Group
+
+       # Note: Feature Group would normally be created via code (not using UI)
+     -> Configure Feature group from Jupyter Notebook
+       -> back to Jupyter Notebook <tab> under "Configure Feature Group"
+           -> run code to create feature group
+             -> created: Feature Group Name: FG-HotelBookingFlow1-9bc4ee8e
+             -> run code blocks to initialize, etc
+             -> wait for "FeatureGroup FG-HotelBookingFlow1-d2ec5f84 successfully created."
+             -> Jupyter Notebook create feature group includes all features (columns)
+
+  Ingesting into Feature Store
+       -> back to Jupyter Notebook <tab> under "Inputs and Outputs"
+         -> run code blocks
+         # next: uploading the flow to S3 so the processing job can grab it
+         -> run code in "Upload Flow to S3"
+         # configure and run processing jobs
+          -> in Job Configuration code block: change instance count from 2 to 1
+          instance_count = 1
+          -> run Configure blocks
+          -> skip optional Spark Cluster Driver Memory block
+          # run processing job blocks and then "job Status & S3 Output Location" block
+           -> wait for complete
+
+   # wait for processing job to complete
+   SageMaker-> Processing <left tab> -> Processing Jobs -> data-wrangler-flow-processing-17-22-03-17-bed76aa2
+
+  Accessing Features from Feature Store
+
+  -> add end of HotelBookingFlow Export to Feature Store Notebook add:
+
+     Code: Dump record_id 7 contents  from online  Feature Store:
+
+       record_id = '7'
+       featurestore_runtime =  sess.boto_session.client(service_name='sagemaker-featurestore-runtime', region_name=region)
+
+       record_id = featurestore_runtime.get_record(
+           FeatureGroupName=feature_group_name, RecordIdentifierValueAsString=record_id)
+
+       record_id['Record']
+
+       # dump record_id 7:
+
+       [{'FeatureName': 'record_id', 'ValueAsString': '7'},
+        {'FeatureName': 'event_time', 'ValueAsString': '1721771486.699969'},
+        {'FeatureName': 'is_canceled', 'ValueAsString': '0'},
+        {'FeatureName': 'lead_time', 'ValueAsString': '266'},
+        {'FeatureName': 'stays_in_weekend_nights', 'ValueAsString': '1'},
+        .  .   .
+        {'FeatureName': 'customer_type_Group', 'ValueAsString': '0.0'},
+        {'FeatureName': 'is_repeated_guest_0', 'ValueAsString': '1.0'},
+        {'FeatureName': 'is_repeated_guest_1', 'ValueAsString': '0.0'}]
+
+
+
+
+  Delete Resources
+     - delete files under folder icon
+     - Terminating instances and kernels
+     - deleting the Athena Table
+       -> Athena -> select table -> delete table
+     - Deleting extra files
+
+   -> AWS Console -> Athena  -> Editor -> Data Source: AwsDataCatalog, Database: sagemaker_featurestore,
+           table: fg_hotelbookingflow_9a1aec90_1721771143 -> right click on dots -> Preview Table
+
+       -> This runs the following Query:
+          SELECT * FROM "sagemaker_featurestore"."fg_hotelbookingflow_9a1aec90_1721771143" limit 10;
+
+
+  Summary
+
+     SageMaker Feature Store
+       - Requires features for record_id and event_time
+         - created using a custom transform with pandas code
+
+   Feature groups can be created through the SageMaker UI or a Jupyter Notebook
+
+   A SageMaker processing Job will save the flow to S3 and the transformed data to Feature store
+
+------------------------------------------------------
+3.8 Section Summary
+
+   Summarizing the Important Takeawys
+     - the most time-consuming part of ML is preparing your data
+
+   SageMaker Data Wrangler
+     - Offers a friendly UI to analyze and transform data
+     - flows can be saved and exported to various locations for future use and sharing
+
+   SageMaker Feature Store
+     - a central place to store and update features
+     - online store: always on with immediate access
+     - offline store: stores records for use over time, slower and less expensive
+
+   Up Next
+     Building and Training Models with SageMaker Studio
+
+------------------------------------------------------
+
+  scatter plots (charts) vs bubble plots (charts):
+    - scatter plots show the relationship between two attributes,
+    - bubble plots show the relationship between three attributes.
+
+
+  A scatter plot is a good visualization type for displaying multi-distribution data, as it easily shows data clusters,
+  minimum and maximum values, and outliers.
+
+  A box plot is a good visualization type for displaying multi-distribution data, as it easily shows the minimum, maximum,
+  and mean values of data, as well as outliers.
+
+  A histogram is a good visualization type for displaying the single distribution of data.
+
+------------------------------------------------------
+3.9 Quiz: Preparing Data with SageMaker Data Wrangler and Feature Store
+
+Question 4
+You are trying to determine the distribution of your customer base using age and income. What type of data visualization can help with this?
+Choices:
+  - Bubble plot
+  - Correlation matrix
+  - Scatter plot
+  - Histogram
+
+Note:
+  A scatter plot uses dots to show values for two different variables (an X and Y axis).
+Correct Answer
+  A histogram is commonly used to show distributions in data.
+
+------------------------------------------------------
+
+Chapter 4: Building and Training Models with SageMaker Studio
+
+------------------------------------------------------
+4.1 Section Introduction - Building and Training Models with SageMaker Studio
+
+  The Machine Learning Process
+    For data Prep (fetch, clean, prepare):                  SageMaker Data Wrangler and Feature Store
+    For Train Model and Evalate Model:                      SageMaker Studio Notebooks, Clarify, and Experiments
+      -> this chapter using Notebooks, Clarify, & Experiments
+    For Deployment to production and Monitoring/Collect data / Evaluate:  Sagemaker Endpoints, Batch, Transform, Pipelines, Model Monitor
+
+  Benefits of Building and Training a Model with SageMaker Studio
+    - Built-in algorithms and pre-trained models
+       - built-in algorithms for common use cases including:  image classification, anomaly detection, speech to text,
+         time series forecasting, etc
+    - Infrastructure is easy to set up and use
+       - just specify the ec2 instance type, Studio handles the rest
+    - Common frameworks and libraries
+       - e.g. TensorFlow, PyTorch, Apache, MXNet
+
+  Overview the Code and Datasets
+       code is at:  demos/S04/[clarify, experiments, script-mode, xgboost]/[start, end]
+
+  Summary
+    There a several benefits to building and training models in SageMaker Studio
+    - Built-in algorithms and pre-trained models
+    - Infrastructure is easy to set up and use
+    - Common frameworks and libraries
+
+    Download the code and datasets to follow along with demos
+
+------------------------------------------------------
+4.2 Using SageMaker's Built-in Algorithms
+
+  Use Amazon SageMaker Built-in Algorithms or Pre-trained Models
+  https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html
+
+  Categories of Built-in Algorithms
+    Algorithm vs Model
+      -> Training Data    ->  Algorithm                   ->    Model
+                             - Code that identifies           - The Output from running the algorithm on the data
+                               patterns in the data           - Rules, numbers, and data structures required to make predictions
+
+     Four Broad Algorithm Categories
+       Supervised Learning
+         - e.g. XGBoost
+       Unsupervised Learning
+         - e.g. K-Means
+       Text Analysis
+         - e.g. BlazingText
+       Image Processing
+         - e.g. Image Classification - TensorFlow
+
+  XGBoost
+    - Used for classification and regression problems
+       - e.g.
+            - will a customer churn or not?
+            - What price should we charge for a new product
+    - an implementation of the gradient boosted trees (eXtreme Gradient Boosting)
+    - designed form speed and performance and very popular today
+    - predicts a target variable by attempting to correct the mistakes of models before it
+    - training dataset -> Classifier 1      -> Classifier 2           -> .... -> Classifer N
+                          a bit arbiturary     some incorrect given               Correct results
+                                               more weight to correct
+
+  K-Means
+     - Used for clustering (unsupervised) problems
+        - unsupervised: don't have label data
+     - Groups data based on similarity
+     - the number of groups is "k"
+     - You must supply attribute that indicates similarity
+     - How K-means works
+        Task
+          - organize a pile of books
+          - we have 3 bookshelves (groups) k=3
+          - They should be grouped by genre (similarity attribute)
+             - K-means places initial 3 books, then tries to place remaining by genre
+
+  BlazingText
+    - Used to identify relationships between words in a document
+       - textual analysis and text classification problems
+    - precursor for many natural language processing (NLP) tasks such as sentiment analysis and spam detection
+    - BlazingText is an implementation of Google's Word2Vec algorithm
+        - Word2Vec two implementations
+           - continuous bag of words
+           - skip-gram model
+     - How BlazingText works
+         Example phrases
+            - This course is great
+            - This course is really good
+            Vector - {This, course, is, great, really, good}
+            - Word2Vec creates word graphs with short distance between words indicate closeness (e.g. good and great)
+              and long distances between words indicate differences (e.g. hot and cold)
+
+  Image Classification - TensorFlow
+    - Takes and image and classifies it into one of the output class labels (predefined classes and labels
+      that your trying to bucket things into)
+      - use cases
+        - handwriting recognition
+        - facial recognition
+        - reverse image search
+        - Patterns in X-rays
+     - How Image Classification - TensorFlow works
+
+          input                 -------> Neural network runs many passes -----> Output
+          image of handwritten "2"        to analysis pixels and                 "2" digit
+                                          identifies patterns
+  Summary:
+
+    SageMaker Studio offers dozens of built-in algorithms across four categories
+     Four Broad Algorithm Categories
+       - Supervised Learning
+         - e.g. XGBoost
+       - Unsupervised Learning
+         - e.g. K-Means
+       - Text Analysis
+         - e.g. BlazingText
+       - Image Processing
+         - e.g. Image Classification - TensorFlow
+
+     Built-in Algorithms make it easy to get started with training models
+
+------------------------------------------------------
+4.3 SageMaker's Algorithms in Action
+
+  XGBoost Algorithm
+  https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost.html
+
+  The machine Learning lifecycle
+    Algorithm vs Model
+      -> Training Data    ->  Algorithm                   ->    Model
+                             - Code that identifies           - The Output from running the algorithm on the data
+                               patterns in the data           - Rules, numbers, and data structures required to make predictions
+
+  Creating a Training Job in SageMaker Studio
+
+    Steps to Create a SageMaker Training Job
+      1. Specify S3 bucket URLs for:
+          S3 bucket containing training data
+          S3 bucket to store model output/artifacts created during training process
+      2. Specify the algorithm and compute instances to use for the training
+      3. Specify the path to the [training] code stored in the Elastic Container Registry (ECR)
+
+  XGBoost Algorithm:
+    https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost.html
+      For EC2 type recommendations, see "EC2 Instance Recommendation for the XGBoost Algorithm" section
+      For Docker Registry Paths, see "Supported Versions" section which contains, the following link:
+       "Docker Registry Paths and Example Code":
+          https://docs.aws.amazon.com/sagemaker/latest/dg-ecr-paths/sagemaker-algo-docker-registry-paths.html
+            -> Topics [regions] -> "US East (N. Virginia)  -> Topics [algorithms] -> XGBoost -> ECR Paths
+
+  Evaluating the Model
+    Goal:
+       - A model that generalizes well so it makes accurate predictions
+    Sometimes models:
+        Overfitting
+          - too tightly predicts
+          - too dependent on training data and not likely to perform well on new data
+          To prevent overfitting:
+            - use more [training] data
+            - add some "noise" to data [data augmentation to make dataset larger]
+            - remove features
+            - Early stopping [before it overfits the data]
+
+        Underfitting
+          - the model is too simple and doesn't accurately reflect the data [has not learned enough]
+          To prevent underfitting:
+            - Use more data
+            - add more features
+            - train longer
+
+
+    Tuning the Model
+
+         Training  -------------> Evaluation ---------------> Prediction
+             |                        |
+             |            Do we need to change the algorithm?
+             |            Do we need to do more feature engineering?
+             |            Do we need new or different data?
+             |                        |
+             |------------------------|
+
+       Hyperparameters
+           - the "knobs" you can use to control the behavior of your algorithm
+           - XGBoost Hyperparameters:
+             https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost_hyperparameters.html
+
+             XGBoost Automatic model tunning:
+             https://docs.aws.amazon.com/sagemaker/latest/dg/xgboost-tuning.html
+               - Automatic model tuning, also known as hyperparameter tuning, finds the best version of a model by running many
+                 jobs that test a range of hyperparameters on your training and validation datasets.
+               - You choose three types of hyperparameters:
+                  - a learning objective function to optimize during model training
+                  - an eval_metric to use to evaluate model performance during validation
+                  - a set of hyperparameters and a range of values for each to use when tuning the model automatically
+
+      Hyperparameter Tuning in SageMaker
+           1. Choose your object metric
+             - the thing you are trying to optimize
+           2. Define ranges for hyperparameters
+           3. SageMaker runs training jobs to optimize for the objective metric
+             - till it finds the right combination of values to optimize your object metric
+
+      How did the model do with Predictions?
+
+        Confustion Matrix:
+
+                        |  Predicted Class     |     Predicted Class
+                        |  Positive            |     Negative
+                        |  (FRAUD)             |     (NOT FRAUD)
+          --------------|----------------------|----------------------
+          Actual Class  | True Positive (TP)   |  False Negative (FN)
+                        |                      |
+          Postive       | FRAUD was correctly  | FRAUD was incorrectly
+          (FRAUD)       | predicted as FRAUD   | predicted as NOT FRAUD
+                        |                      |
+          --------------|----------------------|----------------------
+          Actual Class  | False Positive (FP)  |  True Negative (TN)
+                        |                      |
+          Negative      | NOT FRAUD was        | NOT FRAUD was correctly
+          (NOT FRAUD)   | incorrectly predicted| predicted as NOT FRAUD
+                        | as FRAUD             |
+          --------------|----------------------|----------------------
+
+        Metric for Classification Problems
+
+           Accuracy: (TP + TN)  / (TP + FP + TN + FN)
+              - percentage of predictions that were correct:
+              - less effective with a lot of true negatives
+                 - example: predicting fraud with little to no fraud data
+
+           Precision: (TP)  / (TP + FP)
+              - percentage of positive predictions that were correct:
+              - Use when the cost of false positives is high
+                 - example: an email is flagged and deleted as spam when it really isn't
+
+           Recall: (TP)  / (TP + FN)
+              - percentage of actual positive predictions that were correctly identified:
+              - Use when the cost of false negatives is high
+                 - example: someone has cancer, but screening does not find it
+
+  Training and Evaluationg the Model for Customer Churn using XGBoost
+    cost: ~$1 USD
+    Training and evaluating the model in SageMaker Studio
+      - Create a training job:
+        - 1st, through the UI
+        - 2nd, through a SageMaker Notebook
+      - Train the model
+      - Evaluate the model
+
+      # walking through using the UI:
+      -> SageMaker -> Training <left tab> -> Training Jobs -> Create training Job ->
+        Job Name:   XGBoostCustomerChurn, IAM Role: <default>, Algorithm Source: <default>,
+        Algorithm: Tabular - XGBoost:v1.3, Container: <automatically filled based on region>,
+        Input Mode: File, Instance Type: ml.m4.xlarge, Instance Count: 1,
+        Hyperparameters: objective (must be set): binary:logistic (meaning: binary: working with binary problem
+           - churn/not churn; logistic: return a probability)
+           Input data configuration: Data Source: S3, bucket: TBD,
+           Output data configuration: S3 bucket: TBD
+           -> not completed, but being showned
+
+      Note: Input Mode:
+         File: Training data will be download before it starts
+         Pipe: Streams your data to the algorithm while it is running; gives faster performance
+
+      # Setup S3 Bucket For Jupyter Notebook
+         S3 -> Create Bucket -> bucket name: xgboost-customer-churn-ml-deep-pat -> Create Bucket
+
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S04/xgboost/start/xgboost_churn.ipynb <double click>
+                  <defaults> -> select
+         # in Jupyter Notebook:
+           Initialize Environment and Variables:
+             set bucket name: bucket = "xgboost-customer-churn-ml-deep-pat"
+             # note data has already been split train and validation CSV files
+
+Train
+-> set location of training data
+
+# The location of our training and validation data in S3
+s3_input_train = TrainingInput(
+    s3_data='s3://{}/{}/train'.format(bucket, prefix), content_type='csv'
+)
+s3_input_validation = TrainingInput(
+    s3_data='s3://{}/{}/validation/'.format(bucket, prefix), content_type='csv'
+)
+
+
+-> set location of XGBoost container
+
+# The location of the XGBoost container version 1.5-1 (an AWS-managed container)
+container = sagemaker.image_uris.retrieve('xgboost', sess.boto_region_name, '1.5-1')
+
+             -> Initialize Hyperparameters, setup output bucket, and set up Estimator
+# Initialize hyperparameters
+hyperparameters = {
+                    'max_depth':'5',
+                    'eta':'0.2',
+                    'gamma':'4',
+                    'min_child_weight':'6',
+                    'subsample':'0.8',
+                    'objective':'binary:logistic',
+                    'eval_metric':'error',
+                    'num_round':'100'}
+
+# Output path where the trained model will be saved
+output_path = 's3://{}/{}/output'.format(bucket, prefix)
+
+# Set up the Estimator, which is training job
+xgb = sagemaker.estimator.Estimator(image_uri=container,
+                                    hyperparameters=hyperparameters,
+                                    role=role,
+                                    instance_count=1,
+                                    instance_type='ml.m4.xlarge',
+                                    output_path=output_path,
+                                    sagemaker_session=sess)
+-> Run training:
+
+# "fit" executes the training job
+xgb.fit({'train': s3_input_train, 'validation': s3_input_validation})
+
+-> During training it reports
+
+[1]#011train-error:0.05058#011validation-error:0.08108
+[2]#011train-error:0.04886#011validation-error:0.07508
+.  .  .
+[98]#011train-error:0.02829#011validation-error:0.06607
+[99]#011train-error:0.02829#011validation-error:0.06607
+
+-> when finished it reports 0.028 error rate on training data (0.982 accuracy)
+->               it reports 0.066 error rate on validation data (0.944 accuracy)
+
+# train model
+-> Go to S3 bucket  demo/output/sagemaker-xgboost-<date time>/ model.tar.gz
+
+  Delete Resources
+     - Terminating instances and kernels
+
+  Summary:
+    Training a model in SageMaker starts with a training job
+      - created through the SageMaker UI or  a SageMaker Notebook
+      - specify the dataset, the algorithm, compute instance, ane ECR path
+    Evaluate the model to see how well it makes predictions
+      - use hyperparameters tunning to get it just right
+
+
+------------------------------------------------------
+4.4 Using Popular Frameworks
+
+  Machine Learning Frameworks with SageMaker
+
+    Options for building and training Models in SageMaker
+      1. Built-In Algorithms
+        - AWS provides the algorithm and containers
+      2. Script Mode
+        - You provide the algorithm built with a popular framework [TensorFlow, PyTorch, ...]
+          and you provide a python (.py) script as entry point for creating the model
+        - AWS provides the container
+      3. Bring Your Own Algorithm
+        - You provide the algorithms and containers
+        - for where you have very specialized algorithms or containers
+
+     SageMaker ML and Deep Learning Supported Frameworks:
+       - Apache MXNet
+       - Apache Spark
+       - Chainer
+       - Hugging Face
+       - PyTorch
+       - scikit-learn
+       - SparkML Serving
+       - TensorFlow
+       - Triton Inference Server
+
+      What are ML frameworks:
+        - libraries or interfaces that make it easy to develop ML models
+
+  Popular Framework Overviews:
+
+    TensorFlow
+      - most popular ML framework
+      - developed in 2015 at Google Brain and now is open source
+      - supports Python and R languages
+        - makes heavy use of NumPy arrays (python library for working with arrays)
+      - built-on tensors which are multidimensional arrays
+      - Can run on CPUs and GPUs
+      - Friendly for beginners and advanced users
+      - Used for:
+        - Neural networks (deep learning - e.g. image recognition, speech recognition,  recommendation engines, etc)
+        - Regression
+           - Regression is used to predict numerical or continuous values such as home values, market trends, etc
+        - Classification
+           Classification models are used to predict categorical discrete values such as blue or red, true
+           or false, and so on.
+
+       Note:
+         NumPy
+            - a Python library used for working with arrays.
+            - It also has functions for working in domain of linear algebra, fourier transform, and matrices.
+
+    PyTorch
+      - Competitor to TensorFlow
+        - faster training times than TensorFlow
+        - considered more customizable and uses object-oriented classes (instead of multidimensional arrays used by TensorFlow)
+      - Developed in 2018 at Facebook AI Research
+      - A python Library
+      - Can run on CPUs and GPUs
+      - Used for:
+        - Neural networks (deep learning - e.g. image recognition, speech recognition,  recommendation engines, etc)
+        - Regression
+        - Classification
+
+    Apache MxNet
+      - Exposes the Gluon deep learning APIs
+      - Developed in 2017 by Apache
+      - Supports Python, C++, R, Julia, Perl, and more
+        - Can run on CPUs and GPUs
+      - Many of the SageMaker built-in algorithms and models are implemented with MXNet
+      - Used for:
+        - Deep Learning
+
+    scikit-learn
+      - a great option for beginners
+      - can be used for quick data processing and hypothesis testing
+        - afterwards, can be moved to TensorFlow or PyTorch
+      - developed in 2007 at Google
+      - A python Library
+      - User for:
+        - Supervised learning
+        - Unsupervised learning
+        - Not meant for deep learning nor nearal networks
+
+  Summary:
+
+    SageMaker's script model gives you control of the algorithm and code, while AWS handles the containers
+
+    SageMaker supports many popular frameworks for ML and deep learning
+      including:
+        TensorFlow
+        PyTorch
+        MXNet
+        scikit-learn
+
+------------------------------------------------------
+4.5 Working in Script Model with a Framework
+
+  Overviewing the Dataset and Approach
+    Red Wine Quality Dataset
+      - includes 1600 items of information like acidity level, density, sulfates, pH, and alcohol
+      - target feature: quality
+      - What is the quality score?
+        - using random forest regressioin with scikit-learn
+     Download the Dataset
+       - S04/script-mode-/start/winequality-red.csv
+
+    Estimators and a Custom Python Script
+      - script mode requires and estimator and python script entry point
+      - using estimator class from SKLearn
+
+          # SageMaker Notebook:
+          # Set up the SKLearn estimator, with entry point to our Python script\n",
+
+             from sagemaker.sklearn import SKLearn
+
+             # 'train.py'           - custom training and inference code goes here in a python script
+             # 'script_mode=True'   - using script mode
+             sk_estimator = SKLearn(entry_point='train.py',
+                                 role=role,
+                                 instance_count=1,
+                                 instance_type='ml.m5.large',
+                                 py_version='py3',
+                                 framework_version='0.23-1',
+                                 script_mode=True,
+                                 hyperparameters={,
+                                        'estimators': 20}
+                                 )
+             # call 'fit' to do the training
+             sk_estimator.fit({'train': s3_input_train})
+
+  Training a Model Using scikit-learn in Script Mode
+    cost: $1 USD
+    - creating an S3 bucket for the training data
+    - preparing the data in the SageMaker Notebook
+    - Creating the SKLearn estimator which requires python script entry point
+    - reviewing the 'train.py' file [entry point python script]
+    - train the model
+
+
+      # Setup S3 Bucket For Jupyter Notebook
+         S3 -> Create Bucket -> bucket name: sagemaker-script-mode-wine-quality-pat -> Create Bucket
+
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S04/script-mode/start/script_mode_scikit.ipynb <double click>
+                  <defaults> -> select
+         # in Jupyter Notebook:
+           Initialize Environment and Variables:
+             # fix import CSVSerializer error:
+             https://github.com/aws/amazon-sagemaker-examples/issues/1372
+             # change from:
+             from sagemaker.predictor import CSVSerializer
+             # to:
+             from sagemaker.serializers import CSVSerializer
+             set bucket name: bucket = "sagemaker-script-mode-wine-quality-pat"
+             # note data has already been split train and validation CSV files
+           Data
+             # spit 33% train, 66% validation
+
+
+         # Note: "train.py" in same folder as Notebook file, "script_mode_scikit.ipynb"
+
++++++++=
+train.py
+++++++++++++++++++++++
+# Imports
+import argparse, os
+import boto3
+import json
+import pandas as pd
+import numpy as np
+import joblib
+import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestRegressor
+from sklearn import metrics
+
+if __name__ == '__main__':
+
+    # Retrieve the hyperparameters and arguments passed to the script
+    parser = argparse.ArgumentParser()
+
+    # Hyperparamaters
+    parser.add_argument('--estimators', type=int, default=15)
+
+    # Directories to write model and output artifacts to after training
+    parser.add_argument('--sm-model-dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
+    parser.add_argument('--model_dir', type=str)
+    parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
+
+    args, _ = parser.parse_known_args()
+    estimators     = args.estimators
+    model_dir  = args.model_dir
+    sm_model_dir = args.sm_model_dir
+    training_dir   = args.train
+
+
+    # Read in the training data
+    df = pd.read_csv(training_dir + '/train.csv', sep=',')
+
+    # Data preprocessing to pull out target column ('quality') and split into training and testing sets
+    X = df.drop('quality', axis = 1)
+    y = df['quality']
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    sc = StandardScaler()
+    X_train = sc.fit_transform(X_train)
+    X_test = sc.transform(X_test)
+
+
+     # Train the model using Random Forest Regression
+    regressor = RandomForestRegressor(n_estimators=estimators)
+    regressor.fit(X_train, y_train)
+    y_pred = regressor.predict(X_test)
+
+    # Save the model
+    joblib.dump(regressor, os.path.join(args.sm_model_dir, "model.joblib"))
+
+
+# INFERENCE
+# SageMaker uses four functions to load the model and use it for inference: model_fn, input_fn, output_fn, and predict_fn
+
+"""
+Deserialize fitted model
+"""
+def model_fn(model_dir):
+    model = joblib.load(os.path.join(model_dir, "model.joblib"))
+    return model
+
+"""
+input_fn
+    request_body: The body of the request sent to the model.
+    request_content_type: (string) specifies the format/variable type of the request
+"""
+def input_fn(request_body, request_content_type):
+    if request_content_type == 'application/json':
+        request_body = json.loads(request_body)
+        inpVar = request_body['Input']
+        return inpVar
+    else:
+        raise ValueError("This model only supports application/json input")
+
+"""
+predict_fn
+    input_data: returned array from input_fn above
+    model (sklearn model) returned model loaded from model_fn above
+"""
+def predict_fn(input_data, model):
+    return model.predict(input_data)
+
+"""
+output_fn
+    prediction: the returned value from predict_fn above
+    content_type: the content type the endpoint expects to be returned. Ex: JSON, string
+"""
+
+def output_fn(prediction, content_type):
+    res = int(prediction[0])
+    respJSON = {'Output': res}
+    return respJSON
+++++++++++++++++++++++
+
+  -> Initial SKLearn train code:
+# Set up the SKLearn estimator, with entry point to our Python script
+sk_estimator = SKLearn(entry_point='train.py',
+                       role=role,
+                       instance_count=1,
+                       instance_type='ml.m5.large',
+                       py_version='py3',
+                       framework_version='0.23-1',
+                       script_mode=True,
+                       hyperparameters={
+                              'estimators': 20
+                            }
+                       )
+  -> Start training:
+
+# "fit" executes the training job
+sk_estimator.fit({'train': s3_input_train})
+
+  -> when training completed, it reports:
+
+2023-10-19 00:53:40 Uploading - Uploading generated training model
+2023-10-19 00:53:40 Completed - Training job completed
+Training seconds: 91
+Billable seconds: 91
+
+
+Deploy Code:
+
+
+# Create an endpoint
+sk_endpoint_name = 'sklearn-rf-model'+time.strftime("%Y-%m-%d-%H-%M-%S", time.gmtime())
+
+# Print the name of the endpoint so it can be used in the cell below
+print('Endpoint name: ' + sk_endpoint_name)
+
+# Deploy the model to the endpoint (this will take some time to complete)
+sk_predictor = sk_estimator.deploy(initial_instance_count=1,instance_type='ml.m5.large',
+                                   endpoint_name=sk_endpoint_name)
+
+# Pass sample data to get a prediction of wine quality
+client = boto3.client('sagemaker-runtime')
+content_type = 'application/json'
+
+endpoint_name = 'sklearn-rf-model2024-07-24-23-34-58' # Update with the name of your endpoint that was printed in the cell above
+
+# These are the values for a random wine record.  This particular wine should have a quality score of 6.
+request_body = {'Input': [[5.3, 0.47, 0.11, 2.2, 0.048, 16, 89, 0.99182, 3.54, 0.88, 13.56666667]]}
+
+# Serialize data
+data = json.loads(json.dumps(request_body))
+payload = json.dumps(data)
+
+# Invoke the endpoint, passing in the sample wine data
+response = client.invoke_endpoint(
+    EndpointName=endpoint_name,
+    ContentType=content_type,
+    Body=payload)
+result = json.loads(response['Body'].read().decode())['Output']
+
+# Output the result, which is the wine quality score
+6
+
+
+
+  Delete Resources
+     - Delete Endpoint [if your ran deploy code]
+       -> SageMaker -> Inference <left tab> -> Endpoints -> select endpoint -> Action -> delete
+     - Terminating instances and kernels
+
+  Summary
+
+    SageMaker's script mode requires an estimator that points to a python script
+      - Python script contains a custom training and inference code
+
+
+------------------------------------------------------
+4.6 Using SageMaker Experiments To Manage Training Jobs
+
+  Cost: $1 USD
+
+  Machine Learning is an Iterative Process
+
+         Training  -------------> Evaluation ---------------> Prediction
+             |                        |
+             |            Do we need to change the algorithm?
+             |            Do we need to do more feature engineering?
+             |            Do we need new or different data?
+             |                        |
+             |------------------------|
+
+    - over time, you may have thousands of similar training jobs
+
+  Why SageMaker Experiments
+    - a capability of SageMaker thats lets you organize, track, compare, and evaluate your
+      ML experiments
+    - Created through the SageMaker Python SDK
+    - track and visualize [the experiments] through the SageMaker UI
+
+  The Experiment Hierarchy
+     - an Experiment is a collection of 1 or more Runs
+     - a "Run" consists of all the inputs, parameters, configurations for one iteration of training of the model
+
+                      Experiment
+                            |
+           |-------------|---------|-|-|-------|
+           |             |         | | |       |
+          Run 1         Run 2      . . .    Run N
+
+
+  Creating an Experiment through the Python SDK
+    - reviewing code in the SageMaker Studio Notebook
+         - Dataset using MNIST Dataset with Keras
+         - The MNIST database (Modified National Institute of Standards and Technology database[1]) is a large
+           database of handwritten digits that is commonly used for training various image processing systems
+    - creating multiple runs
+
+
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        # "experiments_keras.ipynb" uses images from cancer flow
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S04/experiments/start/experiments_keras.ipynb <double click>
+                  <defaults> -> select
+
+                  -> No Kernel <upper right> -> Image: TensorFlow 2.6 Python 3.8 CPU optimized,
+                     kernel: Python 3, instance type: ml.t3.medium -> Select
+         # in Jupyter Notebook:
+           Initialize Environment and Variables:
+             install required packages (boto3, sagemaker, tensorflow)
+             - set up sagemaker env
+             - prepare the data from training
+
+           Data
+             - download dataset
+             # spit 33% train, 66% validation
+             x_train shape: (60000, 28, 28, 1)
+             60000 train samples
+             10000 test samples
+            Build the Model
+            Define Keras Callbacks
+
+              - The Keras Callback class provides a method on_epoch_end, which emits metrics at the end of each epoch.
+              - All emitted metrics will be logged in the run passed to the callback.
+            Set up a SageMaker Experiment and its Runs, then Train
+               - train the Keras model locally on the same instance where this notebook is running. With each run,
+                 we track the input artifacts and write them to files. We use the ExperimentCallback method to log the
+                 metrics to the Experiment run.
+
+               - define experiment and define run name
+               experiment_name = "mnist-keras-experiment"
+               run_name = "mnist-keras-batch-size-10"
+
+               - will do 1 run with batch_size set to 10 and 2nd run with set to 20
+                 - each run will have 3 epoch
+                 set:
+                   batch_size = 10
+
+++++++++++++++++++
+"Set up a SageMaker Experiment and its Runs, then Train" code:
++++++++++++++++++++++++++++++
+from sagemaker.experiments.run import Run
+
+batch_size = 10
+epochs = 3
+dropout = 0.5
+
+model = get_model(dropout)
+
+experiment_name = "mnist-keras-experiment"
+run_name = "mnist-keras-batch-size-10"
+with Run(experiment_name=experiment_name, run_name=run_name, sagemaker_session=sagemaker_session) as run:
+    run.log_parameter("batch_size", batch_size)
+    run.log_parameter("epochs", epochs)
+    run.log_parameter("dropout", dropout)
+
+    run.log_file("datasets/input_train.npy", is_output=False)
+    run.log_file("datasets/input_test.npy", is_output=False)
+    run.log_file("datasets/input_train_labels.npy", is_output=False)
+    run.log_file("datasets/input_test_labels.npy", is_output=False)
+
+    # Train locally
+    model.fit(
+        x_train,
+        y_train,
+        batch_size=batch_size,
+        epochs=epochs,
+        validation_split=0.1,
+        callbacks=[ExperimentCallback(run, model, x_test, y_test)],
+    )
+
+    score = model.evaluate(x_test, y_test, verbose=0)
+    print("Test loss:", score[0])
+    print("Test accuracy:", score[1])
+
+    run.log_metric(name="Final Test Loss", value=score[0])
+    run.log_metric(name="Final Test Accuracy", value=score[1])
++++++++++++++++++++++++++++++
+
+  Viewing and Comparing Experiment Results in the SageMaker UI
+    - Viewing experiments
+    - viewing runs
+    - Comparing Runs
+
+      -> SageMaker Studio -> Home <left tab> -> Experiments -> mnist-keras-experiment ->
+
+      # to compare -> select both runs -> analyze
+
+      # to chart
+        -> Chart -> confortable -> edit <icon> -> chart type: bar, y-axis: try different values
+
+
+  Deleting Experiments through the Python SDK
+   https://docs.aws.amazon.com/sagemaker/latest/dg/experiments-cleanup.html
+   - no way to delete experiment via UI, so must use SDK
+++++++
+delete experiment SDK code (Note: change "_Experiment" to "Experiment"
+++++++++++++++++++++++++++
+# Delete the experiment
+from sagemaker.experiments.experiment import Experiment
+
+exp = Experiment.load(experiment_name=experiment_name, sagemaker_session=sagemaker_session)
+exp._delete_all(action="--force")
+++++++++++++++++++++++++++
+
+   - terminate instances and kernels
+
+  Summary
+
+    SageMaker Experiments
+      - Help manage the iterative nature of machine learning
+         - lets you organize, track, and compare different training models
+      - Create through the SageMaker Python SDK
+      - View and compare through the SageMaker UI
+      - Delete experiments through the SageMaker Python SDK (cannot be deleted in UI)
+
+
+
+------------------------------------------------------
+4.7 Detecting Bias with SageMaker Clarify
+
+
+  Cost: $1 USD
+
+  ML Perception
+    - ML must be correct - It knows more than I do
+    ML Bias examples:
+      Dissecting racial bias in an algorithm used to manage the health of populations
+      https://www.science.org/doi/10.1126/science.aax2342
+
+      Amazon scraps secret AI recruiting tool that showed bias against women
+      https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/amazon-scraps-secret-ai-recruiting-tool-that-showed-bias-against-women-idUSKCN1MK08G
+
+  Why SageMaker Clarify
+    - Detects and measures potential bias using a variety of metrics
+    - detects underlining biases in the model and data
+
+  Two Types of ML Bias
+    Dataset (pre-training) bias
+      - data is imbalanced and doesn't reflect the real world
+      - example: loan approval data contains very little data for people who are self-employed but then
+        when the bank is using the model in the real world, it has a lot of self-employed people
+    Model (post-training) bias
+      - bias introduced by the training algorithm
+      - example: binary classification algorithm is used to predict fraud or not, but the model was trained
+        with data that showed 99% of transactions were not fraud and so the model might have picked up some bias.
+
+  Integration Points
+    Using Clarify with other SageMaker Products
+      - SageMaker Data Wrangler
+        - Use a simple graphical interface
+      - SageMaker Data Experiments
+        - Get bias results for each experiment
+        - Visual results appear alongside other experiment details
+
+  Detecting Pre-training Bias in a Dataset
+    - Reviewing the dataset
+      - S04/clarify/start/loan_data.csv
+        - home loan dataset with features: loan_id,gender,married,dependents,education,self_employed,applicant_income,etc
+        - target: approved (Y or N)
+        - looking at gender and self_employed for potential bias
+    - Creating a new experiment
+    - Running the Clarify Processor job
+    - Viewing the bias results in the SageMaker UI
+
+
+
+      # Create S3 bucket: clarify-loan-approval-pat
+
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        # "experiments_keras.ipynb" uses images from cancer flow
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S04/clarify/start/clarify-pre-training-bias.ipynb <double click>
+                  <defaults> -> select
+
+         # in Jupyter Notebook:
+           Initialize Environment and Variables:
+             - check sagemaker version:
+             2.192.0
+            # To use the Experiments functionality in the SageMaker Python SDK, you need to be running at least
+            #    SageMaker v2.123.0
+            # skip upgrade sagemaker block
+             install required packages (sagemaker > 2)
+             - set up sagemaker env
+             - prepare the data from training
+
+           # Import libraries
+            -> first, update bucket name:
+            bucket = 'clarify-loan-approval-pat'
+            -> correct import "CSVSerializer to:
+             from sagemaker.serializers import CSVSerializer
+
+           Data
+             - load data from - S04/clarify/start/loan_data.csv
+             - define attributes
+             - upload dataset to S3
+
+            Clarify and Experiments
+              - implement the Clarify code to detect bias in our dataset.
+              - It starts with a processor for the job, then we define various configuration parameters.
+              - When we run the pre_training_bias job, we hook into our Experiment.
+
+++++++++++++++++++++++++
+
+# Define the processor for the job
+clarify_processor = clarify.SageMakerClarifyProcessor(
+    role=role,
+    instance_count=1,
+    instance_type='ml.m5.xlarge',
+    sagemaker_session=sess,
+    job_name_prefix='clarify-pre-training-bias-detection-job'
+)
+
+# Specify the path where the bias report will be saved once complete
+bias_report_output_path = 's3://{}/{}/clarify-bias'.format(bucket, prefix)
+
+# Specify the S3 path to our input data
+s3_data_input_path='s3://{}/{}'.format(bucket, prefix)
+
+# Specify inputs, outputs, columns and target names
+bias_data_config = clarify.DataConfig(
+    s3_data_input_path=s3_data_input_path,
+    s3_output_path=bias_report_output_path,
+    label='approved',
+    headers=df.columns.to_list(),
+    dataset_type='text/csv',
+)
+
+# Specify the configuration of the bias detection job
+# For facet_name, we include two sensitive features we want to check for bias: gender and self-employed
+# For facet_values_or_threshold, we input the values of potentially disadvantaged groups (gender of 0 = female; self-employed of 1 = self-employed)
+bias_config = clarify.BiasConfig(
+    label_values_or_threshold=['Y'], # The value that indicates someone received a home loan
+    facet_name=['gender', 'self_employed'],
+    facet_values_or_threshold=[[0], [1]]
+)
+# Create an experiment and start a new run
+experiment_name = 'loan-approval-experiment'
+run_name = 'pre-training-bias'
+
+# Run the bias detection job, associating it with our Experiment
+with Run(
+    experiment_name=experiment_name,
+    run_name=run_name,
+    sagemaker_session=sess,
+) as run:
+    clarify_processor.run_pre_training_bias(
+        data_config=bias_data_config,
+        data_bias_config=bias_config,
+        logs=False,
+    )
+# Create an experiment and start a new run
+experiment_name = 'loan-approval-experiment'
+run_name = 'pre-training-bias'
+
+# Run the bias detection job, associating it with our Experiment
+with Run(
+    experiment_name=experiment_name,
+    run_name=run_name,
+    sagemaker_session=sess,
+) as run:
+    clarify_processor.run_pre_training_bias(
+        data_config=bias_data_config,
+        data_bias_config=bias_config,
+        logs=False,
+    )
+++++++++++++++++++++++++
+
+  Viewing results in S3
+    -> S3 -> "clarify-loan-approval-pat" bucket -> under: demo/clarify-bias
+     -> created "report.html", "report.ipynb", & "report.pdf"
+     -> examine "report.pdf"
+
+  Viewing results in SageMaker Experiments UI:
+
+      -> SageMaker Studio -> Home <left tab> -> Experiments -> loan-approval-experiment -> clarify-pre-training-bias-detection-*
+         -> Bias Reports
+
+  Deleting the Experiment
+
+   https://docs.aws.amazon.com/sagemaker/latest/dg/experiments-cleanup.html
+   - no way to delete experiment via UI, so must use SDK
+++++++
+delete experiment SDK code (Note: change "_Experiment" to "Experiment"
++++++++++++++++++++++
+from sagemaker.experiments.experiment import Experiment
+
+exp = Experiment.load(experiment_name=experiment_name, sagemaker_session=sess)
+exp._delete_all(action="--force")
++++++++++++++++++++++
+
+  Delete Resources
+   - terminate instances and kernels
+
+  Summary
+
+    SageMaker Clarify
+      - detects and measures potential bias usign a variety of metrics
+      - bias can exist in the dataset or in the trained model
+      - integrates with Data Wrangler and Experiments making it easy to work with in a graphical way
+
+
+------------------------------------------------------
+4.8 Using SageMaker for Collaboration
+
+  Using Git Integration
+     - SageMaker integration with Git right on the left-hand navigation
+       - This is similar to the functionality that you'd find in VS Code or GitHub desktop
+     - There's also a terminal available so you can just type in commands if you prefer that.
+
+  Working with Git from the SageMaker Terminal and UI
+    - Cloning a repository
+    - Working with common Git commands
+    - Performing a notebook diff
+
+      # clone for SageMaker Studio UI
+      -> SageMaker Studio -> Git <top center tab> -> Clone Git Repository ->
+         Git repository URL <git URL>, project  director to clone into: <folder path> -> clone
+
+      e.g.:
+      -> Git <tab> -> Clone a Repository ->
+         URL: https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive.git
+         Project: ml-deep-dive
+         -> Clone
+
+      # clone for SageMaker Studio terminal
+      -> SageMaker Studio -> File <top center tab> -> New -> Terminal  -> <in terminal window>
+         git clone <URL>
+
+         e.g.
+         git clone https://github.com/ACloudGuru-Resources/Machine-Learning-on-AWS-Deep-Dive.git
+         # clone repo will show up on SageMaker Studio -> folder/file browser
+
+
+      # to work with Git functionality
+       -> SageMaker Studio -> Git Icon <left tab>
+           top: shows current repo
+           middle: current Branch
+               bottom to create "New Branch"
+           Changes files under "Changes"
+            -> click "+" on changed files to submit the change
+            -> click "commit"
+
+          For changed files, hover over the select "diff" icon to see changes
+          For changed files, hover over the select "discharge" icon to delete changes
+
+  Sharing SageMaker Notebooks
+      open repo Notebook file -> Share <top right> -> Create Shareable snapshot options -> create
+        -> creates a notebook snapshot and shareable link
+           copy link to share
+            -> create a read only version, but include "create a copy" option
+
+
+  Summary
+
+    SageMaker provides seamless Git integration from the terminal and the UI
+      - Use all your favorite Git commands
+
+    Sharing SageMaker Notebooks is quick and easy, providing a read-only copy to others in your SageMaker domain
+       -
+
+------------------------------------------------------
+4.9 Section Summary - Building and Training Models with SageMaker Studio
+
+  Summarizing the Important Takeways
+
+    SageMaker Studio offers dozens of built-in algorithms, making it easy to get started training models
+      - supervised learning, unsupervised learning, image classification, ...
+
+    Training a model in SageMaker starts with a training job
+      - created through the SageMaker Studio UI or notebook
+
+    Evaluate the model to see how well it makes predictions
+      - hyperparameter tuning
+      - confusion matrix
+
+    SageMaker Studio supports many popular frameworks for ML and deep learning
+      - TensorFlow
+      - PyTorch
+      - MXNet
+      - scikit-learn
+
+    Working with Frameworks in SageMaker:
+       - Script mode requires an estimator that points to a python script
+       - Python script contains custom training and inference code
+       - with script-mode, SageMaker handles the container for you
+
+    SageMaker Experiments are used to manage the interative nature of machine learning
+       - As you're making the different tweaks to the parameters to train your model, you can capture those in a run,
+       - in the experiments UI, you can see all of those details and even compare across multiple runs
+
+    SageMaker Clarify detects and measures potential bias using a variety of Metrics
+       - bias can exist in the data [dataset] or in the trained model
+
+    Team Collaboration can be done through Git and Sharing Notebooks
+
+
+  Up Next
+    - Deployment and Inference with SageMaker Studio
+
+------------------------------------------------------
+4.10 Quiz: Building and Training Models with SageMaker Studio
+
+
+Question 4
+
+You have decided to use TensorFlow for a deep learning image recognition application. How can you do this in SageMaker?
+
+Choices:
+  - Create a TensorFlow script as an entry point.
+
+  - Set hyperparameters to script_mode.
+
+  - Set script_mode to true.     <- correct answer
+
+  - Call estimator.fit().
+Sorry!
+
+To use the TensorFlow framework, you will need a Python script with your custom code, not a TensorFlow script.
+Correct Answer
+
+To use a machine learning framework like TensorFlow in SageMaker, you need to use script mode. Setting script_mode to true on the Estimator object will achieve this.
+
+------------------------------------------------------
+
+Chapter 5: Deployment and Inference with SageMaker Studio
+
+------------------------------------------------------
+5.1 Section Introduction
+
+  The Machine Learning Process
+    For data Prep (fetch, clean, prepare):                  SageMaker Data Wrangler and Feature Store
+    For Train Model and Evalate Model:                      SageMaker Studio Notebooks, Clarify, and Experiments
+    For Deployment to production and Monitoring/Collect data / Evaluate:  Sagemaker Endpoints, Batch, Transform,
+                                                                           Pipelines, Model Monitor
+      -> this chapter
+
+  Inference
+     - prediction (inference) the model makes for the new data
+
+  Two types of Inference supported by SageMaker
+    Batch Inference
+      - performed on data in batches often asynchronous
+      - Use: SageMaker "batch transform"
+    Live Inference
+      - performed in real time, with immediate results
+      - Use: SageMaker "real-time endpoints"
+
+
+  Summary
+
+    Inference:
+       In ML, inference with new data is the ultimate goal
+
+    SageMaker offers 2 types of inference
+      Batch Inference with SageMaker "batch transform"
+      Live Inference  with SageMaker "real-time endpoints"
+
+------------------------------------------------------
+5.2 Working with SageMaker Batch Transforms
+
+  Cost: ~$0.50
+
+  Creating a SageMaker Batch Transform
+
+    Batch Transform
+      Use Cases:
+        - One-off evaluations of a model
+        - Any prediction where latency isn't a concern
+          -  used more for research and training purposes
+
+      Requires a web server that accepts HTTP POST requests
+        - get setup for you in the demo
+
+      Clusters are torn down when the job completes (unlike with real-time endpoints which
+        are persistent)
+
+      Created using a transformer object and a batch transform job
+        are presistent
+
+  Demo
+    Creating and Running a Batch Transform Job
+      - through the SageMaker UI
+      - Through a SageMaker Notebook
+
+     -> AWS -> SageMaker -> Inference (left tab) -> Batch transform jobs -> Create Batch transform job:
+        Job name:
+
+      # Create S3 bucket: sagemaker-batch-transform-pat
+
+     -> AWS -> SageMaker -> Domains ->  Create Domain -> select "Quick Setup" -> Setup ->
+        Users: pat -> Add user profile ->  User Profile: Name: aws-ml-deep-dive-ag-pat,
+        Execution Role: <default: AmazonSageMaker-ExecutionRole-*> -> Next ->
+        Juptyer Lab Version: <default: Juptyer lab 3.0 -> Next -> Next -> Submit
+
+
+
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        # "batch_transform_churn.ipynb" uses images from cancer flow
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S05/batchtransform/start/batch_transform_churn.ipynb <double click>
+                  <defaults> -> select
+
+                  -> No Kernel <upper right> -> Image: ???
+                     kernel: Python 3, instance type: ml.t3.medium -> Select
+
+         # in Jupyter Notebook:
+          -> change "<name-of-your-bucket> to: sagemaker-batch-transform-pat
+           Initialize Environment and Variables:
+             install required packages (boto3, sagemaker, tensorflow)
+             - set up sagemaker env
+             - prepare the data from training
+
+
+           # Add
+           pip install --upgrade pip
+           -> run, and then, restart Kernel
+
+           # Import libraries
+            -> first, update bucket name:
+            bucket = 'agemaker-batch-transform-pat'
+            -> correct import "CSVSerializer to:
+             from sagemaker.serializers import CSVSerializer
+
+           Data
+             - load data locally to S3 bucket  - S05/batchtransform/start/[batch_data.csv, train.csv, validation.csv]
+             - define attributes
+             - upload dataset to S3
+
+          -> run sections through "Train" section, e.g.
+          # "fit" executes the training job
+          # We're passing in experiment_config so that the training results will be tied to the experiment
+          xgb.fit({'train': s3_input_train, 'validation': s3_input_validation}, experiment_config=experiment_config)
+
+        # Train
+        # We trained the model in previous lessons, but to make it easier to follow along with this notebook, we'll do that again here.
+        #
+        # In this section, we need to specify three things: where our training data is, the path to the algorithm
+        # container stored in the Elastic Container Registry, and the algorithm to use (along with hyperparameters).
+        #
+        # The training job (the Estimator) takes in several hyperparameters. More information on the hyperparameters
+        # for the XGBoost algorithm can be found here.
+
+        # The location of our training and validation data in S3
+        s3_input_train = TrainingInput(
+            s3_data='s3://{}/{}/train'.format(bucket, prefix), content_type='csv'
+        )
+        s3_input_validation = TrainingInput(
+            s3_data='s3://{}/{}/validation/'.format(bucket, prefix), content_type='csv'
+        )
+        # The location of the XGBoost container version 1.5-1 (an AWS-managed container)
+        container = sagemaker.image_uris.retrieve('xgboost', sess.boto_region_name, '1.5-1')
+        # Initialize hyperparameters
+        hyperparameters = {
+                            'max_depth':'5',
+                            'eta':'0.2',
+                            'gamma':'4',
+                            'min_child_weight':'6',
+                            'subsample':'0.8',
+                            'objective':'binary:logistic',
+                            'eval_metric':'error',
+                            'num_round':'100'}
+
+        # Output path where the trained model will be saved
+        output_path = 's3://{}/{}/output'.format(bucket, prefix)
+
+        # Set up the Estimator, which is training job
+        xgb = sagemaker.estimator.Estimator(image_uri=container,
+                                            hyperparameters=hyperparameters,
+                                            role=role,
+                                            instance_count=1,
+                                            instance_type='ml.m4.xlarge',
+                                            output_path=output_path,
+                                            sagemaker_session=sess)
+        # "fit" executes the training job
+        xgb.fit({'train': s3_input_train, 'validation': s3_input_validation})
+
+
+
+     # Host/Batch Transform
+     #  Now that we've trained the model, let's use it to do prediction on batches of data. Batch Transform will launch all necessary
+     #  infrastructure, and then tear it down once the batch transform job completes.
+
+     #  For this lesson, we'll be passing in the data from batch_data.csv. IMPORTANT: The dataset used for batch predictions cannot
+     #  have a target column (i.e., the first column in our case, which represents "Churn?". So we'll remove that column and
+     #  then upload the local file to S3.
+
+        # Read data into a dataframe
+        batch_data_path = 'batch_data.csv'
+        df = pd.read_csv(batch_data_path, delimiter=',', index_col=None)
+
+        batch_data = df.iloc[:, 1:] # delete the target column
+        batch_data.to_csv('batch_data_for_transform.csv', header=False, index = False)
+
+        # Upload the new CSV file (without the target column) to S3
+        boto3.Session().resource('s3').Bucket(bucket).Object(os.path.join(prefix, 'batch/batch_data_for_transform.csv')).upload_file('batch_data_for_transform.csv')
+
+        # The location of the batch data used for prediction, and location for batch output
+        s3_batch_input = 's3://{}/{}/batch/batch_data_for_transform.csv'.format(bucket,prefix)
+        s3_batch_output = 's3://{}/{}/batch/batch-inference'.format(bucket, prefix)
+
+        # Create the Batch Transform job
+        transformer = xgb.transformer(
+            instance_count=1,
+            instance_type="ml.m4.xlarge",
+            strategy="MultiRecord",
+            assemble_with="Line",
+            accept="text/csv",
+            output_path=s3_batch_output
+        )
+
+        # Update the TrialComponentDisplay name; this is for the transform part of the trial (the previous component was for training)
+        experiment_config={'ExperimentName': experiment_name,
+                           'TrialName': trial_name,
+                           'TrialComponentDisplayName': 'BatchTransformJob'}
+
+        transformer.transform(s3_batch_input, content_type="text/csv", split_type="Line", experiment_config = experiment_config)
+        transformer.wait()
+
+  Viewing the Output of SageMaker Batch Transform
+
+        # Download the batch transform output locally
+        !aws s3 cp --recursive $transformer.output_path ./
+
+        # View the first ten predictions (you can also double-click the file in the folder view to see all predictions)
+        !head batch_data_for_transform.csv.out
+
+
+        Cleaning Up Experiments
+        In this section, we iterate through our experiments and delete them (this cannot currently be done through the SageMaker UI).
+
+        # Function to iterate through an experiment to delete its trials, then delete the experiment itself
+        def cleanup_sme_sdk(demo_experiment):
+            for trial_summary in demo_experiment.list_trials():
+                trial = Trial.load(trial_name=trial_summary.trial_name)
+                for trial_component_summary in trial.list_trial_components():
+                    tc = TrialComponent.load(
+                        trial_component_name=trial_component_summary.trial_component_name)
+                    trial.remove_trial_component(tc)
+                    try:
+                        # Comment out to keep trial components
+                        tc.delete()
+                    except:
+                        # Trial component is associated with another trial
+                        continue
+                    # To prevent throttling
+                    time.sleep(.5)
+                trial.delete()
+                experiment_name = demo_experiment.experiment_name
+            demo_experiment.delete()
+            print(f"\nExperiment {experiment_name} deleted")
+        # Call the function above to delete an experiment and its trials
+        # Fill in your experiment name (not the display name)
+        experiment_to_cleanup = Experiment.load(experiment_name='batch-transform-churn-experiment')
+
+        cleanup_sme_sdk(experiment_to_cleanup)
+
+
+
+  Deleting Resources
+
+  Need to add code to delete experiment:
+
+    from sagemaker.experiments.experiment import Experiment
+    exp_name = "batch-transform-churn-experiment"
+    exp = Experiment.load(experiment_name=exp_name, sagemaker_session=sagemaker_session)
+    exp._delete_all(action="--force")
+
+
+  Summary
+    SageMaker Batch Transform:
+      - Run efficient inference on large datasets with batch transforms
+      - Infrastructure and endpoints are setup and torn down for you
+        - you only pay for the runtime of the batch transform job
+
+------------------------------------------------------
+5.3 Hosting Real-Time Endpoints for Live Inference
+
+  Cost: ~$0.50
+
+  Use Cases:
+     Real-Time Inference
+       - Any prediction with requirement for low latency
+       - When you need a persistent endpoint
+           - Endpoint last till explicitly torn down - Managed by SageMaker
+           - Auto scaling policies can be configured to support your traffic patterns
+
+
+  Deploying the Model (to endpoint for use in making perdictions)
+    1 the model you created previously
+    2 Create and endpoint configuration for an HTTPS endpoint
+    3 Create the HTTPS endpoint
+
+   Using the Deployed Model
+      Client Application  ---calls----->  SageMaker endpoint 'InvokeEndpoint' method
+
+
+  Creating an Endpoint Configuration and Endpoint
+    -> Using SageMaker UI:
+    -> SageMaker -> Inference -> Endpoint Configurations -> Create endpoint configuration ->
+       Endpoint configuration name: <name>
+       Type of Endpoint: Provisioned or Serverless
+       Encryption key - optional
+       ....
+       Production -> Create production variant -> select model
+       -> create ...
+
+    -> SageMaker -> Inference -> Endpoint ->  Attach Endpoint Configurations -> ..... -> Create endpoint
+
+
+
+  Creating an Endpoint Configuration and Endpoint
+
+      # Create S3 bucket: sagemaker-live-inference-pat
+
+
+    -> Using SageMaker Notebook:
+      # using the SageMaker Studio Jupyter Notebook:
+        -> AWS -> SageMaker -> Domains -> Select [click in to] domain
+        # "live_inference_churn.ipynb" uses images from cancer flow
+        ->  right click on "Launch" for selected user profile -> Studio
+                 -> Home <left tab> -> Folder -> S05/live-inference/start/live_inference_churn.ipynb <double click>
+                  <defaults> -> select
+
+                  -> No Kernel <upper right> -> Image: ???
+                     kernel: Python 3, instance type: ml.t3.medium -> Select
+
+           # Import libraries
+            -> first, update bucket name:
+            bucket = 'sagemaker-live-inference-pat'
+            -> correct import "CSVSerializer to:
+             from sagemaker.serializers import CSVSerializer
+
+
+
+            -> run all blocks through 'Train' e.g. xbg.fit()
+       -> run all blocks through 'Train'
+
+  Deploying the Model (to endpoint for use in making perdictions)
+
+        # Host
+        # Now that we've trained the model, let's deploy it to an endpoint so we can send data to it for live prediction.
+        # We can do that with a single line. This call to "deploy" will create our endpoint configuration and endpoint
+        # all at the same time.
+
+        xgb_predictor = xgb.deploy(initial_instance_count = 1, instance_type = 'ml.m4.xlarge')
+
+
+    -> SageMaker -> Inference -> Endpoint   -> Verify Endpoint and Endpoint Configuration were created
+
+        # Make Predictions
+        # Now that our endpoint is live, let's pass in test data to get predictions.
+
+        # Read test data into a dataframe and transform it into a CSV that can be passed to the endpoint
+        payload = pd.read_csv('test.csv')
+        payload_file = io.StringIO()
+        payload.to_csv(payload_file, header = None, index = None)
+
+        # Create a low-level client for the SageMaker Runtime
+        sagemaker_runtime = boto3.client('sagemaker-runtime')
+
+        # Client applications use this API to get inferences from the hosted model, by calling invoke_endpoint
+        # We pass in the test data/payload file we read in earlier
+        response = sagemaker_runtime.invoke_endpoint(
+                                    EndpointName=xgb_predictor.endpoint_name,
+                                    Body=payload_file.getvalue(),
+                                    ContentType = 'text/csv'
+        )
+
+        # Print the response body, which contains the predictions
+        print(response['Body'].read().decode('utf-8'))
+
+  Using the Deployed Model
+
+    SageMaker Notebook -> Home <left tab> ->  Deployments -> Endpoints -> <show created endpoint>
+        -> select endpoint -> using Json editor to pass in data
+
+
+  Delete Resources
+    -> SageMaker -> Inference -> Endpoint   -> select endpoint -> Action -> Delete
+
+    -> terminate instances and kernels for SageMaker Notebook
+              <running app icon>  -> shutdown apps
+                                     shutdown kernel
+
+   Summary:
+
+     Use real-time inference for predictions that require low latency and a persistent endpoint
+
+     Must set up and tear down infrastructure yourself
+
+------------------------------------------------------
+5.4 Optimizing Machine Learning Deployments
+
+  Load testing your auto scaling configuration
+    https://docs.aws.amazon.com/sagemaker/latest/dg/endpoint-scaling-loadtest.html
+
+  Run a custom load test
+    https://docs.aws.amazon.com/sagemaker/latest/dg/inference-recommender-load-test.html
+
+
+  Single-Model Endpoint
+     - with multiple models, every endpoint would include: (costly):
+          trained Model
+          container
+          ec2 instances
+
+  Multi-model Endpoints
+     - multiple models
+     - shared container
+     - shared ec2 instance
+
+     requirement: models must be built with the same framework (e.g. TensorFlow, PyTorch)
+
+     The code:
+       # Setting Up MultiDataModel
+       #   Create the MultiDataModel object passing in the information about the desired model to use
+
+        from sagemaker.multidatamodel import MultiDataModel
+        mdm = MultiDataModel(name="<name of the model>,
+                             model_data_prefix="S3 prefix where .tar.gz models are located>",
+                             model=<the Model Object that defines attributes>,
+                             sagemaker_session=<the session object>)
+
+       # Invoking the Endpoint
+       #   The same as invoking a single-model endpoint, with the addition of TargetModel,
+       #   specifying the name of the .tar.gz model file to use
+
+       sagemaker_runtime = boto3.client('sagemaker-runtime')
+       response = sagemaker_runtime.invoke_endpoint(
+                                    EndpointName=<endpoint name>,
+                                    ContentType = 'text/csv',
+                                    Body=<body>,
+                                    TargetModel="<model name>.tar.gz"
+        )
+
+
+
+  Auto Scaling and Load Testing
+     The need for Auto Scaling
+        Client Application  ---calling----> SageMaker endpoint      ------> autoscaling instances
+                                           'InvokeEndpoint' method
+
+   Implementing Autoscaling on a SageMaker Endpoint
+     - Creating an auto scaling policy
+
+         -> Must have an existing SageMaker Endpoint
+         -> SageMaker -> Endpoint -> Select Endpoint -> Endpoint Configuration Settings -> Configure auto scaling
+               Variant automatic scaling: min instance count:  1, maximum instance count: 3
+               target Metric:
+               -> Save
+
+     - load testing the endpoint
+
+  Summary
+    Multi-model endpoints help optimize the costs associated with running inference for multiple models
+
+    Endpoints instances can be automatically created and destroyed based on auto scaling policy
+
+------------------------------------------------------
+5.5 Section Summary
+
+  Summarizing the Important Takeaways
+    Batch transforms allow you to run efficient inference on large datasets
+      - infrastructure and endpoints are set up and torn down for you
+      - you only pay for the runtime of the batch transform job
+
+     Real-tine inference should be used for predictions that require low latency and a persistent endpoint
+       - you must set up and tear down the infrastructure yourself
+
+     Multi-model endpoints help optimize the costs associated with running inference for multiple models
+
+     Endpoints instances can be automatically created/destroyed based on auto scaling policies
+
+
+  Up Next
+------------------------------------------------------
+5.6 Quiz - Deployment and Inference with SageMaker Studio
+------------------------------------------------------
+
+Chapter 6: Security Best Practices for Machine Learning on AWS
+
+------------------------------------------------------
+6.1 Security Best Practices for Machine Learning on AWS - Section Introduction
+
+  The need for Security in Machine Learning
+
+    AWS Shared Responsibility Model:
+      Customer responsibility:
+        Security 'in' the Cloud
+      AWS responsibility:
+        Security 'of' the Cloud
+
+    Security Threats for Machine Learning
+      Data tampering
+        - leading to inaccurate model predictions
+      Membership inference
+        - causing privacy concerns when a model is trained on sensitive data
+      Model Inversion
+        - allowing the reverse engineering of model inputs
+
+  Summary:
+    AWS operates under a Shared Responsibility Model:
+      Customers are responsible for: Security 'in' the Cloud
+      AWS is responsible for: Security 'of' the Cloud
+
+    As machine learning becomes more ubiquitous, it is critical to protect data and models
+
+------------------------------------------------------
+6.2 Securing your resources in a VPC (Virtual Private Cloud)
+
+  Overview of the SageMaker Domain Architecture
+
+    What's in a SageMaker Domain?
+       An Elastic File System (EFS) volume
+         - where you notebooks, etc. are stored
+         - has authorized uses
+         - Variety of configurations for security, applicationss, and VPC
+
+       Creating a SageMaker Domain options:
+         1 Quick Setup
+           - Public internet access
+           - standard encryption
+         2 Standard Setup
+           - Advanced network options
+           - Data encryption
+
+
+       SageMaker Architecture with Public Internet Access (e.g. Quick setup):
+
+             Customer AWS Account                  SageMaker Service Account
+                 customer VPC                          SageMaker Domain
+                    EFS Home directories  <----------     Notebooks         <--------------- SageMaker
+                                                             |                                Studio Users
+                                                             v
+           AWS Services:                              Internet Gateway
+                                                             |
+                |-------------|---------------|--------------|
+                |             |               |
+                v             v               v
+               S3         CloudWatch     SageMaker
+                                         Runtimes & API
+
+       SageMaker Architecture with VPC Connections (e.g. can be configured when using 'Standard setup'):
+
+             Customer AWS Account                  SageMaker Service Account
+                 customer VPC                          SageMaker Domain
+                    EFS Home directories                  Notebooks         <--------------- SageMaker
+                                                             |                               Studio Users
+                     Private Subnet                          |
+                        ENI  <-------------------------------|
+                  (Elastic Network Interface)
+                              |
+                              v
+                |------ VPC Endpoints --------|
+                |             |               |
+                |             |               |
+                v             v               v
+               S3         CloudWatch     SageMaker
+                                         Runtimes & API
+
+    Why Use a VPC?
+      Additional Features and Benefits:
+        - use security groups and network access to control lists to control access
+        - add permission policies to VPC endpoints for additional control
+        - monitor all network traffic using VPC Flow logs
+
+  Creating a SageMaker Domain with a VPC
+    - Creating a new SageMaker domain using the standard setup option
+    - working with advanced networking options
+
+     -> SageMaker -> Domains -> Create Domain -> select "Set up for organizations" -> Set up
+        -> Domain Name: stdDomainEx,
+        -> specify S3 bucket ->
+        -> Network: select "Virtual Private Cloud (VPC) only; select VPC
+        -> ....
+
+  Summary:
+
+     Add an additional layer of security for SageMaker by keeping resources and connections
+       in a VPC
+
+     When creating a SageMaker domain, choose the standard setup for advanced networking options
+
+------------------------------------------------------
+6.3 Using the Principle of Least Privilege
+
+  Overview IAM Policies
+
+    Principle of Least Privilege
+      - "Grant only the permissions required to perform a task"
+
+     Two Types of IAM Policies
+       Identity based
+         - attached to users, user groups, and roles
+       Resource based
+         - attached to resource, such as an S3 bucket
+
+       Example S3 resource policy:
+          - Allow user 'root' and 'amber' (from the specified account) to take all S3 actions (read, write, etc) on
+            ExampleBucket and its objects:
+
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Sid": "ExampleS3ResourcePolicy",
+                      "Effect": "Allow",
+                      "Principal": {
+                          "AWS": [
+                              "arn:aws:iam::111122223333:root",
+                              "arn:aws:iam::111122223333:amber"
+                          ]
+                      },
+                      "Action": [
+                          "s3:*",
+                      ],
+                      "Resource": { ["arn:aws:s3:::ExampleBucket", "arn:aws:s3:::ExampleBucket/*"]
+                          }
+                      }
+              ]
+          }
+
+       Example Identity based policy:
+          - remove the "Principal" section from the above resource based policy to IAM users/groups/roles to
+            achieve the same effect as the previous bucket policy
+
+          {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Sid": "ExampleS3IdentityPolicy",
+                      "Effect": "Allow",
+                      "Action": [
+                          "s3:*",
+                      ],
+                      "Resource": { ["arn:aws:s3:::ExampleBucket", "arn:aws:s3:::ExampleBucket/*"]
+                          }
+                   }
+              ]
+          }
+
+  IAM Access Analyzer
+    - "Generates IAM policies based on access activity in your AWS CloudTrail logs"
+
+    -> IAM -> User -> select <user> -> Access Advisor <right tab>
+       -> shows resources accessed, etc
+    -> IAM -> User Group -> select <group> -> Access Advisor <right tab>
+
+  Summary:
+
+     When granting permissions in AWS, it is a best practice to use the principle of least privileges
+
+     IAM Access Analyzer helps identify which services are used based on CloudTrail activity
+
+------------------------------------------------------
+6.4 Encrypting your Data at Rest and in Transit
+
+  Overview Encryption Options
+
+    Two types of Encryption
+      Data at Rest Encryption
+        - data that is stored or archived on a device
+        - as a best practice, S3 data should always be encrypted at rest
+        - Once applied to a bucket, all new files will be encrypted upon upload
+        - two options for encryption at rest: server side or client side
+
+        Server-Side Encryption (for data at rest):
+          1.  AWS S3-managed keys (SSE-S3)
+            - S3 creates, manages, and uses the keys for you
+          2.  AWS KMS-managed keys (SSE-KMS)
+            - AWS Key Management Service (KMS) manages the keys for you
+            - option to import your own keys into KMS
+          3.  Customer-provided Keys (SSE-C)
+            - the customer provide your own keys
+            - key not stored in AWS
+            - upload must be done programmatically (key must be provided at time of upload)
+            - must use HTTPS (not HTTP) to upload object
+          4. AWS Dual-Layer Server Side Encryption with KMS-managed keys (DSSE-KMS)
+            - new (Jun 2023)encryption option in S3 that applies two layers of encryption to objects when they are
+               uploaded to an S3 bucket.
+            - The first layer is server-side encryption using Amazon S3 Managed Keys (SSE-S3), and the second layer is
+              server-side encryption using AWS Key Management Service (SSE-KMS).
+            - DSSE-KMS is designed to meet National Security Agency CNSSP 15 for FIPS compliance and Data-at-Rest Capability
+              Package (DAR CP) Version 5.0 guidance for two layers of CNSA encryption.
+            - Using DSSE-KMS, you can fulfill regulatory requirements to apply multiple layers of encryption to your data.
+
+        Client-Side Encryption (for data at rest):
+          - data encrypted before it is uploaded to S3
+          - more complex, but may be required for regulatory reasons
+          - upload must be done programmatically
+
+        SageMaker and Encryption at Rest:
+          - By default, SageMaker encrypts:
+             - Notebooks
+             - output from training jobs
+             - output from batch transform jobs
+          - Uses AWS managed keys from S3 (SSE-S3)
+          - You need to handle encryption of model artifacts and data
+          - if using customer-managed keys, the SageMaker execution role needs permissions to
+            encrypt/decrypt with the key
+
+      Data In Transit Encryption
+        - Use AWS's encrypted API endpoints to encrypt data in transit
+        - HTTP endpoint also available, but HTTPS with TLS/SSL is required for encryption
+        - HTTPS also required for SSE-C (customer keys)
+
+        SageMaker and Encryption at Rest:
+          - requests to the SageMaker API and console are made over secure (SSL) connection
+          - model and system artifacts are encrypted in transit
+
+  Encrypting Buckets and Objects in S3 - Demo
+    - previously, S3 encryption was disabled by default -- now it is enabled (SSE-S3) by default
+
+
+
+  Summary:
+    Encryption at Rest
+      - you are responsible for encryption model artifacts and data
+      - By default, SageMaker encrypts notebooks, output from training, and output batch transform jobs
+
+    Encryption in Transit
+      - Use encrypted HTTPS endpoints
+      - requests to the SageMaker API and console are made over a secure (SSL) connection
+
+------------------------------------------------------
+6.5 Protecting Credentials with Secrets Manager
+
+  Overview of Secrets Manager
+    How to Store and Retrieve credentials (usernames, passwords, etc)
+
+    Secrets Manager
+      "Helps you manage, retrieve, and rotate database credentials, API keys, and other
+        secrets throughout their lifecycles"
+
+  Working with Secrets Manager
+    - Create a secret for database credential
+      -> AWS -> Secret Manager -> Store a New Secret -> Secret Type: Credential for RDS,
+        User name: <user>, Password: <pw>, Database: <dbName>  -> Next
+        secret name: <secretName> -> Next
+        Secret Rotation: <configure rotation> -> Next
+        Sample Code: <copy sample code for accessing secret> -> Store
+
+    - Viewing the code to retrieve the secret
+
+        import boto3
+        from botocore.exceptions import ClientError
+
+        session = boto3.session.Session()
+        client = session.client(
+                service_name='secretsmanager',
+                region_name=region_name,
+                )
+
+        response = client.get_secret_value(
+            SecretId='string',
+            VersionId='string',
+            VersionStage='string'
+        )
+
+
+  Summary:
+    Secret Manager is the recommended way to store and retrieve secrets in AWS
+        - can also be used to rotate secrets
+
+    To retrieve secrets programmatically, use the generated code from the SDK
+
+------------------------------------------------------
+6.6 Monitoring Model Input and Output
+
+  SageMaker Model Monitor
+    - Collects data from real-time endpoints or from batch transforms
+    - can do this on a schedule or automatically
+    - detect changes in quality as compared to a baseline
+    - detect drift in data and model performance
+    - offers visualization tools to view results and statistics
+
+  Summary:
+    SageMaker Model Monitor
+      - allows you to monitor data and model quality over time
+
+------------------------------------------------------
+6.7 Enabling Logging for Model Access
+
+  Logging with API Gateway and CloudWatch
+
+        Client Application  ---calling----> API*     ------->  SageMaker endpoint
+        Application                        Gateway            'InvokeEndpoint' method
+
+    * API Gateway can send access logs to cloudWatch
+
+     API Gateway Example CloudWatch log:
+
+        { "requestId":"$context.requestId", \
+          "extendedRequestId":"$context.extendedRequestId", \
+          "ip": "69.130.179.154", \
+          "caller":"-", \
+          "user":"-", \
+          "requestTime":"11/Dec/2022:12:48:12 +0000", \
+          "httpMethod":"GET", \
+          "resourcePath":"/", \
+          "status":"200", \
+          "protocol":"HTTP/1.1", \
+          "responseLength":"53" \
+        }
+
+
+  Enabling Access Logging from API Gateway
+    - create a role to enable CloudWatch logging
+    - Enable CloudWatch logs and access logging
+    - Create a CloudWatch log group (where logs are stored)
+    - specify log format (json or xml?)
+    - Invoke API Gateway Endpoint
+    - View the log results
+
+  Summary:
+    Use CloudWatch logs with API Gateway to retrieve detailed information about model access
+
+------------------------------------------------------
+6.8 Using Version Control on  Model Artifacts
+
+  Versioning with S3
+   Benefits of S3 Versioning
+     - Restore objects that are accidentally overwritten or deleted
+     - prevent deletion of objects by enforcing 'Object Lock' or 'MFA (MultiFactor Authentification) Delete'
+
+   Enabling versioning in S3
+    -> S3 -> Create Bucket -> Bucket name: s3verioning-pat, Bucket Versioning: Enable -> Create Bucket
+
+  Versioning with Git
+
+     SageMaker Studio -> upload Model (e.g. model.tar.gz) -> right-click on model -> Git + Add
+       -> click Git icon -> shows 'model.tar.tz' has been 'Staged'
+       -> click on COMMIT <bottom> -> add summary
+
+  Summary:
+    As a best practice, use version control on code and model artifacts to prevent deletion
+     and allow rollback
+       - S3 Bucket versioning
+       - Git versioning
+
+------------------------------------------------------
+6.9 Section Summary
+
+  Summarize the Important Takeaways
+    VPC
+      - add an additional layer of security to SageMaker by keeping resources and
+        connections in a VPC
+    IAM
+      - when granting permissions in AWS, it is a best practice to use the principle of
+        least privileges
+    Encryption
+      - keep your data secure by using encryption at rest and in transit
+    Secrets Manager
+      - secret Manager is the recommended way to store and retrieve secrets in AWS
+        and allows you to rotate credentials
+    SageMaker Model Monitor
+      - allows your to monitor data and model quality over time
+    Monitoring Model Access
+      - use cloudWatch logs with API Gateway to retrieve detailed information about
+        the model access
+    Version Control
+      - As a best practice, use version control on code and model artifacts to prevent deletion
+        and allow rollback
+       - S3 Bucket versioning
+       - Git versioning
+
+------------------------------------------------------
+6.10  Quiz - Security Best Practices for Machine Learning on AWS
+------------------------------------------------------
+
+Chapter 7: Conclusion
+
+------------------------------------------------------
+7.1 Course Summary
+
+  Key Takeaways
+
+    Machine Learning in a Nutshell
+      Build <-----> Train <------> Deploy
+
+    SageMaker Suite
+      SageMaker Studio Lab
+        - Free and easy to set up
+        - for learning and experimenting
+      SageMaker Canvas
+        - no-code solution
+        - For business and data analysts to solve machining problems without writing code
+          and without ML expertise
+      SageMaker Studio
+        - the real deal
+        - For engineers and scientists
+
+    The Machine Learning Process
+      For data Prep (fetch, clean, prepare):                  SageMaker Data Wrangler and Feature Store
+      For Train Model and Evalate Model:                      SageMaker Studio Notebooks, Clarify, and Experiments
+      For Deployment to production and Monitoring/Collect data / Evaluate:  Sagemaker Endpoints, Batch, Transform,
+                                                                           Pipelines, Model Monitor
+
+    Machine Learning is Iterative
+       - SageMaker Experiment helps with iterative nature of ML by keeping track of various training jobs, parameters, etc.
+         Training  -------------> Evaluation ---------------> Prediction
+             |                        |
+             |            Do we need to change the algorithm?
+             |            Do we need to do more feature engineering?
+             |            Do we need new or different data?
+             |                        |
+             |------------------------|
+
+    Machine Learning Bias
+      - Clarify can help identify dataset and model biases
+      Dataset (pre-training)
+        - data is imbalanced and doesn't reflect the real world
+      Model (post-training)
+        - Bias introduced by the training algorithm
+
+    Two types of Inference supported by SageMaker
+      Batch Inference
+        - performed on data in batches often asynchronous
+        - Use: SageMaker "batch transform"
+      Live Inference
+        - performed in real time, with immediate results
+        - Use: SageMaker "real-time endpoints"
+
+    SageMaker Model Monitor
+      - Collects data from real-time endpoints or from batch transforms
+      - can do this on a schedule or automatically
+      - detect changes in quality as compared to a baseline
+      - detect drift in data and model performance
+      - offers visualization tools to view results and statistics
+
+  Cleaning up Course Resources
+
+     Deleting apps, notebooks, and kernels
+        -> AWS -> SageMaker -> Domains ->  click on  "aws-ml-deep-dive-ag-pat" domain -> Launch -> Studio
+       # in Studio:
+         Verify that no apps or kernels are running
+         -> File -> Shutdown -> Shutdown All
+
+
+        -> AWS -> SageMaker -> Inference ->  Endpoints ->
+           verify all endpoints have been deleted
+
+        -> AWS -> SageMaker -> Inference ->  Configuraiton Endpoints ->
+           verify all endpoint configurations have been deleted
+
+        -> AWS -> SageMaker -> Inference ->  Models
+           verify all models have been deleted
+
+
+     Deleting the SageMaker domain (no charge for domain, but ensures things were cleaned up)
+        # note: all domain apps MUST be deleted/shutdown before deleting the domain
+        -> AWS -> SageMaker -> Domains ->  click on  "aws-ml-deep-dive-ag-pat" domain ->
+           Apps -> default -> Action -> Delete
+           Apps -> JupyterServer -> Action -> Delete -> Yes Delete -> Delete
+
+           # this deletes the domain:
+        -> AWS -> SageMaker -> Domains ->  click on  "aws-ml-deep-dive-ag-pat" domain ->
+           Edit -> Delete User -> Yes, Delete user
+
+        -> AWS -> SageMaker -> Domains ->  click on  "defaultxxx" domain ->
+           Edit -> Delete User -> Yes, Delete user
+
+
+        -> AWS -> SageMaker -> Domains ->  click on  "aws-ml-deep-dive-ag-pat" domain ->
+           Domain Settings <right tab> -> Edit -> Delete Domain  -> Yes Delete -> Delete
+
+     Deleting S3 Buckets and objects
+       -> S3 -> select <bucket> -> Empty -> Permanently Delete
+       -> S3 -> select <bucket> -> Delete ->
+
+------------------------------------------------------
+7.2 Conclusioin and What's Next
+
+  SageMaker Example Notebooks
+  https://sagemaker-examples.readthedocs.io/en/latest/
+
+  SageMaker Blogs
+  https://aws.amazon.com/blogs/machine-learning/tag/amazon-sagemaker/
+   Next Steps
+     ->
+------------------------------------------------------
+
