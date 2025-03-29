@@ -97,5 +97,9 @@ ________________________________________
 
 ### AWS CLOUD DIRECTORY TREE
 
-- aws-cloud-training - TBD
+- aws-cloud-training
+    - acloudguru-aws-certified-developer-associate-course
+    - acloudguru-aws-certified-solution-arch-associate-course
+    - TBD courses
+&nbsp;</p>
 ________________________________________
