@@ -1,0 +1,8 @@
+
+Dev s3 bucket name = cfst-3035-3045e8b1b4c9b1d93fb86740514-s3bucketdev-1gnc177xl6e25
+
+Prod s3 bucket name = cfst-3035-3045e8b1b4c9b1d93fb8674051-s3bucketprod-1e1sasps5a3ye
+
+Engineering s3 bucket name = cfst-3035-3045e8b1b4c9b1d93fb-s3bucketengineering-3h47o4bprkin
+
+Secret s3 bucket name = cfst-3035-3045e8b1b4c9b1d93fb86740-s3bucketsecret-1npx8dae5xkdb

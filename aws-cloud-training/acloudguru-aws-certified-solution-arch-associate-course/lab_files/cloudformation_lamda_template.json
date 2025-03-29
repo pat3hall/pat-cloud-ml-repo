@@ -1,0 +1,79 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Resources": {
+        "LambdaRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "lambda.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "EC2AccessRole",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:*"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:*"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "InitFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Code": {
+                    "ZipFile": "import json\nimport boto3\nimport threading\nimport urllib3\nSUCCESS = \"SUCCESS\"\nFAILED = \"FAILED\"\nhttp = urllib3.PoolManager()\ndef send(event, context, responseStatus, responseData, physicalResourceId=None, noEcho=False, reason=None):\n    responseUrl = event['ResponseURL']\n    print(responseUrl)\n    responseBody = {}\n    responseBody['Status'] = responseStatus\n    responseBody['Reason'] = reason or \"See the details in CloudWatch Log Stream: {}\".format(context.log_stream_name)\n    responseBody['PhysicalResourceId'] = physicalResourceId or context.log_stream_name\n    responseBody['StackId'] = event['StackId']\n    responseBody['RequestId'] = event['RequestId']\n    responseBody['LogicalResourceId'] = event['LogicalResourceId']\n    responseBody['NoEcho'] = noEcho\n    responseBody['Data'] = responseData\n    json_responseBody = json.dumps(responseBody)\n    print(\"Response body:\\n\" + json_responseBody)\n    headers = {\n        'content-type' : '',\n        'content-length' : str(len(json_responseBody))\n    }\n    try:\n        response = http.request('PUT',responseUrl,headers=headers,body=json_responseBody)\n        print(\"Status code: {}\".format(str(response.status)))\n    except Exception as e:\n        print(\"send(..) failed executing requests.put(..): \" + str(e))\ndef createDefault():\n    print(\"Creating default VPC\")\n    ec2 = boto3.client('ec2')\n    response = ec2.create_default_vpc()\n    return response\ndef deleteDefault():\n    return \"\"\ndef timeout(event, context):\n    print('Timing out, sending failure response to CFN')\n    send(event, context, FAILED, {}, None)\ndef lambda_handler(event, context):\n    print(f'Received event: {json.dumps(event)}')\n    timer = threading.Timer((context.get_remaining_time_in_millis() / 1000.00) - 0.5, timeout, args=[event, context])\n    timer.start()\n    status = SUCCESS\n    responseData = {}\n    try:\n        if event['RequestType'] == 'Delete':\n            deleteDefault()\n        else:\n            response = createDefault()\n            print(response)\n            responseData['Data'] = response\n    except Exception as e:\n        print(e)\n        status = FAILED\n    finally:\n        timer.cancel()\n        send(event, context, status, responseData, None)\n"
+                },
+                "Handler": "index.lambda_handler",
+                "Role": {
+                    "Fn::GetAtt": [
+                        "LambdaRole",
+                        "Arn"
+                    ]
+                },
+                "Runtime": "python3.7",
+                "Timeout": 60
+            }
+        },
+        "InitializeVPC": {
+            "Type": "Custom::InitFunction",
+            "Properties": {
+                "ServiceToken": {
+                    "Fn::GetAtt": [
+                        "InitFunction",
+                        "Arn"
+                    ]
+                }
+            }
+        }
+    }
+}
