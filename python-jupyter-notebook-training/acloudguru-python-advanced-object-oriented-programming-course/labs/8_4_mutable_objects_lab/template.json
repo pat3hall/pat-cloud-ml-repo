@@ -1,0 +1,28 @@
+{
+  "listing_date": "2001-01-01",
+  "property": {
+    "address": {
+      "street_1": "100 Fake St",
+      "street_2": null,
+      "city": "Boston",
+      "state": "MA",
+      "zip": "90210"
+    },
+    "square_footage": 2100,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "ammenities": ["fireplace", "sunroom", "geothermal power"]
+  },
+  "broker": {
+    "name": "Tonya Sullivan",
+    "license_number": "ABCD1234",
+    "address": {
+      "street_1": "100 Fake St",
+      "street_2": null,
+      "city": "Boston",
+      "state": "MA",
+      "zip": "90210"
+    },
+    "referrer": "Billy Bob"
+  }
+}

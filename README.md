@@ -6,9 +6,17 @@ _____________________________
 ### ABOUT REPO
 
 Contains my cloud and machine learning training notes, notebooks, etc. as a reference for myself to help others on a similar path. It includes 100+ ML Jupyter Notebooks for AWS SageMaker and other ML services.
+
+If you find this repo helpful, please let me know at: phreggh @ gmail.com (minus the spaces)
 ________________________________________
 ### CAREER SUMMARY
-Results-driven professional with 20+ years of experience in applications engineering, supporting EDA / semiconductor tools and flows. Over the last five years, specialized in cloud-bursting solutions, integrating on-premise design data with AWS, GCP, and Azure. **Recently obtained AWS Machine Learning, AWS Developer, and AWS Solutions Architect certifications to enhance cloud expertise and transition into a machine learning/cloud engineering role.**
+Results-driven professional with 15+ years of experience in applications engineering, supporting EDA / semiconductor tools and flows. Over the last five years, specialized in cloud-bursting solutions, integrating on-premise design data with AWS, GCP, and Azure. **Recently obtained AWS Machine Learning, AWS Developer, and AWS Solutions Architect certifications to enhance cloud expertise and transition into a machine learning/cloud engineering role.**
+
+________________________________________
+### OTHER INTERESTS
+
+I’m into all kinds of outdoor stuff — hiking, swimming, biking, playing volleyball and soccer, or just going for long walks. One of my favorite recent hikes was Koko Head on Oahu near Hawaii Kai — tough climb, but fun hike with rewarding views!
+<a href="https://www.oahuhike.com/koko-head-hike"> Koko Head hike</a>
 ________________________________________
 ### CLOUD CERTIFICATIONS
 
@@ -100,6 +108,13 @@ ________________________________________
 - aws-cloud-training
     - acloudguru-aws-certified-developer-associate-course
     - acloudguru-aws-certified-solution-arch-associate-course
+    - TBD courses
+&nbsp;</p>
+________________________________________
+### Python / Jupter Notebook Training
+
+- python-jupyter-notebook-training
+    - acloudguru-python-advanced-object-oriented-programming-course
     - TBD courses
 &nbsp;</p>
 ________________________________________

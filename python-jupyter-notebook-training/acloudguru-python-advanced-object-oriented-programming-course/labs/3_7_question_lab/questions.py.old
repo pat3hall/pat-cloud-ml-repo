@@ -1,0 +1,74 @@
+from random import sample
+
+class Question:
+    def __init__(self, question_text, choices, correct_answer) -> None:
+        self.question_text = question_text
+        self.choices = [str(element) for element in choices]
+        self.correct_answer = str(correct_answer)
+        self.selected_answer = None
+
+        output = self.question_text + "\n\n"
+
+        choices = self.choices
+        # index through randomize choices list
+        for index, choice in enumerate(choices, start=0 ):
+            # index + 1 because index starts at zero
+            output += f"{index + 1}. {choice}\n"
+        self.output = output
+
+    def __str__(self) -> str:
+        return self.output
+
+    def select(self, selected_answer) -> None:
+        self.selected_answer = str(selected_answer)
+
+    def grade(self) -> bool:
+        return self.correct_answer == self.selected_answer
+
+class TrueFalseQuestion(Question):
+    def __init__(self, question_text, correct_answer) -> None:
+        question_text = self.__prefix_if_necessary(question_text)
+        super().__init__(question_text=question_text, choices = [False, True], correct_answer = correct_answer)
+        #self.choices.sort()
+
+    def __prefix_if_necessary(self, question_text) -> str:
+        if question_text.lower().startswith("false") or question_text.lower().startswith("true"):
+            return question_text
+        else:
+            return f"True/False: {question_text}"
+
+
+class MultipleSelectQuestion(Question):
+    def __init__(self, question_text, choices, correct_answers) -> None:
+        question_text = self.__add_text(question_text, correct_answers)
+        super().__init__(question_text=question_text, choices=choices, correct_answer=correct_answers.sort())
+
+    def __add_text(self, question_text, correct_answer):
+        return f"{question_text} (select {len(correct_answer)})"
+
+if __name__ == "__main__":
+    question = Question("What's the answer to life, the universe, and everything?", [42, "Silver", "Wood", True], 42)
+    question.select(42)
+    print (f"question.question_text:     {question.question_text}")
+    print (f"question.choices:           {question.choices}")
+    print (f"question.selected_answer:   {question.selected_answer}")
+    print (f"question.correct_answer:    {question.correct_answer}")
+    print (f"question:                   {question}\n")
+    print ()
+
+    questiontf = TrueFalseQuestion("Ice cream is the best dessert.", True)
+    questiontf.select(['list', 'random.sample'])
+    print (f"questiontf.question_text:   {questiontf.question_text}")
+    print (f"questiontf.choices:         {questiontf.choices}")
+    print (f"questiontf.selected_answer: {questiontf.selected_answer}")
+    print (f"questiontf.correct_answer:  {questiontf.correct_answer}")
+    print (f"questiontf:                 {questiontf}\n")
+
+    questionm = MultipleSelectQuestion("Which of the following functions return a list?", ['str', 'print', 'random.sample', 'list'], ['list', 'random.sample'])
+    questionm.select(['list', 'random.sample'])
+    print (f"questionm.question_text:   {questionm.question_text}")
+    print (f"questionm.choices:         {questionm.choices}")
+    print (f"questionm.selected_answer: {questionm.selected_answer}")
+    print (f"questionm.correct_answer:  {questionm.correct_answer}")
+    print (f"questionm:                 {questionm}\n")
+
