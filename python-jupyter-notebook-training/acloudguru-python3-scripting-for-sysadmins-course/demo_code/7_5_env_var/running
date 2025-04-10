@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+
+import os
+
+# determine stage, e.g. DEVEL, TEST, PROD based in STAGE env variable
+# if not set, return "dev" stage
+stage = os.getenv("STAGE", default="dev").upper()
+
+output = f"We're running in {stage}"
+
+if stage.startswith("PROD"):
+    output = "DANGER!!! - " + output
+
+print (output)

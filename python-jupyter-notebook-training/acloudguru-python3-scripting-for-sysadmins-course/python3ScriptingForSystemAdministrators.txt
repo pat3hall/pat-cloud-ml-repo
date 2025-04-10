@@ -1,0 +1,4337 @@
+---------------------------------------------------
+A Cloud Guru: Python 3 Scripting for System Administrators
+
+---------------------------------------------------
+
+Chapter 1 Getting Started
+
+---------------------------------------------------
+1.2 Course Introduction
+---------------------------------------------------
+1.3 About the Course Author
+---------------------------------------------------
+1.4 Course Features and Tools
+---------------------------------------------------
+
+Chapter 2 Environment Setup
+
+---------------------------------------------------
+2.1 Setting up a Cloud Server Development Environment
+
+Need installed on your development machine:
+  git, wget, which, words (/usr/share/dict/words), lsof, & text editor
+
+  sudo yum update -y
+  # install python 3.6.8
+  sudo yum install -y python3
+  sudo yum install -y git wget lsof vim gvim words which
+  # install git and other development tools
+  sudo yum groupinstall -y "development tools"
+  # enhanced vim
+  sudo yum install -y vim-enhanced
+
+  # config git
+   git config --global user.name "Pat Hall"
+   git config --global user.email "myemail@gmail.com"
+
+
+   # Customizing bash
+   # note curl to this does not work, instead open file and web browser and copy content to ~/.bashrc
+   curl https://raw.githubusercontent.com/linuxacademy/contentpython3-sysadmin/master/helpers/bashrc -o ~/.bashrc
+
+   # Customizing vim
+   # note curl to this does not work, instead open file and web browser and copy content to ~/.vimrc
+   curl https://raw.githubusercontent.com/linuxacademy/contentpython3-sysadmin/master/helpers/vimrc -o ~/.vimrc
+
+   # make sample git repo
+   mkdir sample
+   cd sample
+   touch file.txt
+   # initialize git repo
+   git init
+   # add files under current directory
+   git add --all .
+   # chec repo status
+   git status
+   # commit 'file.txt' to repo with 'added new file' message
+   git commit -m 'Added new file'
+---------------------------------------------------
+2.2 Installing Python3 on Centos 7
+
+  -> installing python3 from source
+  yum groupinstall -y "development tools"
+
+  yum install -y \
+    libffi-devel \
+    zlib-devel \
+    bzip2-devel \
+    openssl-devel \
+    ncurses-devel \
+    sqlite-devel \
+    readline-devel \
+    tk-devel \
+    gdbm-devel \
+    db4-devel \
+    libpcap-devel \
+    xz-devel \
+    expat-devel
+
+
+  cd /usr/src
+  wget http://python.org/ftp/python/3.6.4/Python-3.6.4.tar.xz
+  tar xf Python-3.6.4.tar.xz
+  ./configure --enable-optimizations
+  # make python3.6 executable
+  make altinstall
+  #  Important: make altinstall causes it to not replace the built in python executable
+
+
+  # Important: make altinstall causes it to not replace the built in python executable.
+  # Ensure that secure_path in /etc/sudoers file includes /usr/local/bin. The line should look something like this:
+      Defaults secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+
+  # Upgrade Pip
+   sudo pip3.6 install --upgrade pip
+
+---------------------------------------------------
+2.3 (optional) Installing Python 3 on Debina/Ubuntu
+---------------------------------------------------
+
+Chapter 3 Introducing Python
+
+---------------------------------------------------
+3.1 History & Benefits of Python
+---------------------------------------------------
+3.2 What's the Deal with Python 3?
+
+  Python 2 vs Python 3
+  https://wiki.python.org/moin/Python2orPython3
+
+  What's New in Python 3:
+  https://docs.python.org/3/whatsnew/3.0.html
+
+---------------------------------------------------
+
+Chapter 4 Running Python
+---------------------------------------------------
+4.1 Introducing the REPL for Rapid Experimentation
+
+  REPL: Read Evaluate Print Loop
+    - line(s) of python code is read in and evaluated/processed
+    - to use, run python 3 with no options:
+
+    python3.6
+    >>>         <- means in REPL mode
+
+    To exit, use either "exit()" or "Ctrl-D"
+
+    To clear REPL screen: Ctrl-L
+
+---------------------------------------------------
+4.2 Creating and Running Python Scripts
+
+ - Create "hello.py" file
+   contents:
+     print("Hello, World!")
+
+     -> run:
+      python3.5 hello.py
+
+
+   To run script standalone, add shebang line at top:
+    #!/usr/bin/env python3.6
+
+    plus:
+    chmod a+x
+
+    to run:
+    ./hello.py
+
+---------------------------------------------------
+4.3  Using Comments
+
+
+   Comments:
+      begin comment on a line with "#"
+
+
+
+    triple quote block string, this really  multi-line string, but since it is not executed, I can be used as multi-line comment:
+    """
+    xxxxx
+    yyyyy
+    """
+
+    -> can be used to comment out multiple lines of code
+
+---------------------------------------------------
+
+Chapter 5 Common Data Types
+
+---------------------------------------------------
+5.1 Strings
+
+
+  python string type doc:
+  https://docs.python.org/3/library/stdtypes.html#text-sequence-type-str
+
+   string type name: str
+
+   - strings are enclosed in quotes, single or double quotes
+   - multi-line strings are enclosed in triple single or triple single quotes
+   - string concatenation: string1 + string2
+   - string replication: string1 * N    where N is the integer replication count
+
+   - passing a string to a method:  string.method()
+     example 1 (find method return index to specified char)
+      "double".find('s')
+      -1
+     example 2
+      "double".find('b')
+      3
+
+      lower method: returns a lower case for all char in string
+         <string>.lower()
+
+      escape sequence
+        \t  : tab
+        \n  : newline
+        \   : escape next char
+
+---------------------------------------------------
+5.2 Numbers (int and float)
+
+  python number type (int, float, complex) doc:
+    https://docs.python.org/3/library/stdtypes.html#numeric-types-int-float-complex
+
+    math operations:
+    +  : addition
+    -  : subtraction
+    *  : multiplication
+    /  : division
+    // : floor division (returns only the whole number portion)
+    %  : modular division (returns the remainder from floor division)
+    ** : exponent operator (power to : x *** y)
+
+    float type (has decimal component)
+      - math with a float type, returns a float type
+
+    converting string to number (note: input generally read in as string)
+      -> convert from str to int: int(<string>)
+      -> convert from str to float: float(<string>)
+      -> convert from int to string: str(<int>)
+      -> convert from float to int: int(<float>)
+      -> determine type:  type(<type>)    example: type(3.0) -> returns: <class 'float'>
+
+---------------------------------------------------
+5.3 Booleans and None
+
+  Truth Value Testing / Boolean operations / Comparisons
+    https://docs.python.org/3/library/stdtypes.html#truth-value-testing
+
+  True  : boolean constant and considered 'truthy'
+  False : boolean constant and considered 'falsyty'
+
+  -> everything has a truthiness value"
+  example
+   bool({})     -> empty dict returns fales
+   bool("")     -> empty string returns False
+   bool("Pat")  -> string returns True
+
+
+   Nothingness : example: variable with no value
+   None  : constant of None (null, undefined)
+      type(None)  returns: <class 'NoneType'>
+
+
+---------------------------------------------------
+5.4 Working with Variables
+
+   Create a simple string variable:
+     my_str = "This is a simple string"
+
+   String concatentations:
+     my_str = mystr + " testing"
+     my_str += " testing"
+
+     Variable reassignment
+        -> can change variable assignment to different type (example <string> to <int>)
+        my_str = 1
+
+---------------------------------------------------
+5.5 Lists
+
+    Sequence Types - list, tuple, range
+      https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
+
+     List:
+       https://docs.python.org/3/library/stdtypes.html#list
+
+
+   Lists are mutable data types
+     - data/items in a list can be changed
+
+
+   Create a simple list (notation: inside square brackets and each item separated by a comma):
+   my_list = [1, 2, 3, 4, 5]
+   -> lists can contains items of different types (heterogenous)
+   my_list1 = [1, 'a', True]
+
+   subscript operation or indexing into a list; syntax: <listName>[<index>]
+      my_list[0]  -> returns: 1
+
+    if <index> exceeds elements in list, then:
+      my_list[5] -> returns: IndexError: list index out of range
+
+    list length: len(<listName>)
+     len(my_list) -> returns: 5
+     negative indexing (index from last item in list):
+      my_list[-1] -> returns 5
+
+   list slice or subsection: syntax <listName>[<startingIndex>:<endingIndex>:<stepValue>]
+        notes: 1. does not include endingIndex item; <stepValue> defaults to 1
+      my_list[0:3] -> returns  [1, 2, 3]
+
+      slice starting with <startingIndex> : syntax <listName>[<startingIndex>:]
+      my_list[3:] -> returns  [4, 5]
+
+      slice up to <endingIndex> : syntax <listName>[:<endingIndex>]
+      my_list[:3] -> returns  [1, 2, 3]
+
+      step through a list with non-one step:
+       my_list[0::2]  -> returns [1, 3, 5]
+
+      Change item(s) in list with subscript operation: syntax <listName>[<index>] = <newItmem>
+        my_list[0] = "a"
+        my_list  -> returns:  ['a', 2, 3, 4, 5]
+
+      Append to end of list using "append()" operator <listName>.append(<appendItems>)
+        my_list.append(6)
+        my_list.append(7)
+        my_list -> returns: ['a', 2, 3, 4, 5, 6, 7]
+
+      Append to end of list using "+=" operator <listName> += [<appendItems>]
+        my_list += [8, 9, 10]
+        my_list -> returns: ['a', 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+      Change a slice of the list <listName>[<startingIndex>:<endingIndex>] += [<appendItems>]
+          my_list[1:3] = ['b', 'c']
+          my_list -> returns: ['a', 'b', 'c', 4, 5, 6, 7, 8, 9, 10]
+
+      Change a slice of the list: <listName>[<startingIndex>:<endingIndex>] += [<appendItems>]
+         where <appendItems> has more items than being replaced -> this will expand list
+          my_list[3:5] = ['e', 'e', 'f']
+          my_list -> returns: ['a', 'b', 'c', 'e', 'e', 'f', 6, 7, 8, 9, 10]
+
+
+      Remove a slice from the list: <listName>[<startingIndex>:<endingIndex>] = []
+        my_list = ['a', 'b', 'c', 'e', 'e', 'f', 5, 6, 7]
+        my_list[4:] = []
+        my_list -> returns: ['a', 'b', 'c', 'e']
+
+      remove() method: removes item matching <listName>.remove(<removeItem>)
+         my_list.remove('b')
+         my_list -> returns: ['a', 'c', 'e']
+
+      remove() an item that is not in list:
+           my_list.remove('x') -> returns: ValueError: list.remove(x): x not in list
+
+        pop() item off list  -> also returns item popped off of list: syntax <listName>.pop(<index>)
+          where <index> default is last item in list
+         my_list.pop() -> returns: 'e'
+         my_list        -> returns: ['a', 'c']
+         my_list.pop(0) -> returns: 'a'
+         my_list        -> returns: ['c']
+
+         pop() item at index greater than items in list
+         my_list.pop(1) -> returns: IndexError: pop index out of range
+
+         pop from an empty list:
+         [].pop()  -> returns: IndexError: pop from empty list
+
+---------------------------------------------------
+5.6 Tuples
+
+  Sequence Types - list, tuple, range
+    https://docs.python.org/3/library/stdtypes.html#sequence-types-list-tuple-range
+
+      - There are three basic sequence types: lists, tuples, and range objects.
+      - Additional sequence types tailored for processing of binary data and text strings are described in dedicated sections.
+
+      Common Sequence Operations
+
+        - The operations in the following table are supported by most sequence types, both mutable and immutable.
+        - The collections.abc.Sequence ABC is provided to make it easier to correctly implement these operations on
+          custom sequence types.
+
+        - This table lists the sequence operations sorted in ascending priority.
+        - In the table, s and t are sequences of the same type, n, i, j and k are integers and x is an arbitrary
+          object that meets any type and value restrictions imposed by s.
+
+        - The 'in' and 'not in' operations have the same priorities as the comparison operations.
+        - The + (concatenation) and * (repetition) operations have the same priority as the corresponding numeric operations.
+
+        Operation       Result
+        ----------      -----------------------------------------------
+	x in s          True if an item of s is equal to x, else False
+
+	x not in s      False if an item of s is equal to x, else True
+
+	s + t            the concatenation of s and t
+
+	s * n or n * s   equivalent to adding s to itself n times
+
+	s[i]             ith item of s, origin 0
+
+	s[i:j]           slice of s from i to j
+
+	s[i:j:k]         slice of s from i to j with step k
+
+	len(s)           length of s
+
+	min(s)           smallest item of s
+
+	max(s)           largest item of s
+
+	s.index(x[, i[, j]])     index of the first occurrence of x in s (at or after index i and before index j)
+
+	s.count(x)        total number of occurrences of x in s`
+
+  Tuples:
+     https://docs.python.org/3/library/stdtypes.html#tuple
+
+
+  Tuples
+    - immutable sequences, typically used to store collections of heterogeneous data
+    - no methods to modify/change (no remove() or pop() methods) a tuple because they are immutable
+    - can concatenate because it returns a new tuple
+
+   Tuples may be constructed in a number of ways:
+     - Using a pair of parentheses to denote the empty tuple: ()
+     - Using a trailing comma for a singleton tuple: a, or (a,)
+     - Separating items with commas: a, b, c or (a, b, c)
+     - Using the tuple() built-in: tuple() or tuple(iterable)
+
+
+   Specify a tuple example:
+     point = (2.0, 3.0)
+     point -> returns: (2.0, 3.0)
+
+   Concatentate (creates a new tuple)
+     Note: need a trailing comma to denote a single item tuple
+       point_3d = point + (4.0,)
+       point_3d  -> returns: (2.0, 3.0, 4.0)
+
+   Unpack a tuple to multipe variables
+       x, y, z = point_3d
+       x  -> returns: 2.0
+       y  -> returns: 3.0
+       z  -> returns: 4.0
+
+   Pass values to print() using a tuple  (needed if more than one item and using Python 2 compatible print() syntax)
+     print("My name is: %s %s" % ("Pat", "Hall"))
+
+---------------------------------------------------
+5.7 Dictionaries (dicts)
+
+   Mapping Types - dict
+     https://docs.python.org/3/library/stdtypes.html#mapping-types-dict
+
+   Mapping Types - dict:
+     - A mapping object maps hashable values to arbitrary objects.
+     - Mappings are mutable objects.
+     - There is currently only one standard mapping type, the dictionary
+
+    Dictionaries can be created by several means:
+      - Use a comma-separated list of key: value pairs within braces: {'jack': 4098, 'sjoerd': 4127} or
+        {4098: 'jack', 4127: 'sjoerd'}
+      - syntax: <dictName> = {<key1>:<value1>, ..., <keyN>:<valueN>}
+      - Use a dict comprehension: {}, {x: x ** 2 for x in range(10)}
+          dict comprehension general syntax:
+            #Basic syntax
+               {key: value for item in iterable}
+
+            #With condition
+               {key: value for item in iterable if condition}
+          examples:
+            squared = {x: x ** 2 for x in range(10)}
+            squared -> returns: {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25, 6: 36, 7: 49, 8: 64, 9: 81}
+
+            names = ['Alice', 'Bob', 'Charlie', 'David']
+            name_lengths = {name: len(name) for name in names if len(name) > 4}
+            print(name_lengths)
+            # output: {'Alice': 5, 'Charlie': 7, 'David': 5}
+
+      - Use the type constructor: dict(), dict([('foo', 100), ('bar', 200)]), dict(foo=100, bar=200)
+         examples:
+           empty_dict = dict()
+           empty_dict -> returns: {}
+
+           foo_bar = dict([('foo', 100), ('bar', 200)])
+           foo_bar  -> returns: {'foo': 100, 'bar': 200}
+
+           my_dict = dict(one=1, two=2, three=3)
+           print(my_dict)  # Output: {'one': 1, 'two': 2, 'three': 3}
+
+     Returning list of keys or values from a dict
+        Using keys() method to return a list of keys: syntax: <dictName>.keys()
+            ages.keys()  -> returns:  dict_keys(['kevin', 'bob'])
+            # to return just the list of keys:
+            list(ages.keys())  -> returns:  ['kevin', 'bob']
+
+        Using values() method to return a list of values: syntax: <dictName>.values()
+            ages.values()  -> returns:  dict_values([59, 40])
+            # to return just the list of values:
+            list(ages.values())  -> returns:  [59, 40]
+
+     Alternative ways to create a dict
+       Using dict() function  - named parameter version of the dict function:
+           syntax:  <dictName> = dict (<key1>=<value1>, <key2>=<value2>, ..., <keyN>=<valueN>)
+         weights = dict (kevin=160, bob=240, kayla=135)
+          weights  -> returns:  {'kevin': 160, 'bob': 240, 'kayla': 135}
+
+       Using dict() function  - list of tuples version of the dict function:
+           syntax:  <dictName> = dict ([(<key1>,<value1>), (<key2>,<value2>), ..., (<keyN>,<valueN>)])
+           colors = dict ([('kevin', 'blue'), ('bob', 'green'), ('kayla', 'red')])
+           colors  -> returns:  {'kevin': 'blue', 'bob': 'green', 'kayla': 'red'}
+
+---------------------------------------------------
+
+Chapter 6 Control Flow
+
+---------------------------------------------------
+6.1 Conditional and Comparisons
+
+  Comparisons:
+     https://docs.python.org/3/library/stdtypes.html#comparisons
+
+    if/elif/else
+      https://docs.python.org/3/tutorial/controlflow.html#if-statements
+
+  Comparison operators:
+      - There are eight comparison operations in Python.
+      - They all have the same priority (which is higher than that of the Boolean operations).
+      - Comparisons can be chained arbitrarily; for example, x < y <= z is equivalent to x < y and y <= z,
+        except that y is evaluated only once (but in both cases z is not evaluated at all when x < y is found to be false).
+      - MUST compare items of the similar types (note: can compare a float and int)
+         - equal '==' and '!=' supported for dissimilar types
+
+  Comparison operations:
+        Operation  Meaning
+        ---------  ---------------------------
+          <        strictly less than
+          <=       less than or equal
+          >        strictly greater than
+          >=        greater than or equal
+          ==        equal
+          !=        not equal
+          is        object identity
+          is not    not negated object identity
+
+
+  Comparisons return True or False
+     1 < 2  -> returns:  True
+     0 > 2  -> returns:  False
+     2 != 1 -> returns:  True
+
+  Comparison of dissimilar types are not supported (e.g. float and str)
+     3.1 <= "this"  -> returns:  TypeError: '<=' not supported between instances of 'float' and 'str'
+  Comparison of similar types are supported (e.g. int and float)
+     3 <= 3.1  -> returns:  True
+  Equal '==' and not equal '!=' comparisons are supported for dissimilar types
+      1.1 == "1.1"          -> returns:  False
+    Plus Casting string to float type:
+      1.1 == float("1.1")   -> returns:  True
+
+  Char comparison
+    - chars and strings can be compared using comparison operators such as >, <, >=, <=, ==, and !=.
+    - The comparison is performed lexicographically, which means strings are compared character by character based on
+      their Unicode code points
+    - ord(): This function takes a single character (string of length 1) as an argument and returns an integer representing
+      its Unicode code point.
+    - When comparing strings, Python considers the Unicode values of the characters. If the first characters of two
+      strings are the same, it moves to the next character and so on. A longer string is considered greater than a
+      shorter string if all the characters up to the length of the shorter string are equal.
+    'b' > 'a'    -> returns:  True
+     ord('a')    -> returns 97
+     ord('b')    -> returns 98
+    'abc' > 'a'  -> returns:  True
+    'abc' > 'b'  -> returns:  False
+
+   Using 'in' check to see if something is inside a list
+     2 in [1, 2, 3]  -> returns:  True
+     4 in [1, 2, 3]  -> returns:  False
+
+   Using 'not in' check to see if something is not inside a list
+     2 not in [1, 2, 3]  -> returns:  False
+     4 not in [1, 2, 3]  -> returns:  True
+
+  Indentation:
+    - python uses indentation to denote code block
+    - should always use 4 spaces for indentation so your code will work other python code (psuedo standard)
+    - make sure your text editor converts tabs to 4 spaces
+
+
+  if/elif/else
+    REPL example 1:
+      >>> if False:
+      ...     print ('was true')
+      ... else:
+      ...     print('was false')
+      ...
+      was false
+
+    REPL example 2:
+      >>> if len(name) >= 6:
+      ...     print('name is long')
+      ... elif len(name) == 5:
+      ...     print('name is 5 char')
+      ... elif len(name) >= 4:
+      ...     print('name is 4 or more chars')
+      ... else:
+      ...     print('name is short')
+      ...
+      name is 5 char
+
+---------------------------------------------------
+6.2 The 'while' Loop
+
+  while statement
+    https://docs.python.org/3/tutorial/introduction.html#first-steps-towards-programming
+  for statement
+    https://docs.python.org/3/tutorial/controlflow.html#for-statements%3CPaste%3E
+
+  while loop: syntax: while condition:
+    example 1:
+      >>> count =1
+      >>> while count <= 4:
+      ...    print ("count: %d" %  count)
+      ...    count += 1
+      ...
+      count: 1
+      count: 2
+      count: 3
+      count: 4
+
+    example 2 (using continue and f-strings):
+      >>> count = 0
+      >>> while count < 10:
+      ...     if count % 2 == 0:
+      ...         count += 1
+      ...         continue     # loop continue statement -> goes back to top of loop, e.g. while statement
+      ...     print(f"We're counting odd numbers: {count}")   # f-strings:  string interpolation (added in 3.6)
+      ...     count += 1
+      ...
+      We're counting odd numbers: 1
+      We're counting odd numbers: 3
+      We're counting odd numbers: 5
+      We're counting odd numbers: 7
+      We're counting odd numbers: 9
+
+    example 3 (Using break and f-strings):
+      >>> count = 1
+      >>> while count < 10:
+      ...     if count % 2 == 0:
+      ...         break   # loop break statement - exits the loop
+      ...     print(f"We're counting odd numbers: {count}")
+      ...     count += 1
+      ...
+      We're counting odd numbers: 1
+
+
+---------------------------------------------------
+6.3 the 'for' loop
+
+  for statement
+    https://docs.python.org/3/tutorial/controlflow.html#for-statements%3CPaste%3E
+
+  for loop interate across a sequence: syntax: for TEMP_VAR in SEQUENCE:
+    example 1:
+      >>> colors = ['blue', 'green', 'red', 'purple']
+      >>> for color in colors:
+      ...     print(color)
+      ...
+      blue
+      green
+      red
+      purple
+      >>> color   # 'color' loop variable still exists outside of for with last value
+      'purple'
+
+    example 2:
+      >>> for color in colors:
+      ...     if color == 'blue':
+      ...         continue         # continue loop if color is 'blue'
+      ...     elif color == 'red':
+      ...         break         # exit loop if color is 'red'
+      ...     print(color)
+      ...
+      green
+
+  Other types of objects that 'for' loops can iterate through - works just like a 'for' loop indexing a list
+     for loop iterate through a tuple
+       example 1
+         >>> point = (2.1, 3.2, 7.5)
+         >>> for value in point:
+         ...     print(value)
+         ...
+         2.1
+         3.2
+         7.5
+
+     for loop iterate through a dict
+       example 2 (two ways to iterate through the keys - 1st: implict; 2nd using key() method)
+         >>> ages = {'kevin':59, 'bob': 40, 'kayla' : 21}
+         >>> for key in ages:
+         ...     print(key)
+         ...
+         kevin
+         bob
+         kayla
+         >>> for key in ages.keys():
+         ...     print(key)
+         ...
+         kevin
+         bob
+         kayla
+
+     for loop iterate through a string
+       example 3:
+         >>> for letter in "my_string":
+         ...    print(letter)
+         ...
+         m
+         y
+         _
+         s
+         t
+         r
+         i
+         n
+         g
+
+     for loop iterate through a list of tuples
+       example 4:
+         >>> list_of_points = [(1,2), (2,3), (4,3)]
+         >>> for x, y in list_of_points:
+         ...     print(f"x: {x}, y: {y}")
+         ...
+         x: 1, y: 2
+         x: 2, y: 3
+         x: 4, y: 3
+
+     for loop iterate through the 'dict' items() method output which returns a list of tuples
+       example 5:
+         >>> ages = {'kevin':59, 'bob': 40, 'kayla' : 21}
+         >>> for name,age in ages.items():
+         ...     print(f"Person named: {name}\tAge of: {age}")
+         ...
+         Person named: kevin     Age of: 59
+         Person named: bob       Age of: 40
+         Person named: kayla     Age of: 21
+         >>> ages.items()
+         dict_items([('kevin', 59), ('bob', 40), ('kayla', 21)])
+
+---------------------------------------------------
+6.4 Logic [Boolean] Operations
+
+  Boolean Operators - and, or, not
+    https://docs.python.org/3/library/stdtypes.html
+
+
+  These are the Boolean operations, ordered by ascending priority:
+     Operation     Result                                 Notes
+     ---------     -----------------------------------    -----
+     x or y        if x is true, then x, else y           (1)
+     x and y       if x is false, then x, else y          (2)
+     not x         if x is false, then True, else False   (3)
+
+     Notes:
+       1. This is a short-circuit operator, so it only evaluates the second argument if the first one is false.
+       2. This is a short-circuit operator, so it only evaluates the second argument if the first one is true.
+       3. not has a lower priority than non-Boolean operators, so not a == b is interpreted as not (a == b),
+          and a == not b is a syntax error.
+
+
+  Boolean operations
+    not operations
+      example 1
+         >>> name = ""
+         >>> not name   # name is empty, there it returns False, and not name returns True
+         True
+         >>> if not name:
+         ...     print ("no name given")
+         ...
+         no name given
+
+    or operations
+      example 2
+         >>> first = ""
+         >>> last = "Thompson"
+         >>> if first or last:
+         ...     print ("The user has a first or last name")
+         ...
+         The user has a first or last name
+
+         >>> last = ""
+         >>> if first or last:
+         ...     print ("The user has a first or last name")
+         ...
+
+         >>> last = ""
+         >>> last_name = last or 'Doe'   # way to set default value using 'or'
+         >>> last_name
+         'Doe'
+
+             Note: x or y        if x is true, then x, else y           (1)
+
+         >>> 0 or 1 or 2    # 0 returns False, and 1 returns True
+         1
+         >>> 0 or 2 or 1    # 0 returns False, and 2 also returns True
+         2
+
+    and operations
+      example 3
+         >>> first = "Pat"
+         >>> last = ""
+         >>> if first and last:
+         ...     print (f"Full name: {first} {last}")
+         ... elif first:
+         ...     print (f"First name: {first}")
+         ... elif last:
+         ...     print (f"Last name: {last}")
+         ...
+         First name: Pat
+
+         >>> last = "Hall"
+         >>> if first and last:
+         ...     print (f"Full name: {first} {last}")
+         ...
+         Full name: Pat Hall
+
+            Note: x and y       if x is false, then x, else y          (2)
+
+         >>> 0 and 1
+         0
+         >>> 1 and 2
+         2
+
+         >>> ( 1 == 1 ) and print ("Something")
+         Something
+         >>> ( 1 == 2 ) and print ("Something")
+         False
+
+---------------------------------------------------
+6.5 Python 3 Scripting for System Administrators Python Basics Quiz
+---------------------------------------------------
+
+Chapter 7 Basic Scripting
+
+---------------------------------------------------
+7.1 Reading User Input
+
+  Input Function:
+    https://docs.python.org/3/library/functions.html#input
+
+
+Create the following "age" script:
+
+ #!/usr/bin/env python3.6
+
+ name = input("What is your name? ")
+ birthdate = input("What is your birthdate? ")
+ age = int(input("How old are you? "))
+
+ print(f"{name} was born on {birthdate}")
+ print(f"Half your age is {age /2}")
+
+ $ ./demo_code/7_1_inputs/age
+   What is your name? Fred
+   What is your birthdate? April 1
+   How old are you? 25
+   # output
+   Fred was born on April 1
+   Half your age is 12.5
+
+---------------------------------------------------
+7.2 Function Basics
+
+  Defining functions:
+    https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+
+  defining a function:
+    def <functionName>(<arg1>,...,argN):
+      -> must start with underscore, _, or upper/lower case letters
+      -> generally, start functions with a letter
+
+  example 1:
+   def hello_world():
+       print("Hello World!")
+
+To examine what "hello_world" is (pass function name without parentheses):
+
+    >>> hello_world
+    <function hello_world at 0x7fc22eca1e18>
+
+  To run a function (include parentheses):
+    >>> hello_world()
+    Hello World!
+
+  example 2:
+     def print_name(name):
+         print(f"Name is {name}")
+
+  to run:
+    >>> print_name("Fred")
+    Name is Fred
+
+  example 3 function that returns a value:
+    >>> def add_two(num):
+    ...     return num + 2
+    ...
+    >>> result = add_two(3)
+    >>> result
+    5
+
+---------------------------------------------------
+7.3 Using Functions in Scripts
+
+  Defining functions:
+    https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+
+  Create a BMI calculator script:
+#################################
+  script: demo_code/7_3_functions_in_scripts/bmi
+####################################################
+#!/usr/bin/env python3
+
+# BMI = (weight in kg / height in meters squared)
+# BMI = (weight in lbs / height in inches squared) * 703
+
+
+def gather_info():
+    height = float(input("What is your height? (inches or meters) "))
+    weight = float(input("What is your weight? (pounds or kilograms) "))
+    # get system type plus lower case and strip whitespaces
+    system = input("Are your measurements in metric or imperial units? ").lower().strip()
+    # return multiple results as a tuple
+    return (height,weight,system)
+
+# define calculate_bmi with weight,height, & system inputs plus default value for system
+def calculate_bmi(weight, height, system='metric'):
+    """
+    Note: This multi-line comment at beginning of a function is referred as a doc string
+          and some tools convert doc strings to documentation
+    Return the body mass index (BMI) for the given·
+    weight, height, and measure systems.
+    """
+    if system == 'metric':
+        bmi = (weight / (height ** 2))
+    else:
+        bmi = 703 * (weight / (height ** 2))
+    return bmi
+
+
+while True:
+    height,weight,system = gather_info()
+    if system.startswith("i"):
+        bmi=calculate_bmi(weight,system='imperial', height=height)
+        print(f"Your BMI is {bmi}")
+        break
+    elif system.startswith("m"):
+        bmi=calculate_bmi(weight, height)
+        print(f"Your BMI is {bmi}")
+        break
+    else:
+        print("Error: Unknown measurement system. Please use imperial or metric")
+
+####################################################
+
+
+---------------------------------------------------
+7.4 Using Standard Library Packages
+
+  Python Standard Library
+    https://docs.python.org/3/library/index.html
+
+    Note: standard package method document shows
+         <package>.<method>([<arg>]>)     -> <arg> is optional when shown inside []
+            e.g.: time.localtime([secs])
+         <package>.<method>(<arg>)        -> <arg> is required when shown without []
+            e.g.:  time.mktime(t)
+
+  The time package
+    https://docs.python.org/3/library/time.html
+
+example how to import a standard package, i.e. time, and use it, i.e. localtime()
+    # import time package
+    >>> import time
+    # use localtime() method in time package
+    >>> now = time.localtime()
+    >>> now
+    # localtime() returns a struct
+    time.struct_time(tm_year=2023, tm_mon=8, tm_mday=28, tm_hour=18, tm_min=22, tm_sec=25, tm_wday=0, tm_yday=240, tm_isdst=0)
+    # accessing a value in the struct_time struct
+    >>> now.tm_hour
+    18
+
+
+Create 'timer' script:
+#################################
+  script: demo_code/7_4_std_lib_packages/timer
+###############################
+#!/usr/bin/env python3
+
+"""
+   Note the time the script is invoked;
+   Have user give some input
+   note the time after input is given
+   compare these to times, and report the time difference - a stop watch
+"""
+import time
+
+start_time = time.localtime()
+# Note: strftime('%X', <timeValue>))  returns time in local time representation
+print (f"Timer started at {time.strftime('%X', start_time)}")
+
+# wait for user to stop timer
+input ("Press 'Enter' to stop timer")
+stop_time = time.localtime()
+# mktime() is inverse of localtime() - that is, it converts struct_time to a number of secs from beginning of computer time
+difference = time.mktime(stop_time)  -  time.mktime(start_time)
+print (f"Timer stopped at {time.strftime('%X', stop_time)}")
+print (f"Total time: {difference}")
+###############################
+
+Update 'timer' script to specify time package method to be called (without using time.<timeMethod>):
+##############
+  script: demo_code/7_4_std_lib_packages/timer_update
+###############################
+#!/usr/bin/env python3
+
+"""
+   Note the time the script is invoked;
+   Have user give some input
+   note the time after input is given
+   compare these to times, and report the time difference - a stop watch
+"""
+# updated to use "from <package> import <method1>, ..., <methodN>"
+from time import localtime, mktime, strftime
+
+start_time = localtime()
+# Note: strftime('%X', <timeValue>))  returns time in local time representation
+print (f"Timer started at {strftime('%X', start_time)}")
+
+# wait for user to stop timer
+input ("Press 'Enter' to stop timer")
+stop_time = localtime()
+# mktime() is inverse of localtime() - that is, it converts struct_time to a number of secs from beginning of computer time
+difference = mktime(stop_time)  -  mktime(start_time)
+print (f"Timer stopped at {strftime('%X', stop_time)}")
+print (f"Total time: {difference}")
+
+###############################
+
+---------------------------------------------------
+7.5 Working with Environment Variables
+
+  The 'os' packages
+  https://docs.python.org/3/library/os.html
+
+  The 'os.environ' attributes
+  https://docs.python.org/3/library/os.html#os.environ
+
+  The 'os.getenv' function
+  https://docs.python.org/3/library/os.html#os.getenv
+
+
+  os.environ
+    - A mapping object where keys and values are strings that represent the process environment.
+    - For example, environ['HOME'] is the pathname of your home directory (on some platforms), and
+      is equivalent to getenv("HOME") in C
+
+Create a script, 'running', to check STAGE env variable value:
+###############################
+#!/usr/bin/env python3.6
+
+import os
+
+# determine stage, e.g. DEVEL, TEST, PROD based in STAGE env variable
+stage = os.environ["STAGE"].upper()
+
+output = f"We're running in {stage}"
+
+if stage.startswith("PROD"):
+    output = "DANGER!!! - " + output
+
+print (output)
+###############################
+
+# Run 'running' script while setting STAGE env inline
+$ STAGE=staging ./running
+We're running in STAGING
+$ STAGE=production ./running
+DANGER!!! - We're running in PRODUCTION
+
+# Run 'running' script without setting STAGE env
+$ ./running
+Traceback (most recent call last):
+  File "./running", line 6, in <module>
+    stage = os.environ["STAGE"].upper()
+  File "/usr/local/lib/python3.6/os.py", line 669, in __getitem__
+    raise KeyError(key) from None
+KeyError: 'STAGE'
+
+# Key error because STAGE env is not set
+
+
+A better way to get env variables is with 'os.getenv()' method
+
+ os.getenv(key, default=None)
+  - Return the value of the environment variable key as a string if it exists, or default if it doesn’t.
+  - key is a string. Note that since getenv() uses os.environ, the mapping of getenv() is similarly also
+    captured on import, and the function may not reflect future environment changes.
+
+Update the 'running' script to use os.getenv(<ENV>,default=<default>) to check STAGE env variable value:
+so that if STATE is not set, it will return "dev" STAGE value instead of an error.
+##############
+  script: demo_code/7_5_env_var/running
+###############################
+#!/usr/bin/env python3
+
+import os
+
+# determine stage, e.g. DEVEL, TEST, PROD based in STAGE env variable
+# if not set, return "dev" stage
+stage = os.getenv("STAGE", default="dev").upper()
+
+output = f"We're running in {stage}"
+
+if stage.startswith("PROD"):
+    output = "DANGER!!! - " + output
+
+print (output)
+
+###############################
+
+---------------------------------------------------
+7.6 Interacting With Files
+
+  open function
+  https://docs.python.org/3/library/functions.html#open
+
+  The file-object
+  https://docs.python.org/3/glossary.html#term-file-object
+
+  The 'io' module
+  https://docs.python.org/3/library/io.html#io-overview
+  -> provides overview of using "open()" method
+
+
+ open(file, mode='r', buffering=- 1, encoding=None, errors=None, newline=None, closefd=True, opener=None)
+   - Open file and return a corresponding file object.
+   - If the file cannot be opened, an OSError is raised.
+
+ -> Create a file, "xmen_base.txt" with list of xmen characters
+   -> file at: demo_code/7_6_files/xmen_base.txt
+
+ -> Open "xmen_base.txt" file in read mode (Note: read mode, 'r', is the default)
+
+>>> xmen_file = open ('xmen_base.txt', 'r')
+>>> xmen_file
+<_io.TextIOWrapper name='xmen_base.txt' mode='r' encoding='UTF-8'>
+
+
+  class io.TextIOWrapper(buffer, encoding=None, errors=None, newline=None, line_buffering=False, write_through=False)
+    - A buffered text stream providing higher-level access to a BufferedIOBase buffered binary stream.
+    - It inherits TextIOBase.
+
+  class io.TextIOBase
+    - Base class for text streams.
+    - This class provides a character and line based interface to stream I/O. It inherits IOBase.
+    - TextIOBase provides or overrides these data attributes and methods in addition to those from IOBase:
+        attributes: encoding, errors, newlines, buffer
+        methods: detach(), read(), readline(), seek(), tell(), write()
+
+# read from file
+#   since no size passed to read(), it returns entire file
+>>> xmen_file.read()
+'Storm\nWolverine\nCyclops\nBishop\nNightcrawler\n'
+# since entire file was read(), no data returned
+>>> xmen_file.read()
+# return cursor to beginning of file
+>>> xmen_file.seek(0)
+0
+
+
+>>> xmen_file.seek(0)
+0
+# increment line-by-line through file, and print it out without "\n" , e.g. print(line,end="")
+>>> for line in xmen_file:
+...     print(line,end="")
+...
+Storm
+Wolverine
+Cyclops
+Bishop
+Nightcrawler
+
+
+# close file:
+>>> xmen_file.close()
+# try to read file after it is closed
+>>> xmen_file.read()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: I/O operation on closed file.
+
+# however, file info still exists after close, but you can no longer access the file
+>>> xmen_file
+<_io.TextIOWrapper name='xmen_base.txt' mode='r' encoding='UTF-8'>
+
+
+# re-open xmen_base.txt for reading
+>>> xmen_base = open ('xmen_base.txt', 'r')
+# open new_xmem.txt' file for writing and write contents of "xmen_base.txt" to it
+>>> new_xmen = open('new_xmen.txt', 'w')
+>>> new_xmen
+<_io.TextIOWrapper name='new_xmen.txt' mode='w' encoding='UTF-8'>
+                                    ^
+>>> new_xmen.write(xmen_base.read())
+44
+# need to close "new_xmen.txt" file because it was not opened for reading (only writing)
+>>> new_xmen.close()
+
+>>> new_xmen = open(new_xmen.name, 'r+')
+>>> new_xmen.read()
+'Storm\nWolverine\nCyclops\nBishop\nNightcrawler\n'
+>>> new_xmen.seek(0)
+0
+# write 2 lines to file at beginning of file
+>>> new_xmen.write("Beast\n")
+6
+>>> new_xmen.write("Phoenix\n")
+8
+>>> new_xmen.seek(0)
+0
+# reading contents shows the two lines overwrote the beginning of file (not inserted)
+>>> new_xmen.read()
+'Beast\nPhoenix\ne\nCyclops\nBishop\nNightcrawler\n'
+
+
+# close both files
+>>> new_xmen.close()
+>>> xmen_base.close()
+
+
+With Statement Usage with Open() Function in Python
+ - whatever we do inside the context created using the 'with' statement stays inside the context.
+ - Hence, you can also use the 'with' statement with the open() function in Python to open a file, perform
+   operations on it, and close it. The syntax for using the with statement is as follows.
+
+    with open(filename, mode) as myFile:
+        //read from the file
+        // write to the file.
+
+# open "xmen_base.txt" using 'with open' statement and append 1 line:
+
+>>> with open('xmen_base.txt', 'a') as f:
+...     f.write("Professor Xavier\n")
+...
+17
+>>> f
+<_io.TextIOWrapper name='xmen_base.txt' mode='a' encoding='UTF-8'>
+
+# read fails because file is automatically closed at end of "with open() block
+>>> f.read()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: I/O operation on closed file.
+
+# alternatively, you can create the 'f' variable outside of the 'with' and it will still close 'f' at end of 'with' block
+>>> f = open('xmen_base.txt', 'a')
+>>> with f:
+...     f.write("Something\n")
+...
+10
+
+# 'f' file is still closed at end of 'with' block
+>>> f.read()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+ValueError: I/O operation on closed file.
+
+---------------------------------------------------
+
+Chapter 8 Intermediate Scripting
+
+---------------------------------------------------
+8.1 Parsing Command Lines Parameters
+
+  the 'sys' module
+  https://docs.python.org/3/library/sys.html
+
+  the 'sys.arg' attribute
+  https://docs.python.org/3/library/sys.html#sys.argv
+
+
+sys - System-specific parameters and functions
+  - The 'sys' module provides access to some variables used or maintained by the interpreter and to functions
+     that interact strongly with the interpreter. It is always available.
+
+sys.argv
+  - The list of command line arguments passed to a Python script. argv[0] is the script name (it is operating system
+    dependent whether this is a full pathname or not).
+  - If the command was executed using the -c command line option to the interpreter, argv[0] is set to the string '-c'.
+  - If no script name was passed to the Python interpreter, argv[0] is the empty string.
+
+
+Create a script, 'param_echo', to report the arguments passed in to it
+##############
+  script: demo_code/8_1_cmd_line_parameters/param_echo
+#############################################
+#!/usr/bin/env python3
+
+import sys
+
+print(f"Positional arguments {sys.argv[1:]}")
+print(f"First argument {sys.argv[1]}")
+#############################################
+
+Run script:
+
+$ ./param_echo testing
+Positional arguments ['testing']
+First argument testing
+
+$ ./param_echo testing testing12 'another argument'
+Positional arguments ['testing', 'testing12', 'another argument']
+First argument testing
+
+# run script with no arguments passed - positional works (no error), but 'argv[1]' fails
+$ ./param_echo
+Positional arguments []
+Traceback (most recent call last):
+  File "./param_echo", line 7, in <module>
+    print(f"First argument {sys.argv[1]}")
+IndexError: list index out of range
+# Positional returns empty with no error, because you can take a slice of an empty list
+# Index error because 'argv[1]' works like a list and the value at the 1st position/index does not exist
+
+---------------------------------------------------
+8.2 Robust CLIs with 'argparse' - Part 1
+
+  The 'argparse' module
+  https://docs.python.org/3/library/argparse.html
+
+  The argparse.ArgumentParser class
+  https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser
+
+  argparse
+    - Parser for command-line options, arguments and sub-commands
+    - The program defines what arguments it requires, and argparse will figure out how to parse those out of sys.argv.
+    - The argparse module also automatically generates help and usage messages.
+    - The module will also issue errors when users give the program invalid arguments.
+
+   class argparse.ArgumentParser(prog=None, usage=None, description=None, epilog=None, parents=[],
+      formatter_class=argparse.HelpFormatter, prefix_chars='-', fromfile_prefix_chars=None, argument_default=None,
+         conflict_handler='error', add_help=True, allow_abbrev=True, exit_on_error=True)
+    - Create a new ArgumentParser object. All parameters should be passed as keyword arguments
+
+
+  Using argparse Steps:
+    Creating a parser
+     - The first step in using the argparse is creating an ArgumentParser object:
+       >>> parser = argparse.ArgumentParser(description='Process some integers.')
+
+    Adding arguments
+     - Filling an ArgumentParser with information about program arguments is done by making calls to the add_argument()
+       method. Generally, these calls tell the ArgumentParser how to take the strings on the command line and turn them
+       into objects. This information is stored and used when parse_args() is called. For example:
+       >>> parser.add_argument('integers', metavar='N', type=int, nargs='+',
+                    help='an integer for the accumulator')
+
+       >>> parser.add_argument('--sum', dest='accumulate', action='store_const',
+                    const=sum, default=max,
+                    help='sum the integers (default: find the max)')
+
+    Parsing arguments
+      - ArgumentParser parses arguments through the parse_args() method. This will inspect the command line, convert
+        each argument to the appropriate type and then invoke the appropriate action. In most cases, this means a
+        simple Namespace object will be built up from attributes parsed out of the command line:
+        >>> parser.parse_args(['--sum', '7', '-1', '42'])
+        Namespace(accumulate=<built-in function sum>, integers=[7, -1, 42])
+
+   Namespaces in Python
+    - A namespace is a collection of currently defined symbolic names along with information about the object that
+      each name references.
+    - You can think of a namespace as a dictionary in which the keys are the object names and the values are the
+      objects themselves. Each key-value pair maps a name to its corresponding object.
+
+  Create a script, 'reverse-file', to reverse a file  - initial program
+##############
+  script: demo_code/8_2_argparse_part1/reverse-file1
+#########################################
+#!/usr/bin/env python3.6
+
+import argparse
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+args = parser.parse_args()
+print(args)
+#########################################
+
+   # running initial program returns a Namespace object
+   $ ./demo_code/8_2_argparse_part1/reverse-file1 fake.txt
+   Namespace(filename='fake.txt')
+
+   # running initial program without an argument returns an error
+   $ ./demo_code/8_2_argparse_part1/reverse-file1
+   usage: reverse-file [-h] filename
+   reverse-file: error: the following arguments are required: filename
+
+  Update script, 'reverse-file', with --limit and --version args
+##############
+  script: demo_code/8_2_argparse_part1/reverse-file
+#########################################
+#!/usr/bin/env python3.6
+
+import argparse
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+print(args)
+
+#########################################
+
+
+  $ ./demo_code/8_2_argparse_part1/reverse-file -v
+  demo_code/8_2_argparse_part1/reverse-file 1.0
+  $ ./demo_code/8_2_argparse_part1/reverse-file --version
+  reverse-file 1.0
+
+---------------------------------------------------
+8.3 Robust CLIs with 'argparse' - Part 2
+
+  -> continuation of the 8.2 building of 'reverse-file' script
+
+   readlines() method
+     - returns all the lines in a file in the format of a list where each element is a line in the file
+   readline() method
+     - returns a line from the file when called
+   reverse() method
+     - reverses the elements of the list (will be used to reverse the lines in the list).
+  strip() method
+    - removes any leading, and trailing whitespaces including newline char (?).
+    - Leading means at the beginning of the string, trailing means at the end.
+    - You can specify which character(s) to remove, if not, any whitespaces will be removed.
+  [::-1]
+    - reverse a string by using a negative step value (and not specify begin and end values)
+
+  Update script, 'reverse-file', to reverse file contents
+##############
+  script: demo_code/8_3_argparse_part2/reverse-file
+#########################################
+#!/usr/bin/env python3.6
+
+import argparse
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+#print(args)
+
+# read file. reverse the content, and print it out
+with open(args.filename) as f:
+    # read file to the lines list
+    lines = f.readlines()
+    # reverse the order of the lines
+    lines.reverse()
+
+    # limit arg is specified, limit the number of lines in the lines list
+    if args.limit:
+        lines = lines[:args.limit]
+
+    # use strip to remove newline char, and then reverse the contents of each line
+    for line in lines:
+        print(line.strip()[::-1])
+
+
+#########################################
+
+  # verify script is working:
+  $ pushd  demo_code/8_3_argparse_part2
+  $ ./reverse-file xmen_base.txt
+  gnihtemoS
+  reivaX rosseforP
+  relwarcthgiN
+  pohsiB
+  spolcyC
+  enirevloW
+  mrotS
+  # verify --limit/-l limit line options work
+  $ ./reverse-file xmen_base.txt --limit 2
+  gnihtemoS
+  reivaX rosseforP
+
+  $ ./reverse-file xmen_base.txt -l 3
+  gnihtemoS
+  reivaX rosseforP
+  relwarcthgiN
+  $ popd
+
+---------------------------------------------------
+8.4 Handling Errors with try/except
+
+  The try statement & workflow
+  https://docs.python.org/3/reference/compound_stmts.html#the-try-statement
+
+  The try statement
+    - The try statement specifies exception handlers and/or cleanup code for a group of statements:
+
+    try1_stmt ::=  "try" ":" suite
+               ("except" [expression ["as" identifier]] ":" suite)+    # if try fails (error)
+               ["else" ":" suite]                                      # if try passes (no error)
+               ["finally" ":" suite]                                   # if specified, will always execute at end of try
+
+  except clause
+   - The except clause(s) specify one or more exception handlers.
+   - When no exception occurs in the try clause, no exception handler is executed
+
+  # run current 'reverse-file' with file input that does not exist and it gives are stack trace FileNotFoundError
+  $ ./reverse-file fake.txt
+  Traceback (most recent call last):
+    File "./reverse-file", line 15, in <module>
+      with open(args.filename) as f:
+  FileNotFoundError: [Errno 2] No such file or directory: 'fake.txt'
+
+
+
+ Update script, 'reverse-file', to catch FileNotFoundError with try/expect block
+##############
+  script: demo_code/8_4_argparse_try_except/reverse-file
+#########################################
+import argparse
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+
+# read file. reverse the content, and print it out
+try:
+    f = open(args.filename)
+    limit = args.limit
+# FileNotFound except error
+except FileNotFoundError as err:
+    print(f"Error: {err}")
+# unexpected except error
+except:
+    print("Error: Unexpected error found")
+else:
+    with f:
+        # read file to the lines list
+        lines = f.readlines()
+        # reverse the order of the lines
+        lines.reverse()
+
+        # limit arg is specified, limit the number of lines in the lines list
+        if limit:
+            lines = lines[:limit]
+
+        # use strip to remove newline char, and then reverse the contents of each line
+        for line in lines:
+            print(line.strip()[::-1])
+# finally block to always run at end of try block
+#finally:
+#    print(f"\nFinished reversing {args.filename} contents")
+#########################################
+
+  # re-run updated 'reverse-file' with file input that does not exist and it reports FileNotFoundError with stack trace
+  $ ./demo_code/8_4_argparse_try_except/reverse-file fake.txt
+  Error: [Errno 2] No such file or directory: 'fake.txt'
+
+
+---------------------------------------------------
+8.5 Exit Statuses
+
+  The 'sys' module
+  https://docs.python.org/3/library/sys.html
+
+  The sys.exit function
+  https://docs.python.org/3/library/sys.html#sys.exit
+
+
+
+  sys - System-specific parameters and functions
+    - The 'sys' module provides access to some variables used or maintained by the interpreter and to functions
+      that interact strongly with the interpreter. It is always available.
+
+   sys.exit([arg])
+    - Raise a SystemExit exception, signaling an intention to exit the interpreter.
+    - The optional argument arg can be an integer giving the exit status (defaulting to zero), or another type of object. If it is
+      an integer, zero is considered "successful termination" and any nonzero value is considered "abnormal termination"
+      by shells and the like.
+
+
+   The current 'reverse-file' script exit status is still '0' even when an error occurs. So calling programs know it fail,
+   it needs a non-zero exit status.
+
+
+ Update script, 'reverse-file', change exit status to non-zero if an error is reported in try/except
+ # to do:
+    import sys
+    add: sys.exit(<exitStatus>)
+Final 'reverse-file'
+##############
+  script: demo_code/8_5_argparse_exit_status/reverse-file
+#########################################
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+
+# read file. reverse the content, and print it out
+try:
+    f = open(args.filename)
+    limit = args.limit
+# FileNotFound except error
+except FileNotFoundError as err:
+    print(f"Error: {err}")
+    # exit with 2 exit status - just to match the FileNotFoundError stack trace exit status
+    sys.exit(2)
+# unexpected except error
+except:
+    print("Error: Unexpected error found")
+    # exit with non-zero unique exit status (e.g. 3)
+    sys.exit(3)
+else:
+    with f:
+        # read file to the lines list
+        lines = f.readlines()
+        # reverse the order of the lines
+        lines.reverse()
+
+        # limit arg is specified, limit the number of lines in the lines list
+        if limit:
+            lines = lines[:limit]
+
+        # use strip to remove newline char, and then reverse the contents of each line
+        for line in lines:
+            print(line.strip()[::-1])
+# finally block to always run at end of try block
+#finally:
+#    print(f"\nFinished reversing {args.filename} contents")
+
+#########################################
+
+  # re-run updated 'reverse-file' with file input that does not exist and it reports FileNotFoundError with stack trace
+  #   and gives non-zero exit status  (e.g. 2)
+  $ ./demo_code/8_5_argparse_exit_status/reverse-file fake.txt
+  Error: [Errno 2] No such file or directory: 'fake.txt'
+  python_scripts $ echo $?
+  2
+
+---------------------------------------------------
+8.6 Execute Shell Commands from Python
+
+
+  The 'subprocess' module
+  https://docs.python.org/3/library/subprocess.html
+
+  The subprocess.run function
+  https://docs.python.org/3/library/subprocess.html#subprocess.run
+
+  The subprocess.CompletedProcess class
+  https://docs.python.org/3/library/subprocess.html#subprocess.CompletedProcess
+
+  The subprocess.PIPE object
+  https://docs.python.org/3/library/subprocess.html#subprocess.PIPE
+
+  The bytes type
+  https://docs.python.org/3/library/stdtypes.html#bytes
+
+  The subprocess.CalledProcessError class
+  https://docs.python.org/3/library/subprocess.html#subprocess.CalledProcessError
+
+
+  subprocess - Subprocess management
+   - Source code: Lib/subprocess.py
+   - The subprocess module allows you to spawn new processes, connect to their input/output/error pipes, and obtain their return codes.
+   - This module intends to replace several older modules and functions: os.system, os.spawn*
+
+
+  subprocess.run(args, *, stdin=None, input=None, stdout=None, stderr=None, capture_output=False, shell=False, cwd=None, timeout=None,
+                 check=False, encoding=None, errors=None, text=None, env=None, universal_newlines=None, **other_popen_kwargs)
+   - The recommended approach to invoking subprocesses is to use the run() function for all use cases it can handle.
+   - For more advanced use cases, the underlying Popen interface can be used directly.
+   - Run the command described by args. Wait for command to complete, then return a CompletedProcess instance.
+   - requires using python 3.5 or later release
+   - by default, stdout and stderr are NOT captured (only args [Linux cmd list] and returncode are captured)
+       - If capture_output is true, stdout and stderr will be captured.
+       - When used, the internal Popen object is automatically created with stdout=PIPE and stderr=PIPE.
+       - The stdout and stderr arguments may not be supplied at the same time as capture_output.
+       - If you wish to capture and combine both streams into one, use stdout=PIPE and stderr=STDOUT instead of capture_output.
+
+   class subprocess.CompletedProcess
+    - The return value from run(), representing a process that has finished.
+      includes: args, returncode, stdout, stderr, check_return_code()
+
+  subprocess.PIPE
+    - Special value that can be used as the stdin, stdout or stderr argument to Popen and indicates that a pipe to the standard
+      stream should be opened. Most useful with Popen.communicate().
+
+  class bytes([source[, encoding[, errors]]])
+    - Firstly, the syntax for bytes literals is largely the same as that for string literals, except that a 'b' prefix is added:
+        - Single quotes: b'still allows embedded "double" quotes'
+        - Double quotes: b"still allows embedded 'single' quotes"
+        - Triple quoted: b'''3 single quotes''', b"""3 double quotes"""
+
+    Byte Objects
+     - Python 3 Byte objects, defined in Python 3 are "sequence of bytes" and similar to "unicode" objects from Python 2.
+
+      Differences between 'strings' and 'Byte objects' include:
+        - Byte objects are sequence of Bytes, whereas Strings are sequence of characters.
+        - Byte objects are in machine readable form internally, Strings are only in human readable form.
+        - Since Byte objects are machine readable, they can be directly stored on the disk. Whereas, Strings need encoding
+          before which they can be stored on disk.
+
+    bytes.decode(encoding='utf-8', errors='strict')
+    bytearray.decode(encoding='utf-8', errors='strict')
+      - Return the bytes decoded to a str.
+      - encoding defaults to 'utf-8'; see Standard Encodings for possible values.
+
+  exception subprocess.CalledProcessError
+    - Subclass of SubprocessError, raised when a process run by check_call(), check_output(), or run() (with check=True) returns
+      a non-zero exit status.
+    - By setting 'check' parameter to True, any errors in the child will be raised in the parent process and cause the entire code to stop.
+
+
+   subprocess.call(args, *, stdin=None, stdout=None, stderr=None, shell=False, cwd=None, timeout=None, **other_popen_kwargs)
+     - can use prior to python 3.5
+     - Run the command described by args. Wait for command to complete, then return the returncode attribute.
+     - Code needing to capture stdout or stderr should use run() instead:
+       run(...).returncode
+
+
+
+   >>> import subprocess
+   # run() takes a list of the linux command and options
+   >>> proc = subprocess.run(["ls", "-l", "demo_code/8_3_argparse_part2"])
+  total 5
+  -rwxrwxr-x. 1 centos centos 1399 Aug 29 19:51 reverse-file
+  -rw-rw-r--. 1 centos centos   71 Aug 28 23:44 xmen_base.txt
+
+  # Linux cmd without options works in a list or without a list
+  >>> proc = subprocess.run(["ls"])
+  demo_code  python3ScriptingForSystemAdministrators.txt
+
+  # Linux cmd with option MUST be specified inside a list
+  >>> proc = subprocess.run("ls -l")
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    File "/usr/local/lib/python3.6/subprocess.py", line 403, in run
+      with Popen(*popenargs, **kwargs) as process:
+    File "/usr/local/lib/python3.6/subprocess.py", line 709, in __init__
+      restore_signals, start_new_session)
+    File "/usr/local/lib/python3.6/subprocess.py", line 1344, in _execute_child
+      raise child_exception_type(errno_num, err_msg, err_filename)
+  FileNotFoundError: [Errno 2] No such file or directory: 'ls -l': 'ls -l'
+
+  >>> import os
+  >>> os.chdir("demo_code/8_3_argparse_part2")
+  >>> proc = subprocess.run(["ls", "-l"])
+  total 5
+  -rwxrwxr-x. 1 centos centos 1399 Aug 29 19:51 reverse-file
+  -rw-rw-r--. 1 centos centos   71 Aug 28 23:44 xmen_base.txt
+
+  # run() returns linux cnd list and return code, but NOT stderr, stdout, etc
+  >>> proc
+  CompletedProcess(args=['ls', '-l'], returncode=0)
+
+  >>> proc.args
+  ['ls', '-l']
+
+
+  # for run() to return stderr and stdout add: "stderr=subprocess.PIPE,stdout=subprocess.PIPE"
+  >>> proc = subprocess.run(["ls", "-l"], stderr=subprocess.PIPE,stdout=subprocess.PIPE)
+
+  # show proc returned items:
+  >>> proc
+  CompletedProcess(args=['ls', '-l'], returncode=0, stdout=b'total 5\n-rwxrwxr-x. 1 centos centos 1399 Aug 29 19:51 reverse-file\n-rw-rw-r--. 1 centos centos   71 Aug 28 23:44 xmen_base.txt\n', stderr=b'')
+
+  # stdout and stderr are returned as Byte Objects and inclosed in b'<stderr>' and b'<stdout>'
+  >>> proc.stdout
+  b'total 5\n-rwxrwxr-x. 1 centos centos 1399 Aug 29 19:51 reverse-file\n-rw-rw-r--. 1 centos centos   71 Aug 28 23:44 xmen_base.txt\n'
+
+  >>> proc.stderr
+  b''
+
+  # to convert byte obect to string using the byte.decode() method
+  >>> print (proc.stdout.decode())
+  total 5
+  -rwxrwxr-x. 1 centos centos 1399 Aug 29 19:51 reverse-file
+  -rw-rw-r--. 1 centos centos   71 Aug 28 23:44 xmen_base.txt
+
+  # simulate an error condition - but no error returned by run() process, just the error message
+  >>> new_proc = subprocess.run(['cat','fake.txt'])
+  cat: fake.txt: No such file or directory
+
+  # use run() check=True so error is reported:
+  #   By setting 'check' parameter to True, any errors in the child will be raised in the parent process and cause the entire code to stop.
+  new_proc = subprocess.run(['cat','fake.txt'],check=True)
+  cat: fake.txt: No such file or directory
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+    File "/usr/local/lib/python3.6/subprocess.py", line 418, in run
+      output=stdout, stderr=stderr)
+  subprocess.CalledProcessError: Command '['cat', 'fake.txt']' returned non-zero exit status 1.
+
+  >>> os.chdir("../..")
+
+---------------------------------------------------
+8.7 Advanced iterations with List Comprehensions
+
+
+  List Comprehensions
+  https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions
+
+  List Comprehensions
+   - List comprehensions provide a concise way to create lists.
+   - Common applications are to make new lists where each element is the result of some operations applied to each member
+     of another sequence or iterable, or to create a subsequence of those elements that satisfy a certain condition.
+
+  - For example, assume we want to create a list of squares, like:
+    >>> squares = []
+    >>> for x in range(10):
+            squares.append(x**2)
+    >>> squares
+    [0, 1, 4, 9, 16, 25, 36, 49, 64, 81]
+
+    - Note that this creates (or overwrites) a variable named x that still exists after the loop completes.
+    - We can calculate the list of squares without any side effects using:
+
+       squares = list(map(lambda x: x**2, range(10)))
+
+     or, equivalently:
+
+       squares = [x**2 for x in range(10)]
+
+
+  Python List Comprehension:
+   https://www.geeksforgeeks.org/python-list-comprehension/
+   - A Python list comprehension consists of brackets containing the expression, which is executed for each element along with
+     the for loop to iterate over each element in the Python list.
+
+   - Python List Comprehension Syntax
+       Syntax: newList = [ expression(element) for element in oldList if condition ]
+
+    Parameter:
+        expression: Represents the operation you want to execute on every item within the iterable.
+        element: The term "variable" refers to each value taken from the iterable.
+        iterable: specify the sequence of elements you want to iterate through.(e.g., a list, tuple, or string).
+        condition: (Optional) A filter helps decide whether or not an element should be added to the new list.
+
+    Return:The return value of a list comprehension is a new list
+
+  Note:
+    map function
+     - The map() function executes a specified function for each item in an iterable. The item is sent to the function as a parameter.
+     Syntax
+          map(function, iterables)
+     Example:
+       numbers = [1, 2, 3, 4]
+       squared_numbers = list(map(lambda x: x**2, numbers))
+       print(squared_numbers)
+       # output
+       [1, 4, 9, 16]
+
+
+Create initial script, 'contains', to determine if input snippet argument is found in /usr/share/dict/words file
+##############
+  script: demo_code/8_7_list_comprehensions/contains1
+################################
+#!/usr/bin/env python3.6
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Search for words including partial words')
+parser.add_argument('snippet', help='partial (or complete) string to search for in words')
+args = parser.parse_args()
+
+snippet = args.snippet.lower()
+
+# open words file and create a list or words
+with open ('/usr/share/dict/words') as f:
+    words = f.readlines()
+
+################################
+
+  # verify 'contains' script runs correctly:
+  $ ./contains Keith
+  ['Keith\n', 'Keithley\n', 'Keithsburg\n', 'Keithville\n']
+
+
+Update script, 'contains', to replace for loop with list comprehension implementation plus remove/strip() newline char
+##############
+  script: demo_code/8_7_list_comprehensions/contains
+################################
+#!/usr/bin/env python3.6
+
+import argparse
+
+parser = argparse.ArgumentParser(description='Search for words including partial words')
+parser.add_argument('snippet', help='partial (or complete) string to search for in words')
+args = parser.parse_args()
+
+snippet = args.snippet.lower()
+
+# open words file and create a list or words
+with open ('/usr/share/dict/words') as f:
+    words = f.readlines()
+
+#matches = [word.strip() for word in words if snippet in word.lower()]
+#print(matches)
+# remove matches and just print result
+print ([word.strip() for word in words if snippet in word.lower()])
+
+################################
+
+  # verify updated 'contains' script with list comprehension implementation runs correctly:
+  $ ./contains Keith
+  ['Keith', 'Keithley', 'Keithsburg', 'Keithville']
+
+---------------------------------------------------
+8.8 Python 3 Scripting for System Administrators Python Scripting Quiz
+---------------------------------------------------
+
+  Chapter 9 Useful Standard Library Packages
+
+---------------------------------------------------
+9.1 random & json
+
+  The random module
+  https://docs.python.org/3/library/random.html
+
+  The json module
+  https://docs.python.org/3/library/json.html
+
+  The range type
+  https://docs.python.org/3/library/stdtypes.html#range
+
+
+  random - Generate pseudo-random numbers
+   - Source code: Lib/random.py
+   - This module implements pseudo-random number generators for various distributions.
+
+   random.random()
+     - Return the next random floating point number in the range 0.0 <= X < 1.0
+
+   random.uniform(a, b)
+    - Return a random floating point number N such that a <= N <= b for a <= b and b <= N <= a for b < a.
+    - The end-point value b may or may not be included in the range depending on floating-point rounding in
+      the equation a + (b-a) * random().
+
+   random.choice(seq)
+    - Return a random element from the non-empty sequence seq. If seq is empty, raises IndexError.
+
+
+  json - JSON encoder and decoder
+   - Source code: Lib/json/__init__.py
+   - encoding and decoding JSON data/files
+
+   json.dump(obj, fp, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None,
+             indent=None, separators=None, default=None, sort_keys=False, **kw)
+    - Serialize obj as a JSON formatted stream to fp (a .write()-supporting file-like object) using this
+      conversion table.
+
+  Ranges
+    - The range type represents an immutable sequence of numbers and is commonly used for looping a specific
+      number of times in for loops.
+      - can generate a random sample out of a list
+
+   class range(stop)
+   class range(start, stop[, step])
+     - returns a sequence of numbers, starting from 0 by default, and increments by 1 (by default), and stops
+       before a specified number.
+     - The arguments to the range constructor must be integers (either built-in int or any object that implements
+       the __index__() special method).
+     - If the step argument is omitted, it defaults to 1.
+     - If the start argument is omitted, it defaults to 0.
+     - If step is zero, ValueError is raised.
+
+  % string concatenation
+    - %s specifically is used to perform concatenation of strings together.
+    - It allows us to format a value inside a string. It is used to incorporate another string within a string.
+    - It automatically provides type conversion from value to string
+    - e.g.: print("Hey, %s!" % name)
+
+  Create receipt JSON file with 'receipts.py' script
+     - will use random.uniform() to receipt values between a specified floating point range
+     - generate content using random.choice() to generate content from '/usr/share/dict/words'
+     - use json package to write generate receipt data to a JSON file. Will using json.dump() method to
+       dump our dict to JSON file
+
+
+##############
+  script: demo_code/9_1_random_json/gen_receipts.py
+####################################################
+import random
+import json
+import os
+
+# count is the number of receipt files to generate
+count = int(os.getenv("FILE_COUNT") or 100)
+
+# create a 'words' list with contents of 'words' file
+words = [word.strip() for word in open('/usr/share/dict/words').readlines()]
+
+for identifier in range(count):
+    # generate random float values between $1 and $1000
+    amount = random.uniform(1.0, 1000)
+    content = {
+            'topic' : random.choice(words),
+            'value' : "%.2f" % amount
+    }
+    with open(f"./new/receipt-{identifier}.json",'w') as f:
+        json.dump(content,f)
+
+####################################################
+
+  # verify "gen_receipt.py' generates the JSON formatted receipt files:
+  $ pushd demo_code/9_1_random_json/
+  $ mkdir new
+  $ FILE_COUNT=10 python3 gen_receipts.py
+
+  $ ls new
+  receipt-0.json  receipt-2.json  receipt-4.json  receipt-6.json  receipt-8.json
+  receipt-1.json  receipt-3.json  receipt-5.json  receipt-7.json  receipt-9.json
+
+  $ cat new/receipt-6.json
+  {"topic": "caccagogue", "value": "249.34"}receipts $
+
+---------------------------------------------------
+9.2 shutil & glob
+
+
+  The os.mkdir function
+    https://docs.python.org/3/library/os.html#os.mkdir
+
+  The shutil module
+  https://docs.python.org/3/library/shutil.html
+
+  The glob module
+  https://docs.python.org/3/library/glob.html
+
+  The json module
+  https://docs.python.org/3/library/json.html
+
+
+  os.mkdir(path, mode=0o777, *, dir_fd=None)
+    - Create a directory named path with numeric mode mode.
+    - If the directory already exists, FileExistsError is raised.
+    - If a parent directory in the path does not exist, FileNotFoundError is raised.
+
+  shutil - High-level file operations
+    - Source code: Lib/shutil.py
+    - The shutil module offers a number of high-level operations on files and collections of files.
+    - In particular, functions are provided which support file copying and removal.
+    - For operations on individual files, see also the os module.
+
+    shutil.move(src, dst, copy_function=copy2)
+      - Recursively move a file or directory (src) to another location (dst) and return the destination.
+      - If the destination is an existing directory, then src is moved inside that directory.
+      - If the destination already exists but is not a directory, it may be overwritten depending on
+        os.rename() semantics.
+
+  glob - Unix style pathname pattern expansion
+    - Source code: Lib/glob.py
+    - The glob module finds all the pathnames matching a specified pattern according to the rules used
+      by the Unix shell, although results are returned in arbitrary order.
+    - No tilde expansion is done, but *, ?, and character ranges expressed with [] will be correctly matched.
+    - This is done by using the os.scandir() and fnmatch.fnmatch() functions in concert, and not by actually
+      invoking a subshell.
+
+    glob.glob(pathname, *, root_dir=None, dir_fd=None, recursive=False, include_hidden=False)
+      - Return a possibly empty list of path names that match pathname, which must be a string containing a
+        path specification. pathname can be either absolute (like /usr/src/Python-1.5/Makefile) or relative
+        (like ../../Tools/*/*.gif), and can contain shell-style wildcards
+
+  json - JSON encoder and decoder
+   - Source code: Lib/json/__init__.py
+   - encoding and decoding JSON data/files
+
+   json.dump(obj, fp, *, skipkeys=False, ensure_ascii=True, check_circular=True, allow_nan=True, cls=None,
+             indent=None, separators=None, default=None, sort_keys=False, **kw)
+    - Serialize obj as a JSON formatted stream to fp (a .write()-supporting file-like object) using this
+      conversion table.
+
+   json.load(fp, *, cls=None, object_hook=None, parse_float=None, parse_int=None, parse_constant=None,
+             object_pairs_hook=None, **kw)
+     - Deserialize fp (a .read()-supporting text file or binary file containing a JSON document) to a Python
+       object using this conversion table.
+
+  Create "process_receipts.py" script to the process the JSON receipt files (generated by receipts.py)
+    - use os.mkdir() to make the directory for processed receipts
+    - glob.glob() to return receipt files based on a regular expression
+
+##############
+  script: demo_code/9_2_shutil_glob/process_receipts.py
+####################################################
+import os
+import glob
+import json
+import shutil
+
+try:
+    os.mkdir('./processed')
+# if dir exists, it raises 'FileExistsError' exception which is in a subclass OSError exception
+# The parent expection, OSError, will work with pre-3.3 version, but th FileExistError may not
+except OSError:
+    print("'./processed' directory already exists")
+
+
+# get list of receipt files
+receipts = glob.glob('./new/receipt-[0-9]*.json')
+subtotal = 0.0
+
+for path in receipts:
+    with open(path) as f:
+        # load receipt JSON contents to 'content' dict
+        content = json.load(f)
+        subtotal += float(content['value'])
+        # split receipt file 'path' to list and get last item [-1]
+        # Note: ./new/receipt-1.json".split('/')[-1]  => [".", 'new', 'receipt-1.json'][-1]
+        #    assigns 'receipt-1.json to 'name'
+        name = path.split('/')[-1]
+        # move processed receipt files from './new' directory to './processed' dir
+        destination = f"./processed/{name}"
+        shutil.move(path,destination)
+        print(f"moved '{path}' to '{destination}'")
+
+print("Receipt subtotal: $%.2f" % subtotal)
+
+####################################################
+
+  # run "gen_receipt.py' to generate the JSON formatted receipt files:
+  $ pushd demo_code/9_2_shutil_glob/
+  $ mkdir new
+  $ FILE_COUNT=10 python3 ../9_1_random_json/gen_receipts.py
+
+  # run 'process_receipts.py' to verify it is working correctly:
+  $ python3 process_receipts.py
+   './processed' directory already exists
+   moved './new/receipt-1.json' to './processed/receipt-1.json'
+   moved './new/receipt-2.json' to './processed/receipt-2.json'
+   moved './new/receipt-3.json' to './processed/receipt-3.json'
+   moved './new/receipt-4.json' to './processed/receipt-4.json'
+   moved './new/receipt-5.json' to './processed/receipt-5.json'
+   moved './new/receipt-6.json' to './processed/receipt-6.json'
+   moved './new/receipt-7.json' to './processed/receipt-7.json'
+   moved './new/receipt-8.json' to './processed/receipt-8.json'
+   moved './new/receipt-9.json' to './processed/receipt-9.json'
+   Receipt subtotal: $3178.61
+
+  $ ls new/
+  $ ls processed/
+   receipt-0.json  receipt-2.json  receipt-4.json  receipt-6.json  receipt-8.json
+   receipt-1.json  receipt-3.json  receipt-5.json  receipt-7.json  receipt-9.json
+
+---------------------------------------------------
+9.3 re [regular expresssions] & math
+
+  The re module
+  https://docs.python.org/3/library/re.html
+
+  The math module
+  https://docs.python.org/3/library/math.html
+
+  re - Regular expression operations
+    - Source code: Lib/re/
+    - This module provides regular expression matching operations similar to those found in Perl.
+    - Both patterns and strings to be searched can be Unicode strings (str) as well as 8-bit strings (bytes).
+
+  '*' special regular expression char
+    - Causes the resulting RE to match 0 or more repetitions of the preceding RE, as many repetitions as are
+      possible. ab* will match ‘a’, ‘ab’, or ‘a’ followed by any number of ‘b’s.
+
+  re.match(pattern, string, flags=0)
+    - If zero or more characters at the beginning of string match the regular expression pattern, return a
+      corresponding Match. Return None if the string does not match the pattern; note that this is different from a
+      zero-length match.
+    - Note that even in MULTILINE mode, re.match() will only match at the beginning of the string and not at the
+      beginning of each line.
+    - If you want to locate a match anywhere in string, use search() instead (see also search() vs. match()).
+
+
+  glob - Unix style pathname pattern expansion
+    - Source code: Lib/glob.py
+    - The glob module finds all the pathnames matching a specified pattern according to the rules used
+      by the Unix shell, although results are returned in arbitrary order.
+    - No tilde expansion is done, but *, ?, and character ranges expressed with [] will be correctly matched.
+    - This is done by using the os.scandir() and fnmatch.fnmatch() functions in concert, and not by actually
+      invoking a subshell.
+
+    glob.glob(pathname, *, root_dir=None, dir_fd=None, recursive=False, include_hidden=False)
+      - Return a possibly empty list of path names that match pathname, which must be a string containing a
+        path specification. pathname can be either absolute (like /usr/src/Python-1.5/Makefile) or relative
+        (like ../../Tools/*/*.gif), and can contain shell-style wildcards
+
+    glob.iglob(pathname, *, root_dir=None, dir_fd=None, recursive=False, include_hidden=False)
+      - Return an iterator which yields the same values as glob() without actually storing them all simultaneously.
+
+    Note:
+    iterator
+      - each call to an iterators will return the 'next' item in the list/sequence
+      - An object representing a stream of data. Repeated calls to the iterator’s __next__() method (or passing
+        it to the built-in function next()) return successive items in the stream. When no more data are available
+        a StopIteration exception is raised instead
+
+  str - string class
+    - Strings implement all of the common sequence operations, along with the additional methods described below.
+
+    str.replace(old, new[, count])
+      - Return a copy of the string with all occurrences of substring old replaced by new.
+      - If the optional argument count is given, only the first count occurrences are replaced.
+
+  math - Mathematical functions
+    - This module provides access to the mathematical functions defined by the C standard.
+
+    math.ceil(x)
+      - essentially, rounds up
+      - Return the ceiling of x, the smallest integer greater than or equal to x. If x is not a float,
+        delegates to x.__ceil__, which should return an Integral value.
+
+    math.floor(x)
+      - essentially, rounds down
+      - Return the floor of x, the largest integer less than or equal to x. If x is not a float, delegates
+        to x.__floor__, which should return an Integral value.
+
+  Built-in functions:
+    round(number, ndigits=None)
+      - Return number rounded to ndigits precision after the decimal point.
+      - If ndigits is omitted or is None, it returns the nearest integer to its input.
+      - For the built-in types supporting round(), values are rounded to the closest multiple of 10 to the power
+        minus ndigits; if two multiples are equally close, rounding is done toward the even choice (so, for example,
+        both round(0.5) and round(-0.5) are 0, and round(1.5) is 2).
+      - Any integer value is valid for ndigits (positive, zero, or negative).
+      - The return value is an integer if ndigits is omitted or None. Otherwise, the return value has the same
+        type as number.
+
+  # generate 20 receipt-*.json files
+  $ pushd demo_code/9_3_re_math/
+  $ mkdir new
+  $ FILE_COUNT=20 python3 ../9_1_random_json/gen_receipts.py
+
+  $ ls new/
+  receipt-0.json   receipt-12.json  receipt-15.json  receipt-18.json  receipt-2.json  receipt-5.json  receipt-8.json
+  receipt-10.json  receipt-13.json  receipt-16.json  receipt-19.json  receipt-3.json  receipt-6.json  receipt-9.json
+  receipt-11.json  receipt-14.json  receipt-17.json  receipt-1.json   receipt-4.json  receipt-7.json
+
+  # use glob.glob() get obtain the even number receipt-*.json files:
+  >>> import glob
+  >>> receipts = glob.glob('./new/receipt-[0-9]*[24680].json')
+  >>> receipts
+  ['./new/receipt-10.json', './new/receipt-12.json', './new/receipt-14.json', './new/receipt-16.json', './new/receipt-18.json']
+  # fails to find even number files below 'receipt-10.json'
+
+  Note: with glob(), '*' matches 1 or more repetitions, while '*' with regular expressions matches or more
+
+
+  # use re.match() to see if './new/receipt-2.json' matches the regex './new/receipt-[0-9]*[24580].json' pattern:
+  >>> import re
+  >>> re.match('./new/receipt-[0-9]*[24680].json','./new/receipt-2.json')
+  <_sre.SRE_Match object; span=(0, 20), match='./new/receipt-2.json'>
+
+  >>> bool(re.match('./new/receipt-[0-9]*[24680].json','./new/receipt-2.json'))
+  True
+
+
+  # use re.match() to find the even number './new/receipt-*.json files
+  >>> receipts = [f for f in glob.iglob('./new/receipt-[0-9]*.json') if re.match('./new/receipt-[0-9]*[24680].json',f)]
+  >>> receipts
+ ['./new/receipt-0.json', './new/receipt-2.json', './new/receipt-4.json', './new/receipt-6.json', './new/receipt-8.json', './new/receipt-10.json', './new/receipt-12.json', './new/receipt-14.json', './new/receipt-16.json', './new/receipt-18.json']
+
+  Update 'process_receipts.py" with the following changes:
+    - simplify getting destination file path by using str.replace() method
+    - use glob.iglob() instead of glob.glob() for receitp file list to reduce memory footprint
+    - use built-in round() function to round off subtotal instead of using python old style print formatting
+
+
+Note:
+  glob vs iglob:
+   - glob and iglob are both functions in the glob module that find files and directories whose names match a specified pattern.
+    - The key difference lies in how they return the results.
+
+      glob.glob():
+        - This function returns a list of all paths that match the pattern.
+        - It reads all the matching paths and stores them in memory before returning the list.
+
+       glob.iglob():
+        - This function returns an iterator that yields paths one at a time as they are found.
+        - It doesn't store all the results in memory at once, making it more memory-efficient, especially when dealing with a large number of files.
+
+
+##############
+  script: demo_code/9_3_re_math/process_receipts.py
+#######################################################
+import os
+import glob
+import json
+import shutil
+import math
+
+try:
+    os.mkdir('./processed')
+# if dir exists, it raises 'FileExistsError' exception which is in a subclass OSError exception
+# The parent expection, OSError, will work with pre-3.3 version, but th FileExistError may not
+except OSError:
+    print("'./processed' directory already exists")
+
+
+# get list of receipt files
+subtotal = 0.0
+
+# use glob.iglob() to return list of receipt files since it returns an iterator sequence [reduces memory footprint]
+for path in glob.iglob('./new/receipt-[0-9]*.json'):
+    with open(path) as f:
+        # load receipt JSON contents to 'content' dict
+        content = json.load(f)
+        subtotal += float(content['value'])
+        # str.replace() to create destination file name (change dir path from ./new/' to './processed/')
+        destination = path.replace('new','processed')
+        # move processed receipt files from './new' directory to './processed' dir
+        shutil.move(path,destination)
+        print(f"moved '{path}' to '{destination}'")
+
+# use old python print formatting to round off subtotal
+#print("Receipt subtotal: $%.2f" % subtotal)
+# use round() built in function to round subtotal result to 2 decimal digits
+print(f"Receipt subtotal: ${round(subtotal, 2)}")
+# experiments with math.ceil() and math.floor() methods
+#print(f"Receipt subtotal ceil:  ${math.ceil(subtotal)}")
+#print(f"Receipt subtotal floor: ${math.floor(subtotal)}")
+#######################################################
+
+  # generate 20 receipt-*.json files
+  $ pushd demo_code/9_3_re_math/
+  $ mkdir new
+  $ FILE_COUNT=20 python3 ../9_1_random_json/gen_receipts.py
+
+  $ python3 process_receipts.py
+  './processed' directory already exists
+  moved './new/receipt-0.json' to './processed/receipt-0.json'
+  moved './new/receipt-1.json' to './processed/receipt-1.json'
+  moved './new/receipt-3.json' to './processed/receipt-3.json'
+  moved './new/receipt-17.json' to './processed/receipt-17.json'
+  . . .
+  moved './new/receipt-18.json' to './processed/receipt-18.json'
+  moved './new/receipt-19.json' to './processed/receipt-19.json'
+  Receipt subtotal: $10149.32
+
+---------------------------------------------------
+
+  Chapter 10  Using Pip and Virtualenv
+
+---------------------------------------------------
+10.1 Using Pip and Virtualenv
+
+  pip
+  https://pip.pypa.io/en/stable/
+
+  boto3
+  https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+
+  pip
+    - pip is the preferred package installer (package manager) for Python.
+    - You can use it to install packages from the Python Package Index and other indexes.
+
+  Boto3
+   - use the AWS SDK for Python (Boto3) to create, configure, and manage AWS services, such as Amazon EC2 and S3.
+   - The SDK provides an object-oriented API as well as low-level access to AWS services.
+
+# list install python packages:
+  $ pip3.6 list
+  Package    Version
+  ---------- -------
+  pip        21.3.1
+  setuptools 28.8.0
+
+  if you get the following deprecation message [for example, if pip version is 9.0.1]
+  DEPRECATION: The default format will switch to columns in the future. You can use --format=(legacy|columns)
+  (or define a format=(legacy|columns) in your pip.conf under the [list] section) to disable this warning.
+
+  -> to fix (or update pip version), create ~/.config/pip/pip.conf containing (states 'list' should use columns)
+  [list]
+  format=columns
+
+  -> alternatively, upgrade pip:
+  sudo pip3.6 install --upgrade pip
+
+  setuptools -> package used to specify how packages are installed - required to use pip
+
+  packaging terms
+    https://packaging.python.org/en/latest/discussions/wheel-vs-egg/
+    - Wheel and Egg are both packaging formats that aim to support the use case of needing an install artifact
+      that doesn’t require building or compilation
+    egg
+      - the Egg format was introduced by setuptools in 2004
+    wheel
+      - replacement for egg - new packaging format
+      - Wheel is currently considered the standard for built and binary packaging for Python
+      - the Wheel format was introduced by PEP 427 in 2012.
+    setuptools vs distutils
+      - setuptools is a new version of disutils
+    easy_install vs pip
+      - pip replaced easy_install
+
+  # install boto3 package; boto3 is newest package for interacting with AWS
+  # note: For global install use case (default) (for local, use 'pip install --user <pkg>' option),
+  #       it will install at /usr/local/lib/python3.6/site-packages
+
+  # list packages after 'boto3' installation
+  $ pip3.6 list
+  Package         Version
+  --------------- -------
+  boto3           1.23.10
+  botocore        1.26.10
+  jmespath        0.10.0
+  pip             21.3.1
+  python-dateutil 2.8.2
+  s3transfer      0.5.2
+  setuptools      28.8.0
+  six             1.16.0
+  urllib3         1.26.16
+
+  # use pip freeze command to show package==version in a format that can be used as input to pip
+  $ pip3.6 freeze
+  boto3==1.23.10
+  botocore==1.26.10
+  jmespath==0.10.0
+  python-dateutil==2.8.2
+  s3transfer==0.5.2
+  six==1.16.0
+  urllib3==1.26.16
+
+  # write 'pip freeze' output to 'requirements.txt' which can be used as input to 'pip install' & 'pip uninstall' command
+  $ pip3.6 freeze > requirements.txt
+  #     at: demo_code/10_1_pip_venv/requirements_10_1.txt
+
+  # uninstall global boto3 package
+  $ sudo pip3.6 uninstall -y -r requirements.txt
+
+  # install boto3 package local (use: pip install --user ...);
+  # installs locally at:  ~/.local/lib/python3.6/ &  ~/.local/bin
+  $ pip3.6 install --user -r requirements.txt
+
+
+  # Note: if you specify to uninstall boto3, it will uninstall local boto3, but it will NOT uninstall
+  #       all it dependency. Thus, use the 'requirement.txt' with all the dependency to fully clean-up
+  $ pip3.6 uninstall boto3
+
+---------------------------------------------------
+10.2 Virtualenv
+
+  venv
+  https://docs.python.org/3/library/venv.html
+
+
+  venv - Creation of virtual environments
+   - New in version 3.3.
+   - Source code: Lib/venv/
+   - The venv module supports creating lightweight "virtual environments", each with their own independent set of
+     Python packages installed in their site directories.
+   - A virtual environment is created on top of an existing Python installation, known as the virtual environment’s
+     "base" Python, and may optionally be isolated from the packages in the base environment, so only those explicitly
+     installed in the virtual environment are available.
+
+ Virtual Environments
+   - Create virtual environment so that you can use different versions of python packages with different projects
+   - can implement loading the venv package
+
+
+  # mkdir venvs dir
+  $ mkdir venvs
+
+  # load venv module using its help
+  $ python3.6 -m venv --help
+   usage: venv [-h] [--system-site-packages] [--symlinks | --copies] [--clear]
+               [--upgrade] [--without-pip] [--prompt PROMPT]
+               ENV_DIR [ENV_DIR ...]
+
+   Creates virtual Python environments in one or more target directories.
+
+   positional arguments:
+     ENV_DIR               A directory to create the environment in.
+     . .  .
+
+  # create 'experiment' virtual env
+  $ python3.6 -m venv venvs/experiment
+
+  # examine venvs/experiment dirs
+  $ ls venvs/experiment
+   bin  include  lib  lib64  pyvenv.cfg
+  $ ls venvs/experiment/bin
+   activate      activate.fish  easy_install-3.6  pip3    python   python3.6
+   activate.csh  easy_install   pip               pip3.6  python3
+
+  # active experiment virtual env
+ $ source venvs/experiment/bin/activate
+   (experiment) $ echo $PATH
+   /home/centos/python_scripts/venvs/experiment/bin:/home/centos/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/home/centos/.local/bin:/home/centos/bin
+
+  # deactive experiment virtual env
+  (experiment) $ deactivate
+  $
+
+  Note: venvs directory tree saved at: demo_code/10_virtualenv/venvs.tgz
+
+---------------------------------------------------
+10.3 Using Third-Party Packages in Your Scripts
+
+  The requests package
+  https://docs.python-requests.org/en/latest/
+
+  The argparse.ArgumentParser class
+  https://docs.python.org/3/library/argparse.html#argparse.ArgumentParser
+
+  The os.getenv function
+  https://docs.python.org/3/library/os.html#os.getenv
+
+  The sys.exit function
+  https://docs.python.org/3/library/sys.html#sys.exit
+
+  Python Package Index
+  https://pypi.org/
+
+  Python Package Index
+   - The Pyth on Package Index (PyPI) is a repository of software for the Python programming language.
+   - where Pip install searches for public open source python packages
+
+
+  Requests: HTTP for Humans
+   - Requests is an elegant and simple HTTP library for Python, built for human beings.
+
+  argparse
+    - Parser for command-line options, arguments and sub-commands
+    - The program defines what arguments it requires, and argparse will figure out how to parse those out of sys.argv.
+    - The argparse module also automatically generates help and usage messages.
+    - The module will also issue errors when users give the program invalid arguments.
+
+    class argparse.ArgumentParser(prog=None, usage=None, description=None, epilog=None, parents=[],
+       formatter_class=argparse.HelpFormatter, prefix_chars='-', fromfile_prefix_chars=None, argument_default=None,
+          conflict_handler='error', add_help=True, allow_abbrev=True, exit_on_error=True)
+      - Create a new ArgumentParser object. All parameters should be passed as keyword arguments
+
+
+  os.environ
+    - A mapping object where keys and values are strings that represent the process environment.
+    - For example, environ['HOME'] is the pathname of your home directory (on some platforms), and
+      is equivalent to getenv("HOME") in C
+
+    os.getenv(key, default=None)
+      - Return the value of the environment variable key as a string if it exists, or default if it doesn’t.
+      - key is a string.
+
+
+  sys.exit([arg])
+    - Raise a SystemExit exception, signaling an intention to exit the interpreter.
+    - The optional argument arg can be an integer giving the exit status (defaulting to zero), or another type of object. If it is
+      an integer, zero is considered "successful termination" and any nonzero value is considered "abnormal termination"
+      by shells and the like.
+
+
+
+   # activate our experiment virtual environment
+   $ source venvs/experiment/bin/activate
+
+   # pip install 'requests' package (note: it will install packages at: venvs/experiment/lib/python3.6/site-packages)
+   (experiment) python_scripts $ pip install requests
+
+   OpenWeathermap.org
+     -> subscribe (but do not need to give credit card info)
+     -> login -> account -> My API Keys  to generate API key
+
+   create weather script, 'weather',
+     - using OpenWeathermap API (so you will need to sign up) (site: openweathermap.org) to get current weather based on zipcode
+     - set your OWM_API_KEY env on command line: export OWM_API_KEY=<OpenWeatherAPIKey>
+     - use requests.get(<OWM zipcode URL>) to return the current weather
+     - print the current weather JSON data
+
+##############
+  script: demo_code/10_3_3rdparty_pkgs/weather
+##########################################
+#!/usr/bin/env python3
+
+import os
+# requests provides HTTP API requests
+import requests
+import sys
+from argparse import ArgumentParser
+
+parser = ArgumentParser(description='Get the current weather information for your zipcode')
+parser.add_argument('zip', help="zip/postal code to get weather for")
+parser.add_argument('--country', default='us', help="zip/postal belongs to, default is 'us'")
+args = parser.parse_args()
+
+# expects Openweathermap API to be passed via OWM_API_KEY env variable
+api_key = os.getenv("OWM_API_KEY")
+if not api_key:
+    print("Error: no 'OWN_API_KEY env variable provided")
+    sys.exit(1)
+
+# specify the Openweathermap URL for zip based weather
+# https://api.openweathermap.org/data/2.5/weather?zip={zip code},{country code}&appid={API key}
+url = f"http://api.openweathermap.org/data/2.5/weather?zip={args.zip},{args.country}&appid={api_key}"
+# Use requests HTTP request to obtain the current weather
+res = requests.get(url)
+
+# verify successful URL request
+if res.status_code != 200:
+    print(f"Error talking to weather provider: {res.status_code}")
+    sys.exit(2)
+
+# print out the returned JSON weather data
+print(res.json())
+##########################################
+
+  # verify 'weather' script returns the current weather at your zipcode
+  (experiment) $ ./weather 95008
+  {'coord': {'lon': -121.9539, 'lat': 37.2803}, 'weather': [{'id': 801, 'main': 'Clouds', 'description': 'few clouds', 'icon': '02d'}], 'base': 'stations', 'main': {'temp': 301.08, 'feels_like': 300.69, 'temp_min': 291.29, 'temp_max': 306.87, 'pressure': 1006, 'humidity': 39}, 'visibility': 10000, 'wind': {'speed': 6.69, 'deg': 140, 'gust': 9.77}, 'clouds': {'all': 20}, 'dt': 1693511773, 'sys': {'type': 2, 'id': 2012574, 'country': 'US', 'sunrise': 1693489056, 'sunset': 1693535951}, 'timezone': -25200, 'id': 0, 'name': 'Campbell', 'cod': 200}
+
+
+  # deactive experiment virtual env
+  $ deactivate
+
+  # run weather without experiment virtual env (where 'requests' package was installed)
+  $ ./weather 95008
+  Traceback (most recent call last):
+    File "./weather", line 5, in <module>
+      import requests
+  ModuleNotFoundError: No module named 'requests'
+
+  # 'weather' script, change the shebang to full path the 'python' in the  experiment virtual env
+  # e.g.:   #!/home/centos/python_scripts/venvs/experiment/bin/python
+
+  # re-run weather without experiment virtual env but shebang points at python in experiment  virtual env (runs correctly)
+  $ ./weather 95008
+   {'coord': {'lon': -121.9539, 'lat': 37.2803}, 'weather': [{'id': 801, 'main': 'Clouds', 'description': 'few clouds', 'icon': '02d'}], 'base': 'stations', 'main': {'temp': 301.08, 'feels_like': 300.69, 'temp_min': 291.29, 'temp_max': 306.87, 'pressure': 1006, 'humidity': 39}, 'visibility': 10000, 'wind': {'speed': 6.69, 'deg': 140, 'gust': 9.77}, 'clouds': {'all': 20}, 'dt': 1693511773, 'sys': {'type': 2, 'id': 2012574, 'country': 'US', 'sunrise': 1693489056, 'sunset': 1693535951}, 'timezone': -25200, 'id': 0, 'name': 'Campbell', 'cod': 200}
+
+---------------------------------------------------
+10.4 Python 3 Scripting for System Administrators Python Packages and Dependencies Quiz
+---------------------------------------------------
+
+  Chapter 11 Planning & Project Structure
+
+---------------------------------------------------
+11.1 Examining the Problem & Prep Work
+
+
+   Build a command line utility call PG backup
+     - give a connection string to postgres database
+     - back it up to either S3 or local backup file
+     - prerequisite:
+         - setup a postgreSQL server
+         - postgres client installed local machine with access to DB using PGdump tool to dump database
+
+
+   # create a Postgres SQL server
+   -> launched t3.micros with Centos 7 (AWS) using same VPC, SG, & subnet has python3host
+       postgres_server: 172.31.82.201
+       python3host: 172.31.81.235
+       -> add ssh-gen key  so ssh between instances
+       -> SG has VPC wide TCP including ssh/http/https access
+
+   # Install postgres server on postgres_server host:
+    curl -o db_setup.sh https://raw.githubusercontent.com/linuxacademy/content-python3-sysadmin/master/helpers/db_setup.sh
+    # edit: Change the line in the db_setup.sh script from postgres:9.6.8-alpine to postgres:11.20-alpine
+    chmod +x db_setup.sh
+    ./db_setup.sh
+       Postgres user name: centos
+       Postgres password:  cenPostgres
+
+
+   # Install postgres client on development (python3host) host:
+   sudo yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+   sudo yum install epel-release -y
+   sudo yum update -y
+   sudo yum install postgresql11-11.20 -y
+
+   # test database connection
+   # psql postgres://[USERNAME]:[PASSWORD]@[SERVER_IP]:80/sample -c "SELECT count(id) FROM employees;"
+   psql postgres://centos:cenPostgres@172.31.82.201:80/sample -c "SELECT count(id) FROM employees;"
+    count
+   -------
+     1000
+   (1 row)
+
+
+
+---------------------------------------------------
+11.2 Planning Through Documentation
+
+  Pipenv:
+  https://docs.pipenv.org/
+
+  reStructuredText
+  https://docutils.sourceforge.io/rst.html
+
+  Pipenv: Python Dev Workflow for Humans
+   - Pipenv is a tool that aims to bring the best of all packaging worlds (bundler, composer, npm, cargo, yarn, etc.) to the
+     Python world. Windows is a first-class citizen, in our world.
+   - It automatically creates and manages a virtualenv for your projects, as well as adds/removes packages from your Pipfile as you
+     install/uninstall packages. It also generates the ever-important Pipfile.lock, which is used to produce deterministic builds
+
+   The problems that Pipenv seeks to solve are multi-faceted:
+     - You no longer need to use pip and virtualenv separately. They work together.
+     - Managing a 'requirements.txt' file can be problematic, so Pipenv uses 'Pipfile' and 'Pipfile.lock' to separate abstract dependency
+       declarations from the last tested combination.
+     - Hashes are used everywhere, always. Security. Automatically expose security vulnerabilities.
+     - Strongly encourage the use of the latest versions of dependencies to minimize security risks arising from outdated components.
+     - Give you insight into your dependency graph (e.g. $ pipenv graph).
+     - Streamline development workflow by loading .env files.
+
+
+  reStructuredText
+    - The primary goal of reStructuredText is to define and implement a markup syntax for use in Python docstrings and other documentation
+      domains, that is readable and simple, yet powerful enough for non-trivial use.
+    - The intended purpose of the markup is the conversion of reStructuredText documents into useful structured data formats.
+    - See 'statemachine.py' (https://docutils.sourceforge.io/docutils/statemachine.py) for an example of a Python module fully documented
+      using reStructuredText.
+
+  Project planning
+   - create project folder structure
+   - setup git repo
+   - setup python virtual environment
+   - write README documentation - README driven development
+
+
+  # remove previous requirement.txt
+  $ mv requirement.txt requirement_10_1.txt
+
+  # create code & project (pgbackup) directories
+  $ mkdir -p code/pgbackup
+
+  # install Pipenv locally (at:  ~/.local/bin/pipenv)
+  $ pip3.6 install --user pipenv
+
+  # create pipenv virtual env
+  $ pipenv --python $(which python3.6)
+   Creating a virtualenv for this project...
+   Pipfile: /home/centos/python_scripts/code/pgbackup/Pipfile
+   Using /usr/local/bin/python3.6 (3.6.4) to create virtualenv...
+   ? . . .
+     . . .
+   ? Successfully created virtual environment!
+   Virtualenv location: /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L
+   Creating a Pipfile for this project...
+
+  # create 'Pipfile' which specifies python version, packages, and dev-pacakges, etc
+
+  # set up git repo
+  $ git init
+
+  # download git ignore (list of files and directories that should not be tracked by repo)
+  # found at: github.com/github/gitignore -> Python.gitignore  -> raw -> copy link
+  $ curl https://raw.githubusercontent.com/github/gitignore/master/Python.gitignore -o .gitignore
+
+# Create initial reSturcturedText README file, README.rst
+##################################################
+pgbackup
+=========
+
+CLI for backup remote PostgreSQL database either locally or to AWS S3.
+
+Preparing the Development
+-------------------------
+
+1. Ensure ``pip`` and ``pipenv`` are installed.
+2. Clone repository: ``git clone git@github:username/pgbackup``
+3. ``cd`` into repository.
+4. Fetch development dependencies ``make install``
+5. Activate virtualenv: ``pipenv shell``
+
+
+Usage
+-----
+
+Pass in a full database URL, the storage driver, and the destination.
+
+S3 Example w/ bucket name:
+
+::
+
+    $ pgbackup postgres://bob@example.com:5432/db_one --driver s3 backupsBucket
+
+
+Local Example w/ local path:
+
+::
+
+    $ pgbackup postgres://bob@example.com:5432/db_one --driver local /var/local/db_one/backups/dump.sql
+
+Running Tests
+-------------
+
+Run tests locally using ``make`` if virtualenv is active:
+
+::
+
+    $ make
+
+If virtualenv is not active, then use:
+
+::
+
+    $ pipenv run make
+
+##################################################
+
+  # perform 1st git commit, but 1st add all files
+  $ git add --all .
+
+  # check git repo status
+  $ git status
+   # On branch master
+   #
+   # Initial commit
+   #
+   # Changes to be committed:
+   #   (use "git rm --cached <file>..." to unstage)
+   #
+   #       new file:   .gitignore
+   #       new file:   Pipfile
+   #       new file:   README.rst
+   #
+
+  # perform 1st git commit
+  $ git commit -m 'Initial commit'
+   [master (root-commit) 48aac2f] Initial commit
+    3 files changed, 218 insertions(+)
+    create mode 100644 .gitignore
+    create mode 100644 Pipfile
+    create mode 100644 README.rst
+
+##################################################
+
+  Note: code/pgbackup directory tree saved at: demo_code/11_2_planning_doc/code.tgz
+
+---------------------------------------------------
+11.3 Initial Project Layout
+
+  setuptools
+  https://setuptools.pypa.io/en/latest/setuptools.html#basic-use
+
+  setuptools - Getting Started With setuptools and setup.py
+  https://pythonhosted.org/an_example_pypi_project/setuptools.html
+
+  setuptools - writing the setup script
+  https://docs.python.org/3/distutils/setupscript.html
+
+  setuptools - Building and Distributing Packages with Setuptools
+  https://setuptools.pypa.io/en/latest/setuptools.html
+
+
+  [gnu] make
+  https://www.gnu.org/software/make/manual/make.html
+
+
+  Setuptools - Building and Distributing Packages with Setuptools
+   - Setuptools is a collection of enhancements to the Python distutils that allow developers to more easily build
+      and distribute Python packages, especially ones that have dependencies on other packages.
+   - Packages built and distributed using setuptools look to the user like ordinary Python packages based on the distutils
+
+
+  Project Layout from a Code Perspective
+    - Create directory structure for python packages and modules
+    - set up basic python code needed - create 'setup.py'
+    - verify 'setup.py' syntax by using 'pip install' (then pip uninstall)
+    - set up 'Makefile'
+    - test out install/Makefile our project (without source code)
+    - commit updates to git
+
+
+  # mkdir pgback source code dir (src/pgbackup) and test directories (test)
+  $ mkdir -p src/pgbackup tests
+
+  # create "__init__.py" so git know that packages with submodules will be created in this directory and
+  #   the package name will based on the directory name (e.g. pgbackup)
+  $ touch src/pgbackup/__init__.py
+
+  # create ".keep" (or ".gitkeep") file in test directory so git knows to include test directory in repo
+  $ touch test/.keep
+
+
+###################
+# Create 'setup.py'
+##############
+  script: demo_code/11_3_initial_project/setup.py
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/setup.py
+#################################################
+from setuptools import setup, find_packages
+
+# load contents of 'READM.rst' file to "readme" string
+#  note: readlines() creates a list of the lines while "read()" creates 1 string
+with open('README.rst', encoding='UTF-8') as f:
+    readme = f.read()
+
+
+# call setup() method , Notes:
+#   - install_requires[<pkg list>] is currently empty, but packages will be required
+#   - find_packages('scr') will recursively find '__init__.py' under 'src' directory to find packages
+#   - package_dir{'': 'src'} a dict that points from and empty string to 'src' and is a
+#     legacy thing disutils. This is needed because of 'find_package() is explicity searching 'src'
+setup(
+        name='pgbackup',
+        version='0.1.0',
+        description='Database backups locally or to AWS S3.',
+        long_description=readme,
+        author='Pat',
+        author_email='myemail@gmail.com',
+        install_requires=[],
+        packages=find_packages('src'),
+        package_dir={'': 'src'}
+)
+
+################################################# end 'setup.py'
+
+  # start virtual env
+  $ pipenv shell
+  Launching subshell in virtual environment...
+   . /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/bin/activate
+  pgbackup[master ?] $  . /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/bin/activate
+
+  # install pgbackup package locally - also verifies 'setup.py' does not have syntax issues
+  $ pip install -e .
+   Obtaining file:///home/centos/python_scripts/code/pgbackup
+     Preparing metadata (setup.py) ... done
+   Installing collected packages: pgbackup
+     Running setup.py develop for pgbackup
+   Successfully installed pgbackup-0.1.0
+
+  # uninstall 'pgbackup'
+   $ pip uninstall pgbackup
+   Found existing installation: pgbackup 0.1.0
+   Uninstalling pgbackup-0.1.0:
+     Would remove:
+       /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages/pgbackup.egg-link
+   Proceed (Y/n)? y
+     Successfully uninstalled pgbackup-0.1.0
+
+
+
+###################
+# create initial 'Makefile' with 'install' and 'test' tasks
+##############
+  script: demo_code/11_3_initial_project/Makefile
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/Makefile
+#################################################
+
+# don't create files based on task names (e.g. install, test)
+.PHONY: install test
+
+# run 'test' task (instead of 'install') by default
+default: test
+
+
+# install development dependencies (--dev) and
+#   Skip locking mechanisms and use the Pipfile (--skip-lock)
+install:
+        pipenv install --dev --skip-lock
+
+# run pytest which is a test runner/framework for python
+test:
+        PYTHONPATH=./src pytest
+
+################################################# end 'Makefile'
+
+  # verify make 'test' task can run (fails because it cannot find 'pytest'
+ $ make
+  PYTHONPATH=./src pytest
+  /bin/sh: pytest: command not found
+  make: *** [test] Error 127
+
+  # verify make 'install' task can run (does nothing because Pipfile has nothing defined
+  $ make install
+  pipenv install --dev --skip-lock
+  Installing dependencies from Pipfile...
+
+
+  # commit updates to git repo
+  $ git add --all .
+
+  $ git status
+   # On branch master
+   # Changes to be committed:
+   #   (use "git reset HEAD <file>..." to unstage)
+   #
+   #       new file:   Makefile
+   #       new file:   setup.py
+   #       new file:   src/pgbackup/__init__.py
+   #       new file:   tests/.keep
+   #
+
+  $ git commit -m 'Structure project with setup.py and Makefile'
+   [master d0850e4] Structure project with setup.py and Makefile
+    4 files changed, 41 insertions(+)
+    create mode 100644 Makefile
+    create mode 100644 setup.py
+    create mode 100644 src/pgbackup/__init__.py
+    create mode 100644 tests/.keep
+
+---------------------------------------------------
+
+  Chapter 12 Implementing Features with Test Driven Development
+
+---------------------------------------------------
+12.1 Introduction to TDD [Test Driven Development] and FI [First Tests]
+
+  The 'pytest' package
+  https://docs.pytest.org/en/latest/
+  https://docs.pytest.org/en/latest/getting-started.html#getstarted
+
+  The 'pytest.raises' function
+  https://docs.pytest.org/en/latest/assert.html#assertions-about-expected-exceptions
+
+
+  pytest: helps you write better programs
+   - The pytest framework makes it easy to write small, readable tests, and can scale to support complex functional testing
+     for applications and libraries.
+
+  pytest simple example:
+    - test file must begin with 'test_' (e.g. test_sample.py) be placed in the 'tests' subdirectory
+    # content of test_sample.py
+    def inc(x):
+        return x + 1
+
+    def test_answer():         # test function musts start with 'test_'
+        assert inc(3) == 5     # expects inc(3) to equal '5', else it is an error
+
+
+  pytest.raises: Assertions about expected exceptions
+   - In order to write assertions about raised exceptions, you can use pytest.raises() as a context manager
+
+  pipenv lock file, 'Pipefile.lock'
+    - 'pipenv lock' command is used to create a 'Pipfile.lock', which declares all dependencies (and sub-dependencies)
+      of your project, their latest available versions, and the current hashes for the downloaded files.
+    - 'Pipfile.lock' also verifies that the right versions of dependencies are used in production
+    - Pipenv, by itself creates a virtualenv if it is not created. It runs pipenv lock command automatically.
+
+  Unittest vs pytest
+    https://builtin.com/data-science/pytest-vs-unittest
+    Pytest:
+      - pytest is a Python testing framework that requires installation and emphasizes simplicity, scalability and ease of use.
+        It also offers extensive plugin support.
+    Unittest:
+      - unittest is a testing framework that’is part of Python's standard library. It’s inspired by xUnit and is compatible
+        with older versions of Python.
+
+
+  Lesson Focuses on building the tests
+
+  # activate pipenv (if not already active)
+  cd /home/centos/python_scripts/code/pgbackup
+  pipenv shell
+
+  # install pytest (--dev: Install both develop and default packages)
+  pipenv install --dev pytest
+
+  # Note: This added 'pytest = "*"' to the 'Pipefile' [dev-packages] section
+
+  # using RED > GREEN > Refactor testing flow approach
+  #     Start with a 'RED', once it 'GREEN' (passes), then you can clean up the testing code
+
+  # create 1st test in 'tests' dir named 'tests/test_cli.py'
+  #  test_cli module is focused on command line parser/script testing
+
+##############
+  script: demo_code/12_intro_tdd_fi/tests/test_cli.py
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/tests/test_cli.py
+###################################################
+import pytest
+
+# Note: 'cli' module and creat_parser() function  need to be created
+from pgbackup import cli
+
+# expected command syntax:
+#  pgbackup postgres://bob@example.com:5432/db_one --driver s3 backupsBucket
+
+# url is just the database string
+url = "postgres://bob@example.com:5432/db_one"
+
+def test_parser_without_driver():
+    """
+    Without a specified driver (e.g. --driver [s3 <bucket>| local <dumpFile>), the parser will exit
+    """
+    with pytest.raises(SystemExit):
+        parser = cli.create_parser()
+        parser.parse_args([url])
+
+def test_parser_with_driver():
+    """
+    The parser will exit if it receives a driver Without destination
+    """
+    parser = cli.create_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([url, "--driver", "local"])
+
+def test_parser_with_driver_and_destination():
+    """
+    The parser will not exit if it receives a driver and destination
+    """
+    parser = cli.create_parser()
+    args = parser.parse_args([url, '--driver', 'local', '/some/path'])
+    assert args.url == url
+    assert args.driver == 'local'
+    assert args.destination == '/some/path'
+
+###################################################
+
+  # test 'tests/test_cli.py by running 'make' which correctly reports 'cli' cannot be imported
+  make
+
+   ====================================================== test session starts =======================================================
+   platform linux -- Python 3.6.4, pytest-7.0.1, pluggy-1.0.0
+   rootdir: /home/centos/python_scripts/code/pgbackup
+   collected 0 items / 1 error
+
+   ============================================================= ERRORS =============================================================
+   _______________________________________________ ERROR collecting tests/test_cli.py _______________________________________________
+   ImportError while importing test module '/home/centos/python_scripts/code/pgbackup/tests/test_cli.py'.
+   Hint: make sure your test modules/packages have valid Python names.
+   Traceback:
+   /usr/local/lib/python3.6/importlib/__init__.py:126: in import_module
+       return _bootstrap._gcd_import(name[level:], package, level)
+   tests/test_cli.py:4: in <module>
+       from pgbackup import cli
+   E   ImportError: cannot import name 'cli'
+   ==================================================== short test summary info =====================================================
+   ERROR tests/test_cli.py
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   ========================================================
+
+---------------------------------------------------
+12.2 Implementing CLI Guided By Tests
+
+  The 'argparse' package
+  https://docs.python.org/3/library/argparse.html
+
+  The 'argparse.Action' class
+  https://docs.python.org/3/library/argparse.html#argparse.Action
+
+  The 'pytest' package
+  https://docs.pytest.org/en/latest/
+
+  The 'pytest.fixture' function
+  https://docs.pytest.org/en/latest/explanation/fixtures.html
+
+  Python decorators
+  https://docs.python.org/3/glossary.html#term-decorator
+
+
+  class argparse.Action(option_strings, dest, nargs=None, const=None, default=None, type=None, choices=None, required=False, help=None, metavar=None)
+    - Action classes implement the Action API, a callable which returns a callable which processes arguments from the
+      command-line. Any object which follows this API may be passed as the action parameter to add_argument().
+
+  pytest fixtures
+    - In testing, a fixture provides a defined, reliable and consistent context for the tests. This could include
+      environment (for example a database configured with known parameters) or content (such as a dataset).
+    - Fixtures define the steps and data that constitute the arrange phase of a test (see Anatomy of a test). In pytest,
+      they are functions you define that serve this purpose. They can also be used to define a test’s act phase;
+      this is a powerful technique for designing more complex tests.
+
+  decorator
+    - A function returning another function, usually applied as a function transformation using the @wrapper syntax.
+    - Common examples for decorators are classmethod() and staticmethod().
+    - The decorator syntax is merely syntactic sugar, the following two function definitions are semantically equivalent:
+        def f(arg):
+            ...
+        f = staticmethod(f)
+
+        @staticmethod
+        def f(arg):
+            ...
+
+
+   # vim map command to map ",t" to run "make<cr>
+     :map ,t :!make<cr>
+
+# create cli module 'src/pgbackup/cli.py
+###################################################
+from argparse import Action, ArgumentParser
+
+known_drivers = ['local', 's3']
+
+# create Action class - needed to handle 2 values for '--driver' argument
+class DriverAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        driver,destination = values
+        if driver.lower() not in known_drivers:
+            parser.error("Unknown driver. Available drivers are 'local' and 's3'")
+        namespace.driver = driver.lower()
+        namespace.destination = destination
+
+
+def create_parser():
+    parser = ArgumentParser()
+    parser.add_argument('url', help="URL of the PostgreSQL database to backup")
+    parser.add_argument('--driver', help="how & where to stora the back",
+            nargs=2,
+            action=DriverAction,
+            required=True)
+    return parser
+
+###################################################
+
+# update tests/test_cli.py module to add additional test functions to run
+##############
+  script: demo_code/12_intro_tdd_fi/tests/test_cli.py
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/tests/test_cli.py
+###################################################
+import pytest
+
+# Note: 'cli' module and creat_parser() function  need to be created
+from pgbackup import cli
+
+# expected command syntax:
+#  pgbackup postgres://bob@example.com:5432/db_one --driver s3 backupsBucket
+
+# url is just the database string
+url = "postgres://bob@example.com:5432/db_one"
+
+def test_parser_without_driver():
+    """
+    Without a specified driver (e.g. --driver [s3 <bucket>| local <dumpFile>), the parser will exit
+    """
+    with pytest.raises(SystemExit):
+        parser = cli.create_parser()
+        parser.parse_args([url])
+
+def test_parser_with_driver():
+    """
+    The parser will exit if it receives a driver Without destination
+    """
+    parser = cli.create_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args([url, "--driver", "local"])
+
+def test_parser_with_unknown_driver():
+    """
+    The parser will exist if the driver name is unknown
+    """
+    parser = cli.create_parser()
+
+    with pytest.raises(SystemExit):
+        # should fail becauser 'azure' is not supported
+        parser.parse_args([url, "--driver", 'azure', 'destination'])
+
+def test_parser_with_known_driver():
+    """
+    The parser will not exist if the driver name is known
+    """
+    parser = cli.create_parser()
+
+    for driver in ['local', 's3']:
+        assert parser.parse_args([url, '--driver', driver, 'destination'])
+
+
+def test_parser_with_driver_and_destination():
+    """
+    The parser will not exit if it receives a driver and destination
+    """
+    parser = cli.create_parser()
+    args = parser.parse_args([url, '--driver', 'local', '/some/path'])
+    assert args.url == url
+    assert args.driver == 'local'
+    assert args.destination == '/some/path'
+
+#################################################### end - update tests/test_cli.py module to add additional test functions to run
+
+# update tests/test_cli.py module to use pytest fixtures to reduce repeating same code
+###################################################
+import pytest
+
+# Note: 'cli' module and creat_parser() function  need to be created
+from pgbackup import cli
+
+# expected command syntax:
+#  pgbackup postgres://bob@example.com:5432/db_one --driver s3 backupsBucket
+
+# url is just the database string
+url = "postgres://bob@example.com:5432/db_one"
+
+# create 'parser' fixture to replace 'parser = cli.create_parser()' call in each test function
+#   and instead pass 'parser' to test function call/def
+@pytest.fixture
+def parser():
+    return cli.create_parser()
+
+
+def test_parser_without_driver(parser):
+    """
+    Without a specified driver (e.g. --driver [s3 <bucket>| local <dumpFile>), the parser will exit
+    """
+    with pytest.raises(SystemExit):
+        parser.parse_args([url])
+
+def test_parser_with_driver(parser):
+    """
+    The parser will exit if it receives a driver Without destination
+    """
+    with pytest.raises(SystemExit):
+        parser.parse_args([url, "--driver", "local"])
+
+def test_parser_with_unknown_driver(parser):
+    """
+    The parser will exist if the driver name is unknown
+    """
+    with pytest.raises(SystemExit):
+        # should fail becauser 'azure' is not supported
+        parser.parse_args([url, "--driver", 'azure', 'destination'])
+
+def test_parser_with_known_driver(parser):
+    """
+    The parser will not exist if the driver name is known
+    """
+    for driver in ['local', 's3']:
+        assert parser.parse_args([url, '--driver', driver, 'destination'])
+
+
+def test_parser_with_driver_and_destination(parser):
+    """
+    The parser will not exit if it receives a driver and destination
+    """
+    args = parser.parse_args([url, '--driver', 'local', '/some/path'])
+    assert args.url == url
+    assert args.driver == 'local'
+    assert args.destination == '/some/path'
+
+################################################### end -  update tests/test_cli.py module to use pytest fixtures to reduce repeating same code
+
+  # verify tests run without errors
+  $ make
+   PYTHONPATH=./src pytest
+   ====================================================== test session starts ======================================================
+   platform linux -- Python 3.6.4, pytest-7.0.1, pluggy-1.0.0
+   rootdir: /home/centos/python_scripts/code/pgbackup
+   collected 5 items
+
+   tests/test_cli.py .....                                                                                                   [100%]
+
+   ======================================================= 5 passed in 0.03s =======================================================
+
+---------------------------------------------------
+12.3 Introduction to Mocking in Tests
+
+  The 'pytest-mock' package
+  https://github.com/pytest-dev/pytest-mock/#usage
+  https://pytest-mock.readthedocs.io/en/latest/usage.html   (usage)
+
+  The 'subprocess' package
+  https://docs.python.org/3/library/subprocess.html
+
+  The 'subprocess.Popen' class
+  https://docs.python.org/3/library/subprocess.html#subprocess.Popen
+
+
+  subprocess - Subprocess management
+    Source code: Lib/subprocess.py
+    - The subprocess module allows you to spawn new processes, connect to their input/output/error pipes, and obtain
+       their return codes. This module intends to replace several older modules and functions:
+          os.system
+          os.spawn*
+
+  Popen Constructor
+    - subprocess.Popen is similar to subprocess.run() except that it runs the called subprocess in the background.
+      Note: subprocess.run() calls subprocess.Popen class
+
+    - The underlying process creation and management in this module is handled by the Popen class. It offers a lot of
+      flexibility so that developers are able to handle the less common cases not covered by the convenience functions.
+
+     class subprocess.Popen(args, bufsize=- 1, executable=None, stdin=None, stdout=None, stderr=None, preexec_fn=None, close_fds=True, shell=False, cwd=None, env=None, universal_newlines=None, startupinfo=None, creationflags=0, restore_signals=True, start_new_session=False, pass_fds=(), *, group=None, extra_groups=None, user=None, umask=- 1, encoding=None, errors=None, text=None, pipesize=- 1, process_group=None)
+
+      - Execute a child program in a new process. On POSIX, the class uses os.execvpe()-like behavior to execute the child program.
+        On Windows, the class uses the Windows CreateProcess() function. The arguments to Popen are as follows.
+
+  Mocking
+    - Mocking is simply the act of replacing the part of the application you are testing with a dummy version of that
+      part called a mock.
+    - Instead of calling the actual implementation, you would call the mock, and then make assertions about what you
+      expect to happen.
+
+   pytest-mock
+     - Thin-wrapper around the unitest.mock package for easier use with pytest
+     - wraps an existing library call mock so it can be used as a pytest fixture
+
+    unittest.mock.patch(target, new=DEFAULT, spec=None, create=False, spec_set=None, autospec=None, new_callable=None, **kwargs)
+    https://docs.python.org/3/library/unittest.mock.html
+      - patch() acts as a function decorator, class decorator or a context manager.
+      - Inside the body of the function or with statement, the target is patched with a new object.
+      - When the function/with statement exits the patch is undone.
+
+   assert_called_with(*args, **kwargs)
+     - This method is a convenient way of asserting that the last call has been made in a particular way:
+       >>> mock = Mock()
+       >>> mock.method(1, 2, 3, test='wow')
+       <Mock name='mock.method()' id='...'>
+       >>> mock.method.assert_called_with(1, 2, 3, test='wow')
+
+   Lesson info
+     - using a mocking library to have a standard library function called by not act in its normal manner
+     - implement 'pg_dump' facility which exists outside of python - calling it using subprocess module
+       - in unit testing, you may not want to call 'pg_dump'  it requires having a access to a database
+     - using mock to ...
+     - create a new test, 'tests/test_pgdump.py', which is focused on call the pgdump facility
+
+
+   # commit 12.2 changes to the git repo
+  $ git status
+   . . .
+   #
+   #       modified:   Pipfile
+   #
+   # Untracked files:
+   #   (use "git add <file>..." to include in what will be committed)
+   #
+   #       Pipfile.lock
+   #       src/pgbackup/cli.py
+   #       tests/test_cli.py
+   no changes added to commit (use "git add" and/or "git commit -a")
+
+   # add ".pytest_cache/" (on line 3 after "__pycache__/" to .gitignore file so it is not track / added to repo
+   #   .pytest_cache dir contains data from the pytest's cache plugin
+  $ vim .gitignore
+
+  $ git add --all
+   (pgbackup) pgbackup[master !+] $ git commit -m 'Implement CLI module'
+   [master 0c9face] Implement CLI module
+    5 files changed, 190 insertions(+)
+    create mode 100644 Pipfile.lock
+    create mode 100644 src/pgbackup/cli.py
+    create mode 100644 tests/test_cli.py
+
+
+   # install pytest-mock library
+   $ pipenv install --dev pytest-mock
+
+# create a new test module, 'tests/test_pgdump.py', focused with interfacing with the 'pgdump' utility
+##############
+  script: demo_code/12_intro_tdd_fi/tests/test_pgdump.py
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/tests/test_pgdump.py
+###################################################
+import pytest
+import subprocess
+
+from pgbackup import pgdump
+
+url = "postgres://bob:password@example.com:5432/db_one"
+
+def test_dump_calls_pg_dump(mocker):
+    """
+    Utilize pg_dump with the database URL
+    """
+    # using Popen class and stub out it's constructor
+
+    # use mocker to stub out 'subprocess.Popen'
+    mocker.patch('subprocess.Popen')
+    assert pgdump.dump(url)
+    # call the mock version Popen passing the expect args list to it
+    subprocess.Popen.assert_call_with(['pg_dump', url], stdout=subprocess.PIPE)
+
+################################################### end of 'tests/test_pgdump.py'
+
+  # test 'tests/test_pgdump.py' module
+  $ make
+  . . .
+  E   ImportError: cannot import name 'pgdump'
+  . . .
+
+---------------------------------------------------
+12.4 Implementing PostgreSQL Interaction
+
+  The 'pytest-mock' package
+  https://github.com/pytest-dev/pytest-mock/#usage
+  https://pytest-mock.readthedocs.io/en/latest/usage.html   (usage)
+
+  The 'subprocess' package
+  https://docs.python.org/3/library/subprocess.html
+
+  The 'subprocess.Popen' class
+  https://docs.python.org/3/library/subprocess.html#subprocess.Popen
+
+  The 'mocker.patch' function
+  https://pypi.org/project/pytest-mock/
+
+  The 'mock' package
+  https://pypi.org/project/mock/
+
+  The 'pytest.raises' function
+  https://docs.pytest.org/en/latest/how-to/assert.html#assertions-about-expected-exceptions
+
+
+  python mock package
+    - mock is a library for testing in Python.
+    - It allows you to replace parts of your system under test with mock objects and make assertions about how they have been used.
+    - mock is now part of the Python standard library, available as unittest.mock in Python 3.3 onwards.
+
+  pytest-mock
+    - This plugin provides a 'mocker' fixture which is a thin-wrapper around the patching API provided by the mock package:
+      import os
+         class UnixFS:
+
+             @staticmethod
+             def rm(filename):
+                 os.remove(filename)
+
+         def test_unix_fs(mocker):
+             mocker.patch('os.remove')
+             UnixFS.rm('file')
+             os.remove.assert_called_once_with('file')
+
+
+# update 'tests/test_pgdump.py' to add "test_dump_handles_oserror() function
+###################################################
+import pytest
+import subprocess
+
+from pgbackup import pgdump
+
+url = "postgres://bob:password@example.com:5432/db_one"
+
+def test_dump_calls_pg_dump(mocker):
+    """
+    Utilize pg_dump with the database URL
+    """
+    # using Popen class and stub out it's constructor
+
+    # use mocker to stub out 'subprocess.Popen'
+    mocker.patch('subprocess.Popen')
+    assert pgdump.dump(url)
+    # call the mock version Popen passing the expect args list to it
+    subprocess.Popen.assert_called_with(['pg_dump', url], stdout=subprocess.PIPE)
+
+
+def test_dump_handles_oserror(mocker):
+    """
+    pgdump.dump returns a reasonable error if pg_dump is not installed
+    """
+    # use mocker to stub out 'subprocess.Popen'
+    # if pg_dump is called, but it is not installed, give SystemExit error
+    mocker.patch('subprocess.Popen', side_effect=OSError('no such file'))
+    with pytest.raises(SystemExit):
+        pgdump.dump(url)
+
+################################################### end update 'tests/test_pgdump.py' to add "test_dump_handles_oserror() function
+
+# create 'src/pgbackup/pgback.py" and define 'dump()"
+#########################################################
+import subprocess
+import sys
+
+def dump(url):
+    try:
+        return subprocess.Popen(['pg_dump', url], stdout=subprocess.PIPE)
+    except OSError as err:
+        print(f"Error: {err}")
+        sys.exit(1)
+
+######################################################### end - create 'src/pgbackup/pgback.py" and define 'dump()"
+
+  $ PYTHONPATH=./src python
+   Python 3.6.4 (default, Aug 24 2023, 20:48:22)
+   [GCC 4.8.5 20150623 (Red Hat 4.8.5-44)] on linux
+   Type "help", "copyright", "credits" or "license" for more information.
+  >>> from pgbackup import pgdump
+
+  # call 'pg_dump' via 'pgdump.dump' -> runs subprocess.Popen -> pg_dump
+  >>> proc = pgdump.dump('postgres://centos:cenPostgres@172.31.82.201:80/sample')
+
+  # open 'dump.sql' write the pg_dump stdout to it, then close file
+  #  note: stdout returns raw byte data, and 'read()' reads the byte data and 'write()' writes byte data to the file
+  >>> f = open('dump.sql', 'wb')
+  >>> f.write(proc.stdout.read())
+   56724
+  >>> f.close()
+  >>> proc
+   <subprocess.Popen object at 0x7fc52f0e04e0>
+
+
+---------------------------------------------------
+12.5 Implementing Local File Storage
+
+
+  The 'tempfile' package
+  https://docs.python.org/3/library/tempfile.html
+
+  The tempfile.TemporaryFile' class
+  https://docs.python.org/3/library/tempfile.html#tempfile.TemporaryFile
+
+  The tempfile.NamedTemporaryFile' class
+
+
+  tempfile - Generate temporary files and directories
+    Source code: Lib/tempfile.py
+    - This module creates temporary files and directories.
+    - It works on all supported platforms.
+    - TemporaryFile, NamedTemporaryFile, TemporaryDirectory, and SpooledTemporaryFile are high-level interfaces
+      which provide automatic cleanup and can be used as context managers. mkstemp() and mkdtemp() are lower-level
+      functions which require manual cleanup.
+
+    tempfile.TemporaryFile(mode='w+b', buffering=- 1, encoding=None, newline=None, suffix=None, prefix=None, dir=None, *, errors=None)
+      - Return a file-like object that can be used as a temporary storage area.
+      - The file is created securely, using the same rules as mkstemp().
+      - It will be destroyed as soon as it is closed (including an implicit close when the object is garbage collected).
+
+    tempfile.NamedTemporaryFile(mode='w+b', buffering=- 1, encoding=None, newline=None, suffix=None, prefix=None, dir=None, delete=True, *, errors=None)
+      - This function operates exactly as TemporaryFile() does, except that the file is guaranteed to have a visible
+        name in the file system (on Unix, the directory entry is not unlinked). That name can be retrieved from the name
+        attribute of the returned file-like object.
+      - Whether the name can be used to open the file a second time, while the named temporary file is still open,
+        varies across platforms (it can be so used on Unix; it cannot on Windows).
+      - If delete is true (the default), the file is deleted as soon as it is closed.
+      - The returned object is always a file-like object whose file attribute is the underlying true file object.
+      - This file-like object can be used in a with statement, just like a normal file.
+
+   file-like object
+     - asynonym for file object
+     - Python supports file like objects, that don't write to the disk but stay in the memory.
+
+   Lesson
+     - focus on test driving local [sql dump] file storage
+     - create 'tests/test_storage.py' to test whether data can be stored locally
+
+
+# create 'tests/test_storage.py to test whether data can be stored locally...
+##############
+  script: demo_code/12_intro_tdd_fi/tests/test_storage.py
+    Note: also in demo_code/11_2_planning_code/code.tgz    at: code/pgbackup/tests/test_storage.py
+#################################################################
+import tempfile
+
+from pgbackup import storage
+
+def test_storing_file_locally():
+    """
+    Writes content from one file-like to another
+    """
+    # create a temporary file with mode='w+b' (write and byte type) (default TemporaryFile() mode)
+    infile = tempfile.TemporaryFile()
+    infile.write(b'Testing')
+    # go back beginning of file so read starts at beginning
+    infile.seek(0)
+    # create temporary Named out file that is not deleted when closed so it can be re-opened to check contents
+    outfile = tempfile.NamedTemporaryFile(delete=False)
+    #
+    storage.local(infile, outfile)
+    # verify outfile contents match infile contents (byte read comparison)
+    with open(outfile.name, 'rb') as f:
+        assert f.read() == b'Testing'
+
+################################################################# end - create 'tests/test_storage.py ...
+
+# create storage module, src/pgbackup/storage.py with local() function to copy infile file byte content to outfile
+#################################################################
+def local(infile, outfile):
+    outfile.write(infile.read())
+    # must close outfile to ensure write data buffer is flushed (all content was written to file)
+    outfile.close()
+    infile.close()
+
+################################################################# end - create storage module, src/pgbackup/storage.py .. .
+
+  # test 'tests/test_storage.py along with 'src/pgbackup/storage.py [storage.local() function]
+  $ make
+  . . .
+  tests/test_cli.py .....                                                                                    [ 62%]
+  tests/test_pgdump.py ..                                                                                    [ 87%]
+  tests/test_storage.py .
+  ====================================================== 8 passed in 0.05s =========================================
+
+
+---------------------------------------------------
+12.6 Implementing AWS Interactive
+
+
+  The 'boto3' package
+  https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+
+  The 'boto3' 'S3.Client.upload_fileobj' method
+  https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/upload_fileobj.html#
+
+  The 'pytest-mock' package
+  https://github.com/pytest-dev/pytest-mock/#usage
+  https://pytest-mock.readthedocs.io/en/latest/usage.html   (usage)
+
+  The 'Mock' class
+  https://docs.python.org/3/library/unittest.mock.html#unittest.mock.Mock
+
+
+  Boto3
+   - use the AWS SDK for Python (Boto3) to create, configure, and manage AWS services, such as Amazon EC2 and S3.
+   - The SDK provides an object-oriented API as well as low-level access to AWS services.
+
+  upload_fileobj
+      S3.Client.upload_fileobj(Fileobj, Bucket, Key, ExtraArgs=None, Callback=None, Config=None)
+        - Upload a file-like object to S3.
+        - The file-like object must be in binary mode.
+        - This is a managed transfer which will perform a multipart upload in multiple threads if necessary.
+        - Usage:
+
+            import boto3
+            s3 = boto3.client('s3')
+
+            with open('filename', 'rb') as data:
+                s3.upload_fileobj(data, 'mybucket', 'mykey')
+
+
+  Mock Class
+   class unittest.mock.Mock(spec=None, side_effect=None, return_value=DEFAULT, wraps=None, name=None, spec_set=None, unsafe=False, **kwargs)
+    - Create a new Mock object. Mock takes several optional arguments that specify the behaviour of the Mock object.
+
+   Lesson Objectives
+     - install Boto3 dependent package (use as our client to connect to S3) in our virtual env
+     - configure AWS CLI
+
+  # install Boto3 package
+  $ pipenv install boto3
+
+  $ mkdir ~/.aws
+  # install awscli - must be done outside pip virtual env
+  $ deactivate
+  $ pip3.6 install --user awscli
+
+  # create S3 bucket named: pgbackup-sdk
+  # Create Role (S3accessFromEc2) with AmazonS3FullAccess policy and attach Role to EC2 python3Host instance
+
+  # reactivate pip virtual env - not sure how to activate without exiting virtual env
+  $ exit
+  $ pipenv shell
+
+
+  # add additional tests to tests/test_storate.py and create fixture for reading infile
+
+
+##########################################################
+import tempfile
+import pytest
+
+from pgbackup import storage
+
+# create infile fixture that can be passed to multiple tests
+@pytest.fixture
+def infile():
+    # create a temporary file with mode='w+b' (write and byte type) (default TemporaryFile() mode)
+    f = tempfile.TemporaryFile()
+    # write byte data to temporary file
+    f.write(b'Testing')
+    # go back beginning of file so read starts at beginning
+    f.seek(0)
+    return f
+
+
+def test_storing_file_locally(infile):
+    """
+    Writes content from one file-like to another
+    """
+    # create temporary Named out file that is not deleted when closed so it can be re-opened to check contents
+    outfile = tempfile.NamedTemporaryFile(delete=False)
+    #
+    storage.local(infile, outfile)
+    # verify outfile contents match infile contents (byte read comparison)
+    with open(outfile.name, 'rb') as f:
+        assert f.read() == b'Testing'
+
+def test_storing_file_on_s3(mocker,infile):
+    """
+    Writes content from one file-like to S3
+    """
+    # a mock client
+    client = mocker.Mock()
+
+    storage.s3(client, infile, "bucket", "file-name")
+
+    client.upload_fileobj.assert_called_with(infile, "bucket", "file-name")
+
+########################################################## end - # add additional tests to tests/test_storate.py
+
+#
+# update storage module, src/pgbackup/storage.py with 's3' method to call boto3 upload_fileobj()
+#################################################################
+def local(infile, outfile):
+    outfile.write(infile.read())
+    # must close outfile to ensure write data buffer is flushed (all content was written to file)
+    outfile.close()
+    infile.close()
+
+def s3(client, infile, bucket, filename):
+    client.upload_fileobj(infile, bucket, filename)
+
+################################################################# end - update 'tests/test_storage.py with 's3' method ...
+
+  # verify no errors with tests/test_storage.py and src/pgbackup/storage.py
+  $ make
+   .  .  .
+   tests/test_cli.py .....                                                                                         [ 55%]
+   tests/test_pgdump.py ..                                                                                         [ 77%]
+   tests/test_storage.py ..                                                                                        [100%]
+
+   ========================================================= 9 passed in 0.07s =============================================
+
+   # verify 'storage.s3' works directly with 's3' (writes to s3 bucket)
+   # create local file, 'example.txt'
+   $ echo ""UPLOADED" > example.txt
+
+   # start python REPL env
+   $ PYTHONPATH=./src python
+
+   >>> import boto3
+   >>> from pgbackup import storage
+
+   # create s3 client
+   >>> client = boto3.client('s3')
+   # open infile
+   >>> infile = open('example.txt', 'rb')
+   # storage 'example.txt' on in 'pgbackup-sdk' bucket
+   >>> storage.s3(client, infile, 'pgbackup-sdk', infile.name)
+
+   # verify 'example.txt' was stored on s3
+
+---------------------------------------------------
+
+  Chapter 13 Integrating Features and Distributing the Project
+
+---------------------------------------------------
+13.1 Wiring the Units Together
+
+  The 'boto3' package
+  https://boto3.amazonaws.com/v1/documentation/api/latest/index.html
+
+  The 'boto3' 'S3.Client.upload_fileobj' method
+  https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/upload_fileobj.html#
+
+  setuptools - Building and Distributing Packages with Setuptools
+  https://setuptools.pypa.io/en/latest/setuptools.html
+
+  setuptools - entry points & console scripts
+  https://setuptools.pypa.io/en/latest/userguide/entry_point.html
+
+  setuptools - command line scripts (console_scripts)
+  https://python-packaging.readthedocs.io/en/latest/command-line-scripts.html
+
+
+  The 'time.strftime' function
+  https://docs.python.org/3/library/time.html#time.strftime
+
+
+  Setuptools - Building and Distributing Packages with Setuptools
+   - Setuptools is a collection of enhancements to the Python distutils that allow developers to more easily build
+      and distribute Python packages, especially ones that have dependencies on other packages.
+   - Packages built and distributed using setuptools look to the user like ordinary Python packages based on the distutils
+
+  time.strftime(format[, t])
+    - Convert a tuple or struct_time representing a time as returned by gmtime() or localtime() to a string as specified
+      by the format argument. If t is not provided, the current time as returned by localtime() is used.
+    - format must be a string.
+    - ValueError is raised if any field in t is outside of the allowed range.
+
+  parser.add_argumment(..., metavar=(argName1, ..., argNameN), ...)
+     metavar:  Alternate display name for the argument(s) as shown in help
+
+  Lesson objects
+    - setuptools automatic script generation
+       - in 'setup.py', requires you to set up an entry_points with console_scripts section containing script name,
+         package name and function name:
+
+       setup(
+            # other arguments here ...
+            entry_points = {
+                'console_scripts': [
+                   '<scriptName> = <packageName>.<moduleName>:<functionName>'
+                ],
+            }
+            ...
+        )
+        - update cli module, 'scr/pbgbackup/cli.py', to add  '<packageName>.<moduleName>:<functionName>'
+
+
+# update "setup.py" to add install_requires packages, create entry_point to define console_scripts
+########################################################
+from setuptools import setup, find_packages
+
+# load contents of 'READM.rst' file to "readme" string
+#  note: readlines() creates a list of the lines while "readme()" creates 1 string
+with open('README.rst', encoding='UTF-8') as f:
+    readme = f.read()
+
+
+# call setup() method , Notes:
+#   - install_requires[<pkg list>] currently boto3
+#   - find_packages('scr') will recursively find '__init__.py' under 'src' directory to find packages
+#   - package_dir{'': 'src'} a dict that points from and empty string to 'src' and is a
+#     legacy thing disutils. This is needed because of 'find_package() is explicity searching 'src'
+# add entry_point to define console scripts with '<scriptName> = <packageName>.<moduleName>:<functionName>'
+setup(
+        name='pgbackup',
+        version='0.1.0',
+        description='Database backups locally or to AWS S3.',
+        long_description=readme,
+        author='Pat',
+        author_email='myemail@gmail.com',
+        install_requires=['boto3'],
+        packages=find_packages('src'),
+        package_dir={'': 'src'},
+        entry_point={
+            'console_scripts': [
+                'pgbackup=pgbackup.cli:main',
+            ]
+        }
+######################################################## end - update 'setup.py'
+
+
+# update cli module, 'src/pgbackup/cli.py, " to add main() function to be used by 'console_scripts'
+########################################################
+from argparse import Action, ArgumentParser
+
+known_drivers = ['local', 's3']
+
+# create Action class - needed to handle 2 values for '--driver' argument
+class DriverAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        driver,destination = values
+        if driver.lower() not in known_drivers:
+            parser.error("Unknown driver. Available drivers are 'local' and 's3'")
+        namespace.driver = driver.lower()
+        namespace.destination = destination
+
+
+
+def create_parser():
+    parser = ArgumentParser()
+    parser.add_argument('url', help="URL of the PostgreSQL database to backup")
+    parser.add_argument('--driver', help="how & where to stora the back",
+            nargs=2,
+            action=DriverAction,
+            required=True)
+    return parser
+
+def main():
+    import boto3
+    from pgbackup import pgdump, storage
+
+    # get input arguments
+    args = create_parser().parse_args()
+    # run 'pg_dump' by calling pgdump.dump() to dump PostgreSQL database
+    dump = pgdump.dump(args.url)
+    if args.driver == 's3':
+        # if 's3' driver, store sql dump file in S3 bucket
+        client = boto3.client('s3')
+        storage.s3(client, dump.stdout, args.destination, 'example.sql')
+    else:
+        # if 'local' driver, store sql dump file in local file
+        outfile = open(args.destination, 'wb')
+        storage.local(dump.stdout, outfile)
+
+######################################################## end - update cli module 'src/pgbackup/cli.py, " to add main() function ...
+
+  # test console_scripts update
+
+  # use 'pip install -e .' to generate 'pbbackup' script and add it to your venv seach PATH
+  # Note:
+  #    pip install -e, --editable <path/url>:   Install a project in editable mode (i.e. setuptools "develop mode")
+  #       from a local project path or a VCS url.
+  $ pip install -e .
+    . . .
+    Installing collected packages: pgbackup
+      Attempting uninstall: pgbackup
+        Found existing installation: pgbackup 0.1.0
+        Uninstalling pgbackup-0.1.0:
+          Successfully uninstalled pgbackup-0.1.0
+      Running setup.py develop for pgbackup
+    Successfully installed pgbackup-0.1.0
+
+  # Notes: if successful, it should place 'pgbackup' script in .local virtual env directory (same as in venv PATH), e.g.:
+  #   /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/bin/pgbackup
+
+  # if there is a syntax error, the following command may help find it (e.g. if entry_points is missing 's':
+  $  python3.6 setup.py --help-commands
+  /usr/local/lib/python3.6/distutils/dist.py:261: UserWarning: Unknown distribution option: 'entry_point'
+  warnings.warn(msg)
+  . . .
+
+  # verify 'pgbackup' command works writing local dump data:
+  $ pgbackup --driver local ./local-dump.sql postgres://centos:cenPostgres@172.31.82.201:80/sample
+
+  # verify 'local-dump.sgl' contains the expected dump data
+  $ vim local-dump.sql
+
+  # verify 'pgbackup' command works writing s3 dump data:
+  $ pgbackup --driver s3 pgbackup-sdk postgres://centos:cenPostgres@172.31.82.201:80/sample
+
+  # example s3 bucket to see if it contains 'example.sql'
+  $ aws s3 ls pgbackup-sdk/example.sql
+    2023-09-09 00:16:31      56724 example.sql
+
+# update 'create_parser' function in cli module, 'src/pgbackup/cli.py', to improve args options and help message
+#######################################################
+
+def create_parser():
+    parser = ArgumentParser()
+    parser.add_argument('url', help="URL of the PostgreSQL database to backup")
+    # add '-d' short hand option, and 'metavar'to specified alternative names to '--driver' args
+    parser.add_argument('--driver', '-d' help="how & where to stora the back",
+            nargs=2,
+            action=DriverAction,
+            metavar=('driver', 'destination')
+            required=True)
+    return parser
+
+####################################################### end - update 'create_parser' function in cli module 'src/pgbackup/cli.py',  ...
+
+
+# update 'tests/test_pgdump.py' to add "test_dump_file_name_without_timestamp() and test_dump_file_name_with_timestamp() functions
+###################################################
+import pytest
+import subprocess
+
+from pgbackup import pgdump
+
+url = "postgres://bob:password@example.com:5432/db_one"
+
+def test_dump_calls_pg_dump(mocker):
+    """
+    Utilize pg_dump with the database URL
+    """
+    # using Popen class and stub out it's constructor
+
+    # use mocker to stub out 'subprocess.Popen'
+    mocker.patch('subprocess.Popen')
+    assert pgdump.dump(url)
+    # call the mock version Popen passing the expect args list to it
+    subprocess.Popen.assert_called_with(['pg_dump', url], stdout=subprocess.PIPE)
+
+
+def test_dump_handles_oserror(mocker):
+    """
+    pgdump.dump returns a reasonable error if pg_dump is not installed
+    """
+    # use mocker to stub out 'subprocess.Popen'
+    # if pg_dump is called, but it is not installed, give SystemExit error
+    mocker.patch('subprocess.Popen', side_effect=OSError('no such file'))
+    with pytest.raises(SystemExit):
+        pgdump.dump(url)
+
+
+def test_dump_file_name_without_timestamp():
+    """
+    pgdump.dump_file_name returns the name of the database
+    """
+    # 'dp_one.sql' filename is based on url database name is 'db_one'
+    assert pgdump.dump_file_name(url) == 'db_one.sql'
+
+
+def test_dump_file_name_with_timestamp():
+    """
+    pgdump.dump_file_name returns the name of the database with timestamp
+    """
+    timestamp = "2023-09-08T14:47:10"
+    # 'dp_one.sql' filename is based on url database name is 'db_one'
+    assert pgdump.dump_file_name(url,timestamp) == f"db_one-{timestamp}.sql"
+
+################################################### end update 'tests/test_pgdump.py' to add "filename_without_timestamp() ...
+
+
+# update 'src/pgbackup/pgback.py" and define 'dump_file_name()"
+#########################################################
+import subprocess
+import sys
+
+def dump(url):
+    try:
+        return subprocess.Popen(['pg_dump', url], stdout=subprocess.PIPE)
+    except OSError as err:
+        print(f"Error: {err}")
+        sys.exit(1)
+
+def dump_file_name(url, timestamp=None):
+    # get db name which is after last '/'
+    db_name = url.split("/")[-1]
+    # in url, query parameters start with '?' separater can be appeneded after db Name
+    db_name = db_name.split("?")[0]
+    if timestamp:
+        return f"{db_name}-{timestamp}.sql"
+    else:
+        return f"{db_name}.sql"
+
+######################################################### end - create 'src/pgbackup/pgback.py" and define 'dump_file_name()"
+
+
+
+# update 'main()' function in cli module, 'src/pgbackup/cli.py', to generate db dump file_name
+#######################################################
+from argparse import Action, ArgumentParser
+
+known_drivers = ['local', 's3']
+
+# create Action class - needed to handle 2 values for '--driver' argument
+class DriverAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        driver,destination = values
+        if driver.lower() not in known_drivers:
+            parser.error("Unknown driver. Available drivers are 'local' and 's3'")
+        namespace.driver = driver.lower()
+        namespace.destination = destination
+
+
+
+def create_parser():
+    parser = ArgumentParser()
+    parser.add_argument('url', help="URL of the PostgreSQL database to backup")
+    # add '-d' short hand option, and 'metavar'to specified alternative names to '--driver' args
+    parser.add_argument('--driver', '-d', help="how & where to stora the back",
+            nargs=2,
+            action=DriverAction,
+            metavar=('driver', 'destination'),
+            required=True)
+    return parser
+
+def main():
+    import time
+    import boto3
+    from pgbackup import pgdump, storage
+
+    # get input arguments
+    args = create_parser().parse_args()
+    # run 'pg_dump' by calling pgdump.dump() to dump PostgreSQL database
+    dump = pgdump.dump(args.url)
+    if args.driver == 's3':
+        # if 's3' driver, store sql dump file in S3 bucket
+        client = boto3.client('s3')
+        # create timestamp using localtime()
+        timestamp = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+        # use pgdump.dump_file_name() to return dump file_name based on db Name plus timestamp
+        file_name = pgdump.dump_file_name(args.url, timestamp)
+        print(f"Backing database up to {args.destination} in S3 as {file_name}")
+        storage.s3(client, dump.stdout, args.destination, file_name)
+    else:
+        # if 'local' driver, store sql dump file in local file
+        outfile = open(args.destination, 'wb')
+        print(f"Backing database up locally to {args.destination}")
+        storage.local(dump.stdout, outfile)
+
+####################################################### end - update 'main()' function in cli module, 'src/pgbackup/cli.py', ...
+
+  # verify pbackup with S3 works:
+  $ pgbackup --driver s3 pgbackup-sdk postgres://centos:cenPostgres@172.31.82.201:80/sample
+    Backing database up to pgbackup-sdk in S3 as sample-2023-09-09T01:37:41.sql
+
+  # verify dump file was create in S3 bucket
+  $ aws s3 ls pgbackup-sdk/ | grep sample
+    2023-09-09 01:37:42      56724 sample-2023-09-09T01:37:41.sql
+
+
+---------------------------------------------------
+13.2 Building and Sharing a Wheel Distribution
+
+
+   The 'wheel' documentation
+   https://wheel.readthedocs.io/en/stable/#defining-the-python-version
+
+
+  wheel
+   - This library is the reference implementation of the Python wheel packaging standard, as defined in PEP 427.
+   - It has two different roles:
+       - A setuptools extension for building wheels that provides the bdist_wheel setuptools command
+       - A command line tool for working with wheel files
+
+  To build a wheel for your project:
+      python -m pip install build
+      python -m build --wheel
+
+        - The wheel will go to dist/yourproject-<tags>.whl.
+
+
+   Note:
+   https://discuss.python.org/t/where-are-the-docs-for-bdist-wheel/12937
+   Where are the docs for `bdist_wheel`?
+      - FYI, build is the modern, standards-conformant, PyPA-recommended replacement for legacy setup.py
+        invocations, and it includes a cleaner CLI, documentation and built-in help for its commands. The
+        equivalent of "python setup.py sdist bdist_wheel" is "python -m build".
+
+    Lesson objectives:
+       - build a wheel
+       - how to install wheels locally and remotely
+
+
+# create "setup.cfg" before generating our wheel - configure for python 3.6 or higher support
+# If supporting python 2 & 3, then use "univeral = 1" on 2nd "setup.cfg" line
+#################################################
+[bdist_wheel]
+python-tag = py36
+#################################################
+
+  # run "setup.py" with --help
+  $ python setup.py --help
+   Common commands: (see '--help-commands' for more)
+
+     setup.py build      will build the package underneath 'build/'
+     setup.py install    will install the package
+
+   Global options:
+     --verbose (-v)      run verbosely (default)
+     --quiet (-q)        run quietly (turns verbosity off)
+     --dry-run (-n)      don't actually do anything
+     --help (-h)         show detailed help message
+     --no-user-cfg       ignore pydistutils.cfg in your home directory
+     --command-packages  list of packages that provide distutils commands
+
+   Information display options (just display information, ignore any commands)
+     --help-commands     list all available commands
+     . . .
+
+   usage: setup.py [global_opts] cmd1 [cmd1_opts] [cmd2 [cmd2_opts] ...]
+      or: setup.py --help [cmd1 cmd2 ...]
+      or: setup.py --help-commands
+      or: setup.py cmd --help
+
+
+  # Use "bdist_wheel" subcommand for building a 'wheel'
+  #   this will create "dist/pgbackup-0.1.0-py36-none-any.whl" zip-tar wheel file contain source code, etcs the project
+  $ python setup.py bdist_wheel
+   running bdist_wheel
+   running build
+   running build_py
+   creating build
+   creating build/lib
+   . . .
+   adding 'pgbackup-0.1.0.dist-info/entry_points.txt'
+   adding 'pgbackup-0.1.0.dist-info/top_level.txt'
+   adding 'pgbackup-0.1.0.dist-info/RECORD'
+   removing build/bdist.linux-x86_64/wheel
+
+
+  # test wheel dist by uninstall pgbackup
+  $ pip uninstall pgbackup
+   Found existing installation: pgbackup 0.1.0
+   Uninstalling pgbackup-0.1.0:
+     Would remove:
+       /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/bin/pgbackup
+       /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages/pgbackup.egg-link
+   Proceed (Y/n)? y
+     Successfully uninstalled pgbackup-0.1.0
+
+  # reinstall 'pgbackup' from wheel file
+  $ pip install dist/pgbackup-0.1.0-py36-none-any.whl
+   Processing ./dist/pgbackup-0.1.0-py36-none-any.whl
+   Requirement already satisfied: boto3 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from pgbackup==0.1.0) (1.23.10)
+   Requirement already satisfied: jmespath<2.0.0,>=0.7.1 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from boto3->pgbackup==0.1.0) (0.10.0)
+   Requirement already satisfied: s3transfer<0.6.0,>=0.5.0 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from boto3->pgbackup==0.1.0) (0.5.2)
+   Requirement already satisfied: botocore<1.27.0,>=1.26.10 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from boto3->pgbackup==0.1.0) (1.26.10)
+   Requirement already satisfied: python-dateutil<3.0.0,>=2.1 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from botocore<1.27.0,>=1.26.10->boto3->pgbackup==0.1.0) (2.8.2)
+   Requirement already satisfied: urllib3<1.27,>=1.25.4 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from botocore<1.27.0,>=1.26.10->boto3->pgbackup==0.1.0) (1.26.16)
+   Requirement already satisfied: six>=1.5 in /home/centos/.local/share/virtualenvs/pgbackup-m3Yq8k4L/lib/python3.6/site-packages (from python-dateutil<3.0.0,>=2.1->botocore<1.27.0,>=1.26.10->boto3->pgbackup==0.1.0) (1.16.0)
+   Installing collected packages: pgbackup
+   Successfully installed pgbackup-0.1.0
+
+
+  # in REPL, upload wheel dist to S3
+  $ python3.6
+  Python 3.6.4 (default, Aug 24 2023, 20:48:22)
+  >>> import boto3
+  >>> client = boto3.client('s3')
+  >>> f = open('dist/pgbackup-0.1.0-py36-none-any.whl', 'rb')
+  >>> client.upload_fileobj(f, 'pgbackup-sdk', 'pgbackup-0.1.0-py36-none-any.whl')
+  >>> exit()
+
+  # verify file was uploaded to S3
+  $ aws s3 ls pgbackup-sdk
+  2023-09-11 21:59:46       3685 pgbackup-0.1.0-py36-none-any.whl
+
+
+  # verify dist works on another host
+  # first, configure 2nd host for python3.6, aws cli, etc
+  $ sudo yum install python3
+  $  sudo yum groupinstall -y "development tools"
+  $  pip3.6 install --user awscli
+  $  aws s3 ls
+
+  # If private, copy file from s3 bucket using CLI:
+  #   If public, you can cause URL to install package directly with 'pip3.6 install <URL>'
+  # download file
+  aws s3 cp s3://pgbackup-sdk/pgbackup-0.1.0-py36-none-any.whl .
+
+  # install wheel dist
+  $ pip3.6 install --user pgbackup-0.1.0-py36-none-any.whl
+   Processing ./pgbackup-0.1.0-py36-none-any.whl
+   Collecting boto3 (from pgbackup==0.1.0)
+     Downloading https://files.pythonhosted.org/packages/75/ca/d917b244919f1ebf96f7bbd5a00e4641f7e9191b0d070258f5dc10f5eaad/boto3-1.23.10-py3-none-any.whl (132kB)
+       100% |¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦¦| 133kB 6.7MB/s
+   . . .
+   Installing collected packages: boto3, pgbackup
+   Successfully installed boto3-1.23.10 pgbackup-0.1.0
+
+  # verify 'pgbackup' is in your search path
+  $ pgbackup --help
+   usage: pgbackup [-h] --driver driver destination url
+
+   positional arguments:
+     url                   URL of the PostgreSQL database to backup
+
+   optional arguments:
+     -h, --help            show this help message and exit
+     --driver driver destination, -d driver destination
+                           how & where to stora the back
+  $ which pgbackup
+   ~/.local/bin/pgbackup
+
+
+---------------------------------------------------
+13.3 Python 3 Scripting for System Administrators
+
+
+Question 2
+How do you create a package in a Python project?
+Choices:
+  - Put an __init__.py file in a directory with the desired name.     <------- correct answer
+  - Name a Python file with the package name you want to create.
+  - None of the answers listed are correct.
+  - Prefix the file name with package_.
+
+Correct Answer
+
+  To create a package within your Python project, you will need to add an __init__.py file inside of a directory with the
+  desired package name. All other Python files within that directory will be modules on the package.
+
+---------------------------------------------------
+
+  Chapter 14 Final Steps
+
+   - recommends take Ansible training (ancible is usi
+   - for additional python  experience  look at the configuration management tool Ansible, which happens to be written in Python
+
+
+---------------------------------------------------
+l4.1 What's Next
+---------------------------------------------------
+

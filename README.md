@@ -115,6 +115,7 @@ ________________________________________
 
 - python-jupyter-notebook-training
     - acloudguru-python-advanced-object-oriented-programming-course
+    - acloudguru-python3-scripting-for-sysadmins-course
     - TBD courses
 &nbsp;</p>
 ________________________________________

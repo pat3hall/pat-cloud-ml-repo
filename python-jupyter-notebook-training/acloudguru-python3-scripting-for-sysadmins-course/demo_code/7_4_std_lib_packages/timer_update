@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+"""
+   Note the time the script is invoked;
+   Have user give some input
+   note the time after input is given
+   compare these to times, and report the time difference - a stop watch
+"""
+# updated to use "from <package> import <method1>, ..., <methodN>"
+from time import localtime, mktime, strftime
+
+start_time = localtime()
+# Note: strftime('%X', <timeValue>))  returns time in local time representation
+print (f"Timer started at {strftime('%X', start_time)}")
+
+# wait for user to stop timer
+input ("Press 'Enter' to stop timer")
+stop_time = localtime()
+# mktime() is inverse of localtime() - that is, it converts struct_time to a number of secs from beginning of computer time
+difference = mktime(stop_time)  -  mktime(start_time)
+print (f"Timer stopped at {strftime('%X', stop_time)}")
+print (f"Total time: {difference}")

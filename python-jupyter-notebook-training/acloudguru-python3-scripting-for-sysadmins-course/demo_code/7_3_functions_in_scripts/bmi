@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+# BMI = (weight in kg / height in meters squared)
+# BMI = (weight in lbs / height in inches squared) * 703
+
+
+def gather_info():
+    height = float(input("What is your height? (inches or meters) "))
+    weight = float(input("What is your weight? (pounds or kilograms) "))
+    # get system type plus lower case and strip whitespaces
+    system = input("Are your measurements in metric or imperial units? ").lower().strip()
+    # return multiple results as a tuple
+    return (height,weight,system)
+
+# define calculate_bmi with weight,height, & system inputs plus default value for system
+def calculate_bmi(weight, height, system='metric'):
+    """
+    Note: This multi-line comment at beginning of a function is referred as a doc string
+          and some tools convert doc strings to documentation
+    Return the body mass index (BMI) for the given
+    weight, height, and measure systems.
+    """
+    if system == 'metric':
+        bmi = (weight / (height ** 2))
+    else:
+        bmi = 703 * (weight / (height ** 2))
+    return bmi
+
+
+while True:
+    height,weight,system = gather_info()
+    if system.startswith("i"):
+        bmi=calculate_bmi(weight,system='imperial', height=height)
+        print(f"Your BMI is {bmi}")
+        break
+    elif system.startswith("m"):
+        bmi=calculate_bmi(weight, height)
+        print(f"Your BMI is {bmi}")
+        break
+    else:
+        print("Error: Unknown measurement system. Please use imperial or metric")
+
+
+

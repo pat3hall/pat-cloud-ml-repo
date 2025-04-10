@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+
+import argparse
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+# print(args)
+
+# read file. reverse the content, and print it out
+with open(args.filename) as f:
+    # read file to the lines list
+    lines = f.readlines()
+    # reverse the order of the lines
+    lines.reverse()
+
+    # limit arg is specified, limit the number of lines in the lines list
+    if args.limit:
+        lines = lines[:args.limit]
+
+    # use strip to remove newline char, and then reverse the contents of each line
+    for line in lines:
+        print(line.strip()[::-1])
+
+
+

@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+
+import argparse
+import sys
+
+# parse the arguments
+parser = argparse.ArgumentParser()
+parser.add_argument('filename', help='the file to read')
+parser.add_argument('--limit', '-l', type=int, help='number of lines to read')
+# default %(prog) is the script name
+parser.add_argument('--version', '-v', action='version', version='%(prog)s 1.0')
+args = parser.parse_args()
+
+# read file. reverse the content, and print it out
+try:
+    f = open(args.filename)
+    limit = args.limit
+# FileNotFound except error
+except FileNotFoundError as err:
+    print(f"Error: {err}")
+    # exit with 2 exit status - just to match the FileNotFoundError stack trace exit status
+    sys.exit(2)
+# unexpected except error
+except:
+    print("Error: Unexpected error found")
+    # exit with non-zero unique exit status (e.g. 3)
+    sys.exit(3)
+else:
+    with f:
+        # read file to the lines list
+        lines = f.readlines()
+        # reverse the order of the lines
+        lines.reverse()
+
+        # limit arg is specified, limit the number of lines in the lines list
+        if limit:
+            lines = lines[:limit]
+
+        # use strip to remove newline char, and then reverse the contents of each line
+        for line in lines:
+            print(line.strip()[::-1])
+# finally block to always run at end of try block
+#finally:
+#    print(f"\nFinished reversing {args.filename} contents")
+
